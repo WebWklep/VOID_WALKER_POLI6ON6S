@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VOID WALKER — 001</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#aaa}
+  canvas#scene{display:block;width:100%;height:100%}
+  #grain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.22;mix-blend-mode:screen}
+  #vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 18%,rgba(0,0,0,.45) 68%,#000 100%)}
+  #hint{position:fixed;left:22px;bottom:18px;font-size:10px;letter-spacing:.16em;line-height:1.8;color:rgba(210,210,210,.5);text-transform:uppercase;pointer-events:none}
+  #title{position:fixed;right:22px;top:18px;font-size:10px;letter-spacing:.2em;color:rgba(210,210,210,.32);pointer-events:none}
+  #start{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.42);cursor:pointer;transition:opacity .6s}
+  #start span{font-size:10px;letter-spacing:.24em;color:rgba(235,235,235,.72);border:1px solid rgba(220,220,220,.2);padding:13px 18px}
+  #start.off{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<canvas id="grain"></canvas>
+<div id="vignette"></div>
+<div id="title">VOID WALKER / 001</div>
+<div id="hint">W A S D — MOVE<br>MOUSE — LOOK<br>CLICK — ENTER</div>
+<div id="start"><span>CLICK TO ENTER</span></div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const renderer = new THREE.WebGLRenderer({canvas:document.querySelector('#scene'),antialias:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=.72;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x000000);
+scene.fog=new THREE.FogExp2(0x000000,.085);
+const camera=new THREE.PerspectiveCamera(54,innerWidth/innerHeight,.1,90);
+camera.position.set(0,3.1,6.8);
+
+const hemi=new THREE.HemisphereLight(0x777777,0x080808,.24);scene.add(hemi);
+const floorGeo=new THREE.PlaneGeometry(180,180,100,100);
+floorGeo.rotateX(-Math.PI/2);
+const p=floorGeo.attributes.position;
+for(let i=0;i<p.count;i++){
+ const x=p.getX(i),z=p.getZ(i);
+ const h=(Math.sin(x*.16+Math.cos(z*.11))*Math.cos(z*.19)*.12)+(Math.sin(x*.045+z*.07)*.3);
+ p.setY(i,h);
+}
+floorGeo.computeVertexNormals();
+const floor=new THREE.Mesh(floorGeo,new THREE.MeshStandardMaterial({color:0x171717,roughness:1,metalness:0}));
+scene.add(floor);
+
+// The character is intentionally a temporary, anonymous blockout.
+const player=new THREE.Group();scene.add(player);
+const stoneMat=new THREE.MeshStandardMaterial({color:0x777777,roughness:1,metalness:0});
+const darkMat=new THREE.MeshStandardMaterial({color:0x3d3d3d,roughness:1});
+function capsulePart(parent,geo,mat,pos,scale){
+ const m=new THREE.Mesh(geo,mat);m.position.set(...pos);m.scale.set(...scale);parent.add(m);return m;
+}
+capsulePart(player,new THREE.CapsuleGeometry(.24,.62,4,7),stoneMat,[0,.83,0],[1,1, .82]);
+capsulePart(player,new THREE.SphereGeometry(.22,8,6),stoneMat,[0,1.48,0],[.9,1,.85]);
+capsulePart(player,new THREE.BoxGeometry(.13,.55,.15),darkMat,[-.17,.35,0],[1,1,1]);
+capsulePart(player,new THREE.BoxGeometry(.13,.55,.15),darkMat,[.17,.35,0],[1,1,1]);
+capsulePart(player,new THREE.CapsuleGeometry(.075,.42,3,5),stoneMat,[-.31,.88,0],[1,1,1]);
+capsulePart(player,new THREE.CapsuleGeometry(.075,.42,3,5),stoneMat,[.31,.88,0],[1,1,1]);
+
+// A soft pool of light follows the character; it fades into the black.
+const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=256;
+const gx=glowCanvas.getContext('2d');
+const grad=gx.createRadialGradient(128,128,2,128,128,126);
+grad.addColorStop(0,'rgba(245,245,245,.34)');grad.addColorStop(.22,'rgba(205,205,205,.18)');
+grad.addColorStop(.55,'rgba(150,150,150,.055)');grad.addColorStop(1,'rgba(0,0,0,0)');
+gx.fillStyle=grad;gx.fillRect(0,0,256,256);
+const glow=new THREE.Mesh(new THREE.PlaneGeometry(8.5,8.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(glowCanvas),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+glow.rotation.x=-Math.PI/2;glow.position.y=.035;scene.add(glow);
+const playerLight=new THREE.PointLight(0xcfcfcf,13,9,2);playerLight.position.set(0,2.2,0);player.add(playerLight);
+const topLight=new THREE.PointLight(0x999999,2.5,4,2);topLight.position.set(0,2.4,0);player.add(topLight);
+
+// Small, irregular rock forms, placed sparsely around the illuminated area.
+const rockMat=new THREE.MeshStandardMaterial({color:0x454545,roughness:1,flatShading:true});
+function rock(x,z,s,seed){
+ const g=new THREE.IcosahedronGeometry(1,1);
+ const a=g.attributes.position;
+ for(let i=0;i<a.count;i++){
+  const v=new THREE.Vector3().fromBufferAttribute(a,i);
+  const n=1+.16*Math.sin(v.x*7+seed)*Math.cos(v.y*5+seed*2);
+  a.setXYZ(i,v.x*n,v.y*n,v.z*n);
+ }
+ g.computeVertexNormals();
+ const m=new THREE.Mesh(g,rockMat);
+ m.position.set(x,.05+s*.36,z);m.scale.set(s*1.25,s*.72,s);
+ m.rotation.set(seed*.2,seed,seed*.13);scene.add(m);
+}
+[[3,-2,.8,1],[-3,-4,1.1,2],[4,3,.65,3],[-4,2,.9,4],[1,-7,1.35,5],[-7,-1,.7,6],[7,-5,1,7],[-1,6,.8,8],[6,7,1.2,9]].forEach(v=>rock(...v));
+
+let yaw=0, pitch=.16, locked=false;
+const keys={};
+const start=document.querySelector('#start');
+start.addEventListener('click',()=>renderer.domElement.requestPointerLock?.());
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;start.classList.toggle('off',locked)});
+document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.0022;pitch=Math.max(-.05,Math.min(.55,pitch+e.movementY*.0015))});
+addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault()});
+addEventListener('keyup',e=>keys[e.code]=false);
+let last=performance.now();
+function animate(now){
+ requestAnimationFrame(animate);
+ const dt=Math.min((now-last)/1000,.04);last=now;
+ const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+ const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+ const move=new THREE.Vector3();
+ if(keys.KeyW||keys.ArrowUp)move.add(forward);
+ if(keys.KeyS||keys.ArrowDown)move.sub(forward);
+ if(keys.KeyD||keys.ArrowRight)move.add(right);
+ if(keys.KeyA||keys.ArrowLeft)move.sub(right);
+ if(move.lengthSq()>0){move.normalize().multiplyScalar(dt*2.25);player.position.add(move);player.rotation.y=Math.atan2(move.x,move.z);}
+ glow.position.x=player.position.x;glow.position.z=player.position.z;
+ const target=new THREE.Vector3(player.position.x+Math.sin(yaw)*.1,player.position.y+1.0,player.position.z+Math.cos(yaw)*.1);
+ const dist=6.2;
+ const desired=new THREE.Vector3(player.position.x+Math.sin(yaw)*dist,player.position.y+2.5+pitch*2,player.position.z+Math.cos(yaw)*dist);
+ camera.position.lerp(desired,.075);camera.lookAt(target);
+ renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
+
+// Coarse, moving monochrome sensor grain.
+const grain=document.querySelector('#grain'),ctx=grain.getContext('2d',{alpha:true});
+function resizeGrain(){grain.width=Math.max(1,Math.floor(innerWidth/2));grain.height=Math.max(1,Math.floor(innerHeight/2));}
+resizeGrain();
+function makeGrain(){
+ const w=grain.width,h=grain.height,img=ctx.createImageData(w,h);
+ for(let i=0;i<img.data.length;i+=4){const n=Math.random()*255;img.data[i]=n;img.data[i+1]=n;img.data[i+2]=n;img.data[i+3]=Math.random()*95;}
+ ctx.putImageData(img,0,0);
+}
+setInterval(makeGrain,75);makeGrain();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);resizeGrain();makeGrain()});
+</script>
+</body>
+</html>
