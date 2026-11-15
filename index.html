@@ -84,6 +84,7 @@ const topLight=new THREE.PointLight(0x999999,2.5,4,2);topLight.position.set(0,2.
 
 // Small, irregular rock forms, placed sparsely around the illuminated area.
 const rockMat=new THREE.MeshStandardMaterial({color:0x454545,roughness:1,flatShading:true});
+const rocks=[];
 function rock(x,z,s,seed){
  const g=new THREE.IcosahedronGeometry(1,1);
  const a=g.attributes.position;
@@ -96,6 +97,7 @@ function rock(x,z,s,seed){
  const m=new THREE.Mesh(g,rockMat);
  m.position.set(x,.05+s*.36,z);m.scale.set(s*1.25,s*.72,s);
  m.rotation.set(seed*.2,seed,seed*.13);scene.add(m);
+ rocks.push({x,z,rx:s*1.25+.34,rz:s+.34});
 }
 [[3,-2,.8,1],[-3,-4,1.1,2],[4,3,.65,3],[-4,2,.9,4],[1,-7,1.35,5],[-7,-1,.7,6],[7,-5,1,7],[-1,6,.8,8],[6,7,1.2,9]].forEach(v=>rock(...v));
 
@@ -107,6 +109,10 @@ document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockEl
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.0022;pitch=Math.max(-.05,Math.min(.55,pitch+e.movementY*.0015))});
 addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.code]=false);
+// Prevent the temporary character from passing through rocks.
+function blockedAt(x,z){
+ return rocks.some(r=>{const dx=(x-r.x)/r.rx,dz=(z-r.z)/r.rz;return dx*dx+dz*dz<1;});
+}
 let last=performance.now();
 function animate(now){
  requestAnimationFrame(animate);
@@ -118,7 +124,14 @@ function animate(now){
  if(keys.KeyS||keys.ArrowDown)move.sub(forward);
  if(keys.KeyD||keys.ArrowRight)move.add(right);
  if(keys.KeyA||keys.ArrowLeft)move.sub(right);
- if(move.lengthSq()>0){move.normalize().multiplyScalar(dt*2.25);player.position.add(move);player.rotation.y=Math.atan2(move.x,move.z);}
+ if(move.lengthSq()>0){
+  move.normalize().multiplyScalar(dt*2.25);
+  const nextX=player.position.x+move.x;
+  if(!blockedAt(nextX,player.position.z))player.position.x=nextX;
+  const nextZ=player.position.z+move.z;
+  if(!blockedAt(player.position.x,nextZ))player.position.z=nextZ;
+  player.rotation.y=Math.atan2(move.x,move.z);
+ }
  glow.position.x=player.position.x;glow.position.z=player.position.z;
  const target=new THREE.Vector3(player.position.x+Math.sin(yaw)*.1,player.position.y+1.0,player.position.z+Math.cos(yaw)*.1);
  const dist=6.2;
