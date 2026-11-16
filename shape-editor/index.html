@@ -91,7 +91,7 @@ for(let y=0;y<128;y+=step*4){ctx.fillStyle='rgba(210,210,210,.16)';ctx.fillRect(
 }else if(kind==='grain'){
 let seed=17;for(let i=0;i<2800;i++){seed=(seed*16807)%2147483647;const px=seed%128;seed=(seed*16807)%2147483647;const py=seed%128;const v=70+(seed%100);ctx.fillStyle='rgba('+v+','+v+','+v+',.22)';ctx.fillRect(px,py,1,1);}
 }else{ctx.fillStyle='#292929';ctx.fillRect(0,0,128,128);ctx.strokeStyle='rgba(255,255,255,.035)';for(let i=0;i<128;i+=16){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,128);ctx.moveTo(0,i);ctx.lineTo(128,i);ctx.stroke();}}
-const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t;
+const t=new THREE.CanvasTexture(c);t.colorSpace=kind==='stone-bump'?THREE.NoColorSpace:THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t;
 }
 function activeTexture(){return textureCanvases[['stone','clay'][skinMode]];}
 function createPart(type){
