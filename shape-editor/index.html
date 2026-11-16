@@ -77,31 +77,30 @@ const smooth=t=>t*t*(3-2*t);
 const noise=(x,y,scale)=>{
  const fx=x/scale,fy=y/scale,ix=Math.floor(fx),iy=Math.floor(fy),tx=smooth(fx-ix),ty=smooth(fy-iy);
  const a=hash(ix,iy),b=hash(ix+1,iy),d=hash(ix,iy+1),e=hash(ix+1,iy+1);
- return (a+(b-a)*tx)+((d+(e-d)*tx)-(a+(b-a)*tx))*ty;
+ const top=a+(b-a)*tx,bot=d+(e-d)*tx;return top+(bot-top)*ty;
 };
 const data=ctx.createImageData(size,size);
 for(let y=0;y<size;y++)for(let x=0;x<size;x++){
- const broad=noise(x,y,118),mid=noise(x,y,39),grain=noise(x,y,9),micro=hash(x,y);
- // Sediment bands are softly warped and broken, never perfectly parallel.
- const warp=(noise(x,y,82)-.5)*24+(noise(x,y,23)-.5)*8;
- const band=noise(x+warp,y+warp*.16,54);
- const strata=Math.sin((y+warp+noise(x,y,17)*5)*.115);
- const layered=Math.pow(Math.max(0,strata),7)*.5+(band-.5)*.17;
- const mineral=(broad-.5)*27+(mid-.5)*17+(grain-.5)*11+(micro-.5)*8+layered*17;
- const cool=noise(x+51,y-23,73)-.5;
- const i=(y*size+x)*4;
- data.data[i]=Math.max(0,Math.min(255,146+mineral+cool*4));
- data.data[i+1]=Math.max(0,Math.min(255,155+mineral+cool*2));
- data.data[i+2]=Math.max(0,Math.min(255,170+mineral-cool*3));
+ const warp=(noise(x,y,118)-.5)*34+(noise(x,y,34)-.5)*15;
+ const broad=noise(x+warp*.4,y+warp,148),mid=noise(x,y,62),grain=noise(x,y,17),micro=hash(x,y);
+ const strata=Math.sin((y+warp+noise(x,y,25)*13)*.105);
+ const crest=Math.pow(Math.max(0,strata),5);
+ const seam=Math.pow(Math.max(0,Math.cos((y+warp+noise(x,y,19)*9)*.105)),18);
+ const pores=noise(x+noise(x,y,31)*9,y,13);
+ const pits=pores<.29?(.29-pores)*62:0;
+ const relief=(broad-.5)*25+(mid-.5)*18+(grain-.5)*10+(micro-.5)*5+crest*19-seam*9-pits*.7;
+ const cool=noise(x+51,y-23,73)-.5,i=(y*size+x)*4;
+ data.data[i]=Math.max(0,Math.min(255,143+relief+cool*4-pits*.22));
+ data.data[i+1]=Math.max(0,Math.min(255,153+relief+cool*2-pits*.2));
+ data.data[i+2]=Math.max(0,Math.min(255,169+relief-cool*3-pits*.15));
  data.data[i+3]=255;
 }
 ctx.putImageData(data,0,0);
-// Sparse mineral flecks and shallow weathering pits, blended into the grain.
 let seed=9217;const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-for(let i=0;i<1350;i++){
- const x=rand()*size,y=rand()*size,rx=.5+rand()*2.8,ry=.35+rand()*1.6;
- ctx.fillStyle=rand()>.48?'rgba(38,48,65,.16)':'rgba(226,229,235,.15)';
- ctx.beginPath();ctx.ellipse(x,y,rx,ry,(rand()-.5)*.5,0,Math.PI*2);ctx.fill();
+for(let i=0;i<900;i++){
+ const x=rand()*size,y=rand()*size,rx=.7+rand()*3.5,ry=.4+rand()*1.9;
+ ctx.fillStyle=rand()>.48?'rgba(35,45,61,.19)':'rgba(225,231,239,.17)';
+ ctx.beginPath();ctx.ellipse(x,y,rx,ry,(rand()-.5)*.7,0,Math.PI*2);ctx.fill();
 }
 }else if(kind==='stone-bump'){
 c.width=c.height=512;
@@ -115,16 +114,17 @@ const noise=(x,y,scale)=>{
 };
 const data=ctx.createImageData(size,size);
 for(let y=0;y<size;y++)for(let x=0;x<size;x++){
- const broad=noise(x,y,112),mid=noise(x,y,36),fine=noise(x,y,10),micro=hash(x,y);
- const warp=(noise(x,y,76)-.5)*24+(noise(x,y,24)-.5)*8;
- const strata=Math.sin((y+warp+noise(x,y,18)*5)*.115);
- const ridge=Math.pow(Math.max(0,strata),8);
- const height=128+(broad-.5)*42+(mid-.5)*34+(fine-.5)*24+(micro-.5)*15+(ridge-.22)*42;
+ const warp=(noise(x,y,118)-.5)*34+(noise(x,y,34)-.5)*15;
+ const broad=noise(x+warp*.4,y+warp,148),mid=noise(x,y,62),fine=noise(x,y,17),micro=hash(x,y);
+ const strata=Math.sin((y+warp+noise(x,y,25)*13)*.105);
+ const crest=Math.pow(Math.max(0,strata),5),seam=Math.pow(Math.max(0,Math.cos((y+warp+noise(x,y,19)*9)*.105)),18);
+ const pores=noise(x+noise(x,y,31)*9,y,13),pits=pores<.29?(.29-pores)*62:0;
+ const height=128+(broad-.5)*54+(mid-.5)*38+(fine-.5)*24+(micro-.5)*9+crest*48-seam*25-pits*1.7;
  const v=Math.max(0,Math.min(255,height)),i=(y*size+x)*4;
  data.data[i]=data.data[i+1]=data.data[i+2]=v;data.data[i+3]=255;
 }
 ctx.putImageData(data,0,0);
-}}else if(kind==='clay'){
+}else if(kind==='clay'){
 ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
 let seed=4219;
 for(let i=0;i<3600;i++){seed=(seed*16807)%2147483647;const x=seed%128;seed=(seed*16807)%2147483647;const y=seed%128;seed=(seed*16807)%2147483647;const v=75+(seed%65);ctx.fillStyle='rgba('+v+','+(v-9)+','+(v-17)+','+(.08+(seed%25)/100)+')';ctx.beginPath();ctx.ellipse(x,y,1+(seed%5),1+(seed%3),seed%6,0,Math.PI*2);ctx.fill();}
@@ -159,12 +159,12 @@ const isStone=type.startsWith('stone_');
 const eye=type==='eye';
 // Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
 const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.19:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.27:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
 function setPartLine(o,mat){if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.19:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
+function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.27:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
 document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects)if(o.userData.edge)o.userData.edge.visible=nakedMode;document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
