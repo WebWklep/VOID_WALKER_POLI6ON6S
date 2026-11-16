@@ -97,7 +97,8 @@ function activeTexture(){return textureCanvases[['stone','clay'][skinMode]];}
 function createPart(type){
 const g=geometry(type);
 const isStone=type.startsWith('stone_');
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),bumpScale:isStone?.11:.035,color:0xffffff,side:THREE.DoubleSide,roughness:isStone?.96:.88,metalness:0,flatShading:isStone}));
+const eye=type==='eye';
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),bumpScale:isStone?.11:.035,color:eye?0x101316:0xffffff,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.96:.88),metalness:0,flatShading:isStone}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
@@ -229,7 +230,7 @@ if(type==='limb')return ringForm([[-.7,.12,.14],[-.48,.2,.19],[-.25,.13,.14],[0,
 if(type==='claw')return ringForm([[-.7,.2,.2],[-.4,.28,.24],[-.12,.18,.17],[.18,.24,.2],[.48,.12,.13],[.78,.015,.025]],7);
 if(type==='leg_heavy')return ringForm([[-.85,.2,.23],[-.58,.29,.27],[-.3,.23,.22],[0,.31,.28],[.28,.22,.2],[.58,.28,.25],[.82,.15,.18]],8);
 if(type==='antenna')return new THREE.CylinderGeometry(.045,.07,.9,5);
-if(type==='horn')return new THREE.ConeGeometry(.2,.75,5);
+if(type==='horn')return ringForm([[-.62,.012,.016,0,0],[-.48,.055,.06,-.015,0],[-.25,.105,.11,.015,0],[-.02,.16,.16,0,0],[.18,.19,.18,-.015,0],[.28,.16,.15,0,0]],7,'armor');
 if(type==='cylinder')return new THREE.CylinderGeometry(.48,.48,1.15,8,1);
 return new THREE.PlaneGeometry(1.35,1.35,1,1);
 }
@@ -269,8 +270,11 @@ connector.set(0,p.max.y,0);
 }else if(role==='TOP'){
 socket.set(0,t.max.y+.015,0);connector.set(0,p.min.y,0);
 }else if(role==='EYE'){
-socket.set(side*(t.max.x*.23),0,t.max.z+.015);
-connector.set(0,0,p.min.z);
+// The eye sits mostly inside the head, leaving only its dark center visible.
+socket.set(side*(t.max.x*.23),.08,t.max.z*.76);
+connector.set(0,0,0);
+}else if(role==='BOTTOM'){
+socket.set(side*.12,t.min.y+.025,0);connector.set(0,p.max.y,0);
 }
 part.position.copy(center.add(socket).sub(connector));
 part.userData.socketRole=role;part.userData.socketSide=side;
@@ -278,7 +282,7 @@ part.userData.socketRole=role;part.userData.socketSide=side;
 function socketPlaceArm(part,target,side=1){
 const p=localBounds(part),t=localBounds(target);
 const socket=new THREE.Vector3(side*(t.max.x+.025),t.min.y+(t.max.y-t.min.y)*.66,0);
-const connector=new THREE.Vector3(-side*(side>0?p.min.x:p.max.x),0,0);
+const connector=new THREE.Vector3(side>0?p.min.x:p.max.x,0,0);
 connector.applyQuaternion(part.quaternion);
 part.position.copy(target.position).add(socket).sub(connector);
 part.userData.socketRole='ARM';part.userData.socketSide=side;
@@ -289,7 +293,7 @@ const body=getMainBody();if(!body)return;
 const head=objects.find(x=>x.userData.category==='HEAD');
 for(const o of objects){if(o===body)continue;
 if(o.userData.category==='HEAD')socketPlace(o,body,'HEAD');
-else if(o.userData.category==='ARMS')socketPlace(o,body,'ARM',o.userData.side||1);
+else if(o.userData.category==='ARMS')socketPlaceArm(o,body,o.userData.side||1);
 else if(o.userData.category==='LEGS')socketPlace(o,body,'LEG',o.userData.side||1);
 else if(o.userData.category==='EXTRAS'){const target=head||body;socketPlace(o,target,o.userData.socketRole||'TOP',o.userData.socketSide||1);}
 }
@@ -313,7 +317,7 @@ else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
 else if(currentCategory==='ARMS'){
 o.userData.side=side;
 o.rotation.y=side<0?Math.PI:0;
-o.rotation.z=side<0?1.02:-1.02;
+o.rotation.z=side<0?Math.PI/2:-Math.PI/2;
 socketPlaceArm(o,body,side);
 }
 else if(currentCategory==='LEGS'){
@@ -322,13 +326,14 @@ o.rotation.y=side<0?Math.PI:0;
 }
 else{
 const head=objects.find(p=>p.userData.category==='HEAD');const target=head||body;
-const role=type==='eye'?'EYE':'TOP';const extraSide=objects.filter(p=>p.userData.category==='EXTRAS'&&p.userData.type==='eye').length%2===0?-1:1;
+const role=type==='eye'?'EYE':type==='horn'?'BOTTOM':'TOP';
+const extraSide=side;
 socketPlace(o,target,role,extraSide);
 }
 scene.add(o);objects.push(o);return o;
 };
 let first;
-if(currentCategory==='ARMS'||currentCategory==='LEGS'){
+if(currentCategory==='ARMS'||currentCategory==='LEGS'||(currentCategory==='EXTRAS'&&type==='eye')){
 first=addOne(-1);addOne(1);
 }else first=addOne(1);
 if(currentCategory==='BODY'){body=first;reflowParts();}
@@ -350,7 +355,7 @@ const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userDat
 add(pick(['stone_head_crag','stone_head_block']),'HEAD');
 const armType=pick(['stone_arm_slab','stone_arm_hammer','stone_arm_exo','stone_arm_piston']);
 const armScale=.9+Math.random()*.2;
-for(const side of [-1,1]){const a=add(armType,'ARMS',side,[armScale,armScale,armScale]);a.rotation.y=side<0?Math.PI:0;a.rotation.z=side<0?1.02:-1.02;socketPlaceArm(a,body,side);}
+for(const side of [-1,1]){const a=add(armType,'ARMS',side,[armScale,armScale,armScale]);a.rotation.y=side<0?Math.PI:0;a.rotation.z=side<0?Math.PI/2:-Math.PI/2;socketPlaceArm(a,body,side);}
 const legType=pick(['stone_leg_broken','stone_leg_pillar','stone_leg_exo']);
 add(legType,'LEGS',-1);
 add(legType,'LEGS',1);
