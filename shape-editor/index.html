@@ -214,7 +214,7 @@ if(type.startsWith('stone_arm_')||type.startsWith('stone_leg_')){
 mesh.userData.type=type;mesh.userData.edge=edge;mesh.userData.edges=[edge];return mesh;
 }
 function setPartLine(o,mat){if(o?.userData?.edges?.length){for(const e of o.userData.edges)e.material=mat;}else if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)o.traverse(n=>{if(n.isMesh&&n.material){n.material.map=n.userData.isEye?null:activeTexture();n.material.bumpMap=o.userData.type?.startsWith('stone_')?textureCanvases.stoneBump:activeTexture();n.material.bumpScale=skinMode===0?.12:.035;n.material.roughness=skinMode===0?1:.88;n.material.roughnessMap=null;n.material.needsUpdate=true;}});}
+function applySkin(){for(const o of objects)o.traverse(n=>{if(n.isMesh&&n.material){n.material.map=o.userData.type==='eye'?null:activeTexture();n.material.bumpMap=o.userData.type?.startsWith('stone_')?textureCanvases.stoneBump:activeTexture();n.material.bumpScale=skinMode===0?.12:.035;n.material.roughness=skinMode===0?1:.88;n.material.roughnessMap=null;n.material.needsUpdate=true;}});}
 document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects){const edges=o.userData.edges||[o.userData.edge];for(const e of edges)if(e)e.visible=nakedMode;}document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
