@@ -135,10 +135,13 @@ clay_body_roll:[[-.78,.18,.23,0,0],[-.58,.38,.33,-.08,0],[-.30,.54,.42,-.02,-.03
 clay_body_taper:[[-.78,.18,.22,0,0],[-.52,.32,.29,.05,0],[-.18,.42,.34,.12,0],[.16,.52,.39,.04,0],[.48,.43,.34,-.08,0],[.72,.20,.22,-.10,0]],
 stone_arm_slab:[[-.78,.14,.17,0,0],[-.58,.26,.24,-.04,0],[-.36,.22,.22,.10,0],[-.12,.30,.27,.18,0],[.14,.22,.21,.10,0],[.42,.31,.27,-.02,0],[.68,.23,.22,-.12,0],[.80,.12,.15,-.16,0]],
 stone_arm_hammer:[[-.78,.12,.14,0,0],[-.55,.19,.19,-.04,0],[-.30,.16,.17,.10,0],[-.06,.22,.20,.20,0],[.16,.34,.30,.24,0],[.42,.38,.33,.20,0],[.62,.30,.27,.12,0],[.78,.16,.17,.08,0]],
+stone_arm_exo:[[-.82,.13,.16,0,0],[-.66,.23,.22,-.03,0],[-.48,.17,.18,.04,0],[-.30,.28,.26,.08,0],[-.12,.19,.20,.12,0],[.08,.24,.23,.10,0],[.28,.32,.29,.04,0],[.48,.26,.24,-.02,0],[.68,.18,.18,-.08,0],[.82,.10,.13,-.12,0]],
+stone_arm_piston:[[-.82,.11,.13,0,0],[-.62,.18,.18,-.02,0],[-.42,.13,.14,.04,0],[-.20,.22,.21,.08,0],[.02,.17,.17,.12,0],[.22,.25,.23,.08,0],[.42,.19,.18,.02,0],[.62,.14,.15,-.04,0],[.82,.09,.11,-.08,0]],
 clay_arm_bent:[[-.78,.10,.13,0,0],[-.56,.17,.18,-.10,0],[-.34,.14,.16,-.22,0],[-.12,.19,.18,-.26,0],[.10,.16,.16,-.12,0],[.32,.20,.18,.02,0],[.56,.25,.22,.12,0],[.76,.13,.15,.16,0]],
 clay_arm_long:[[-.82,.09,.12,0,0],[-.58,.15,.16,.02,0],[-.30,.13,.15,.14,0],[-.02,.18,.17,.20,0],[.24,.15,.14,.12,0],[.50,.20,.18,-.02,0],[.76,.12,.14,-.08,0]],
 stone_leg_pillar:[[-.88,.18,.20,0,0],[-.62,.30,.27,-.04,0],[-.32,.27,.25,.02,0],[-.04,.34,.30,.10,0],[.24,.29,.27,.12,0],[.56,.36,.31,.06,0],[.82,.28,.26,-.04,-.08]],
 stone_leg_broken:[[-.88,.12,.16,0,0],[-.64,.22,.22,.08,0],[-.38,.16,.18,.18,0],[-.12,.28,.25,.10,0],[.12,.20,.20,-.04,0],[.38,.30,.26,-.16,0],[.66,.20,.20,-.22,-.04],[.84,.12,.15,-.16,-.16]],
+stone_leg_exo:[[-.90,.16,.19,0,0],[-.68,.27,.25,-.03,0],[-.48,.20,.19,.03,0],[-.24,.29,.26,.08,0],[.02,.19,.18,.12,0],[.26,.25,.23,.08,0],[.50,.34,.30,.02,0],[.72,.25,.23,-.04,-.04],[.88,.13,.16,-.08,-.12]],
 clay_leg_bent:[[-.88,.10,.13,0,0],[-.62,.17,.18,.12,0],[-.36,.13,.15,.24,0],[-.12,.20,.19,.18,0],[.12,.14,.16,.02,0],[.36,.18,.18,-.12,0],[.62,.25,.22,-.16,-.02],[.84,.14,.16,-.08,-.18]],
 clay_leg_digit:[[-.88,.08,.12,0,-.10],[-.62,.14,.16,-.10,-.04],[-.36,.12,.14,-.18,0],[-.08,.18,.17,-.08,0],[.18,.13,.14,.08,0],[.42,.18,.17,.18,0],[.66,.25,.22,.12,-.02],[.84,.15,.17,.02,-.20]]
 };
@@ -241,8 +244,8 @@ function attachTo(targetObj,moving){if(!targetObj||!moving||targetObj===moving)r
 const catalog={
 HEAD:[['STONE BLOCK','stone_head_block',[1,1,1]],['STONE CRAG','stone_head_crag',[1,1,1]]],
 BODY:[['STONE SLAB','stone_body_slab',[1,1,1]],['BOULDER','stone_body_boulder',[1,1,1]]],
-ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]]],
-LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]]],
+ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]],['EXO ARMOR','stone_arm_exo',[1,1,1]],['PISTON LIMB','stone_arm_piston',[1,1,1]]],
+LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]],['EXO LEG','stone_leg_exo',[1,1,1]]],
 EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn',[1,1,1]]]
 };
 function renderParts(){const select=document.querySelector('#variation');select.innerHTML='';const prompt=document.createElement('option');prompt.value='';prompt.textContent='— SELECT PART —';prompt.disabled=true;prompt.selected=true;select.appendChild(prompt);catalog[currentCategory].forEach(([name,type,sc])=>{const option=document.createElement('option');option.value=type;option.textContent=name;option.dataset.scale=sc.join(',');select.appendChild(option);});}
@@ -272,6 +275,14 @@ connector.set(0,0,p.min.z);
 part.position.copy(center.add(socket).sub(connector));
 part.userData.socketRole=role;part.userData.socketSide=side;
 }
+function socketPlaceArm(part,target,side=1){
+const p=localBounds(part),t=localBounds(target);
+const socket=new THREE.Vector3(side*(t.max.x+.025),t.min.y+(t.max.y-t.min.y)*.66,0);
+const connector=new THREE.Vector3(-side*(side>0?p.min.x:p.max.x),0,0);
+connector.applyQuaternion(part.quaternion);
+part.position.copy(target.position).add(socket).sub(connector);
+part.userData.socketRole='ARM';part.userData.socketSide=side;
+}
 function getMainBody(){return objects.find(x=>x.userData.category==='BODY'||x.userData.part==='CORE'||x.userData.type.startsWith('body_'))||null;}
 function reflowParts(){
 const body=getMainBody();if(!body)return;
@@ -300,9 +311,10 @@ o.scale.set(sc[0]*factor,sc[1]*factor,sc[2]*factor);
 if(currentCategory==='BODY'){o.position.set(0,0,0);o.userData.category='BODY';}
 else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
 else if(currentCategory==='ARMS'){
-o.userData.side=side;socketPlace(o,body,'ARM',side);
+o.userData.side=side;
 o.rotation.y=side<0?Math.PI:0;
-o.rotation.z=side<0?.34:-.34;
+o.rotation.z=side<0?1.02:-1.02;
+socketPlaceArm(o,body,side);
 }
 else if(currentCategory==='LEGS'){
 o.userData.side=side;socketPlace(o,body,'LEG',side);
@@ -336,11 +348,10 @@ const body=createPart('stone_body_boulder');body.userData.part='STONE BOULDER';b
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
 add(pick(['stone_head_crag','stone_head_block']),'HEAD');
-const armType=pick(['stone_arm_slab','stone_arm_hammer']);
+const armType=pick(['stone_arm_slab','stone_arm_hammer','stone_arm_exo','stone_arm_piston']);
 const armScale=.9+Math.random()*.2;
-add(armType,'ARMS',-1,[armScale,armScale,armScale]);
-add(armType,'ARMS',1,[armScale,armScale,armScale]);
-const legType=pick(['stone_leg_broken','stone_leg_pillar']);
+for(const side of [-1,1]){const a=add(armType,'ARMS',side,[armScale,armScale,armScale]);a.rotation.y=side<0?Math.PI:0;a.rotation.z=side<0?1.02:-1.02;socketPlaceArm(a,body,side);}
+const legType=pick(['stone_leg_broken','stone_leg_pillar','stone_leg_exo']);
 add(legType,'LEGS',-1);
 add(legType,'LEGS',1);
 select(body);updateCount();document.querySelector('#status').textContent='CREATURE GENERATED · RANDOM';
