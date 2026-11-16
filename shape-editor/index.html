@@ -11,7 +11,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 #orbitY{position:absolute;bottom:12px;left:15%;width:70%;accent-color:#ddd;height:18px}#orbitX{position:absolute;right:8px;top:22%;height:55%;writing-mode:vertical-lr;direction:rtl;accent-color:#ddd;width:18px}
 .tools{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:12px 18px max(18px,env(safe-area-inset-bottom));gap:12px}.tools>.row{flex:0 0 auto}.tools::-webkit-scrollbar{width:3px}.tools::-webkit-scrollbar-thumb{background:#444}
 .row{display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,22px)}button{background:none;color:#aaa;border:1px solid #393939;border-radius:0;min-width:46px;height:42px;font-size:20px;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
-button:active,button.active{border-color:#eee;color:#fff;background:#171717}.shape{font-size:23px}.library-head{justify-content:flex-start}.categories{gap:5px}.category{height:30px;min-width:0;flex:1;padding:0 7px;font:10px monospace;letter-spacing:.08em}.variation-row{justify-content:space-between;gap:10px}.variation-select{flex:1;min-width:0;height:38px;padding:0 12px;background:#111;color:#ddd;border:1px solid #484848;border-radius:0;font:11px monospace;letter-spacing:.08em;appearance:none}.sizes{display:flex;gap:4px}.sizes button{min-width:34px;width:34px;height:34px;font:11px monospace}.library-actions{gap:10px}.library-actions button{font:10px monospace;height:32px;min-width:90px}.label{font:9px monospace;letter-spacing:.12em;color:#686868;text-align:center;margin-top:4px}
+button:active,button.active{border-color:#eee;color:#fff;background:#171717}.shape{font-size:23px}.library-head{justify-content:flex-start}.categories{gap:5px}.category{height:30px;min-width:0;flex:1;padding:0 7px;font:10px monospace;letter-spacing:.08em}.variation-row{justify-content:space-between;gap:10px}.variation-select{flex:1;min-width:0;height:38px;padding:0 12px;background:#111;color:#ddd;border:1px solid #484848;border-radius:0;font:11px monospace;letter-spacing:.08em;appearance:none}.sizes{display:flex;gap:4px}.sizes button{min-width:34px;width:34px;height:34px;font:11px monospace}.library-actions{gap:10px}.library-actions button{font:10px monospace;height:32px;min-width:90px}.label{font:9px monospace;letter-spacing:.12em;color:#686868;text-align:center;margin-top:4px}.joint-tools{gap:10px;min-height:30px}.joint-tools[hidden]{display:none}.joint-tools input{flex:1;max-width:230px;accent-color:#ddd;height:18px}.joint-tools output{font:10px monospace;color:#aaa;min-width:38px;text-align:right}
 .tool{display:flex;flex-direction:column;align-items:center}.tool button{width:48px}
 .die-button{width:38px!important;height:36px!important;min-width:38px!important;border:0!important;padding:0!important;background:transparent!important}.die-icon{position:relative;display:block;width:22px;height:22px;border-radius:4px;background:linear-gradient(145deg,#f0f0f0,#777);transform:rotate(-12deg);box-shadow:2px 3px 0 #444,3px 4px 0 #222,inset 1px 1px 2px #fff}.die-icon:before{content:'•  •';position:absolute;left:3px;top:1px;color:#222;font:bold 9px/10px Arial;letter-spacing:1px;text-shadow:0 5px 0 #222}.die-icon:after{content:'•';position:absolute;left:8px;top:8px;color:#222;font:bold 9px Arial;text-shadow:0 5px 0 #222}#pad{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:0;width:102px;height:102px;touch-action:manipulation}#pad:before,#pad:after{content:'';position:absolute;inset:0;clip-path:polygon(40% 34%,40% 20%,22% 0,78% 0,60% 20%,60% 34%,66% 40%,80% 40%,100% 22%,100% 78%,80% 60%,66% 60%,60% 66%,60% 80%,78% 100%,22% 100%,40% 80%,40% 66%,34% 60%,20% 60%,0 78%,0 22%,20% 40%,34% 40%)}#pad:before{z-index:-2;background:linear-gradient(145deg,#777 0%,#333 35%,#090909 75%,#555 100%);filter:drop-shadow(0 3px 4px #000)}#pad:after{z-index:-1;inset:2px;background:linear-gradient(145deg,#292929,#090909 70%)}#pad button{position:relative;z-index:1;min-width:0;width:34px;height:34px;padding:0;border:0;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(0,0,0,.12));color:#aaa;font-size:17px;text-shadow:0 1px 2px #000}#pad button:active{background:#555;color:#fff;box-shadow:inset 0 2px 5px #000}#pad [data-move='0,0,-1']{grid-column:2;grid-row:1}#pad [data-move='-1,0,0']{grid-column:1;grid-row:2}#pad [data-move='1,0,0']{grid-column:3;grid-row:2}#pad [data-move='0,0,1']{grid-column:2;grid-row:3}#pad .empty{display:none}#pad .vertical{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center}#pad .vertical button{height:17px;font-size:13px;line-height:1}.tools > .row:nth-of-type(6){justify-content:space-between}.tools > .row:nth-of-type(6) #pad{margin-left:auto}.tools > .row:nth-of-type(6) .tool:first-child{margin-left:auto;order:10}
 .small{font-size:15px}
@@ -30,6 +30,7 @@ button:active,button.active{border-color:#eee;color:#fff;background:#171717}.sha
 
 <button id="skin" class="small">◈ MATERIAL: STONE</button><button id="naked" class="small">NAKED: OFF</button>
 </div>
+<div class="row joint-tools" id="jointTools" hidden><span class="label">ELBOW</span><input id="elbowAngle" type="range" min="-130" max="130" value="0" aria-label="Сгиб локтя"><output id="elbowValue">0°</output></div>
 <div class="row">
 <div class="tool"><button id="magnet" aria-label="Магнит">⌁</button><div class="label">MAGNET</div></div>
 <div class="tool"><button id="snap" aria-label="Постоянный магнит">⊛</button><div class="label">AUTO</div></div>
@@ -64,7 +65,7 @@ const fillLight=new THREE.DirectionalLight(0x8298bb,.42);fillLight.position.set(
 const rimLight=new THREE.DirectionalLight(0xaabbd8,.38);rimLight.position.set(1,4,-6);scene.add(rimLight);
 const camera=new THREE.PerspectiveCamera(42,1,.1,100);
 let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
-const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type,d.side||1);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
+const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray(),elbowRot:o.userData.joints?.elbow?.rotation.toArray()||null})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type,d.side||1);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);if(d.elbowRot&&o.userData.joints?.elbow)o.userData.joints.elbow.rotation.fromArray(d.elbowRot);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
 const lineMat=new THREE.LineBasicMaterial({color:0xbdbdbd,transparent:true,opacity:.82});const contactMat=new THREE.LineBasicMaterial({color:0xbfd9c4,transparent:true,opacity:.9});
 const selectedMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:1});
 const textureCanvases={graphite:null,grain:null,raster:null,stone:null,stoneBump:null};
@@ -153,10 +154,34 @@ const merged=new THREE.BufferGeometry();merged.setAttribute('position',new THREE
 if(side<0)merged.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
 merged.computeVertexNormals();merged.computeBoundingBox();return merged;
 }
+function clipGeometryY(source,keepPositive){
+ const p=source.getAttribute('position'),uv=source.getAttribute('uv'),idx=source.index?source.index.array:Array.from({length:p.count},(_,i)=>i),outP=[],outUv=[];
+ const vertex=i=>({p:[p.getX(i),p.getY(i),p.getZ(i)],uv:uv?[uv.getX(i),uv.getY(i)]:[.5,.5]});
+ const inside=v=>keepPositive?v.p[1]>=-1e-6:v.p[1]<=1e-6;
+ const cut=(a,b)=>{const t=(0-a.p[1])/(b.p[1]-a.p[1]);return {p:[a.p[0]+(b.p[0]-a.p[0])*t,0,a.p[2]+(b.p[2]-a.p[2])*t],uv:[a.uv[0]+(b.uv[0]-a.uv[0])*t,a.uv[1]+(b.uv[1]-a.uv[1])*t]};};
+ const emit=v=>{outP.push(...v.p);outUv.push(...v.uv);};
+ for(let i=0;i<idx.length;i+=3){let poly=[vertex(idx[i]),vertex(idx[i+1]),vertex(idx[i+2])],clipped=[];for(let j=0;j<poly.length;j++){const a=poly[j],b=poly[(j+1)%poly.length],ia=inside(a),ib=inside(b);if(ia&&ib)clipped.push(b);else if(ia&&!ib)clipped.push(cut(a,b));else if(!ia&&ib)clipped.push(cut(a,b),b);}for(let j=1;j<clipped.length-1;j++){emit(clipped[0]);emit(clipped[j]);emit(clipped[j+1]);}}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(outP,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(outUv,2));g.computeVertexNormals();g.computeBoundingBox();return g;
+}
+function makeRigMesh(g,material){const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);return {mesh,edge};}
+function createArmRig(type){
+ const source=geometry(type),upperGeometry=clipGeometryY(source,true),lowerGeometry=clipGeometryY(source,false);source.dispose();
+ // Shoulder is the root. The upper arm reaches down to the elbow; the forearm hangs from its own pivot.
+ upperGeometry.translate(0,-.8,0);
+ const material=new THREE.MeshStandardMaterial({map:activeTexture(),bumpMap:textureCanvases.stoneBump,roughnessMap:null,bumpScale:.12,color:0xf4f5f2,side:THREE.DoubleSide,roughness:1,metalness:0});
+ const rig=new THREE.Group(),upper=makeRigMesh(upperGeometry,material),elbow=new THREE.Group(),forearm=makeRigMesh(lowerGeometry,material);
+ rig.add(upper.mesh);elbow.position.set(0,-.8,0);elbow.name='ELBOW_PIVOT';elbow.add(forearm.mesh);
+ const jointMaterial=material;
+ const shoulderCap=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),jointMaterial);shoulderCap.position.set(0,0,0);shoulderCap.castShadow=true;rig.add(shoulderCap);
+ const elbowCap=new THREE.Mesh(new THREE.SphereGeometry(.205,12,10),jointMaterial);elbowCap.position.set(0,0,0);elbowCap.castShadow=true;elbow.add(elbowCap);
+ const collar=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,6,12),jointMaterial);collar.rotation.y=Math.PI/2;collar.castShadow=true;elbow.add(collar);
+ rig.add(elbow);rig.userData.joints={elbow};rig.userData.edges=[upper.edge,forearm.edge];rig.userData.edge=upper.edge;rig.userData.type=type;rig.userData.rigType='ARM_2_SEGMENT';rig.userData.side=1;
+ return rig;
+}
 function createPart(type,side=1){
+if(type.startsWith('stone_arm_')){const rig=createArmRig(type);rig.userData.side=side;return rig;}
 let g=geometry(type);
-if(type.startsWith('stone_arm_'))g=combineArmJoint(g,side);
-else if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
+if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
 // Limb meshes are authored around their attachment pivots: shoulder for arms, hip for legs.
 if(type.startsWith('stone_arm_'))g.translate(side*.80,0,0);
 else if(type.startsWith('stone_leg_'))g.translate(0,-.88,0);
@@ -186,11 +211,11 @@ if(type.startsWith('stone_arm_')||type.startsWith('stone_leg_')){
  joint.castShadow=true;joint.receiveShadow=true;
  mesh.add(joint);
 }
-mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
+mesh.userData.type=type;mesh.userData.edge=edge;mesh.userData.edges=[edge];return mesh;
 }
-function setPartLine(o,mat){if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.12:.035;o.material.roughness=skinMode===0?1:.88;o.material.roughnessMap=null;o.material.needsUpdate=true;}}
-document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects)if(o.userData.edge)o.userData.edge.visible=nakedMode;document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
+function setPartLine(o,mat){if(o?.userData?.edges?.length){for(const e of o.userData.edges)e.material=mat;}else if(o?.userData?.edge)o.userData.edge.material=mat;}
+function applySkin(){for(const o of objects)o.traverse(n=>{if(n.isMesh&&n.material){n.material.map=n.userData.isEye?null:activeTexture();n.material.bumpMap=o.userData.type?.startsWith('stone_')?textureCanvases.stoneBump:activeTexture();n.material.bumpScale=skinMode===0?.12:.035;n.material.roughness=skinMode===0?1:.88;n.material.roughnessMap=null;n.material.needsUpdate=true;}});}
+document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects){const edges=o.userData.edges||[o.userData.edge];for(const e of edges)if(e)e.visible=nakedMode;}document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
   const vertices=[],indices=[],uv=[];
@@ -324,7 +349,7 @@ return new THREE.PlaneGeometry(1.35,1.35,1,1);
 textureCanvases.stone=makeTexture('stone');textureCanvases.stoneBump=makeTexture('stone-bump');textureCanvases.clay=makeTexture('clay');
 function dims(o){const b=new THREE.Box3().setFromObject(o);const v=new THREE.Vector3();b.getSize(v);return v;}
 function make(type){checkpoint();const mesh=createPart(type);mesh.position.set(0,0,0);scene.add(mesh);objects.push(mesh);select(mesh);document.querySelector('#status').textContent=type.toUpperCase()+' CREATED';updateCount();}
-function select(o){if(selected)setPartLine(selected,lineMat);lastSelected=selected;selected=o;if(selected)setPartLine(selected,selectedMat);document.querySelector('#status').textContent=o?'SELECTED · '+o.userData.type.toUpperCase():'NO SELECTION';}
+function select(o){if(selected)setPartLine(selected,lineMat);lastSelected=selected;selected=o;if(selected)setPartLine(selected,selectedMat);const rig=!!selected?.userData?.joints?.elbow;document.querySelector('#jointTools').hidden=!rig;if(rig){const angle=Math.round(THREE.MathUtils.radToDeg(selected.userData.joints.elbow.rotation.z));document.querySelector('#elbowAngle').value=angle;document.querySelector('#elbowValue').textContent=angle+'°';}document.querySelector('#status').textContent=o?'SELECTED · '+o.userData.type.toUpperCase():'NO SELECTION';}
 function updateContacts(){for(const o of objects){let touching=false;const a=new THREE.Box3().setFromObject(o);for(const p of objects){if(p===o)continue;const b=new THREE.Box3().setFromObject(p),e=.025;const overlapX=Math.min(a.max.x,b.max.x)-Math.max(a.min.x,b.min.x),overlapY=Math.min(a.max.y,b.max.y)-Math.max(a.min.y,b.min.y),overlapZ=Math.min(a.max.z,b.max.z)-Math.max(a.min.z,b.min.z);const face=(Math.abs(a.max.x-b.min.x)<e||Math.abs(b.max.x-a.min.x)<e)&&overlapY>0&&overlapZ>0||(Math.abs(a.max.y-b.min.y)<e||Math.abs(b.max.y-a.min.y)<e)&&overlapX>0&&overlapZ>0||(Math.abs(a.max.z-b.min.z)<e||Math.abs(b.max.z-a.min.z)<e)&&overlapX>0&&overlapY>0;if(face){touching=true;break;}}setPartLine(o,o===selected?selectedMat:touching?contactMat:lineMat);}}function updateCount(){document.querySelector('#count').textContent=String(objects.length).padStart(2,'0')+' OBJECT'+(objects.length===1?'':'S');}
 function intersects(a,b){const A=new THREE.Box3().setFromObject(a),B=new THREE.Box3().setFromObject(b);return A.intersectsBox(B);}
 function attachTo(targetObj,moving){if(!targetObj||!moving||targetObj===moving)return;checkpoint();const a=new THREE.Box3().setFromObject(targetObj),b=new THREE.Box3().setFromObject(moving);const ac=a.getCenter(new THREE.Vector3()),bc=b.getCenter(new THREE.Vector3());const delta=bc.sub(ac);let axis='x';if(Math.abs(delta.y)>Math.abs(delta.x)&&Math.abs(delta.y)>Math.abs(delta.z))axis='y';else if(Math.abs(delta.z)>Math.abs(delta.x))axis='z';const gap=.015;const pos=targetObj.position.clone();const da=dims(targetObj),db=dims(moving);const sign=delta[axis]>=0?1:-1;pos[axis]+=sign*(da[axis]+db[axis])/2+sign*gap;moving.position.copy(pos);document.querySelector('#status').textContent='MAGNETICALLY ALIGNED';}
@@ -403,7 +428,7 @@ if(currentCategory==='BODY'){o.position.set(0,0,0);o.userData.category='BODY';}
 else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
 else if(currentCategory==='ARMS'){
 o.userData.side=side;
-o.rotation.z=side<0?Math.PI/2:-Math.PI/2;
+o.rotation.z=side<0?-Math.PI/2:Math.PI/2;
 socketPlaceArm(o,body,side);
 }
 else if(currentCategory==='LEGS'){
@@ -440,7 +465,7 @@ const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type,side);o.us
 add(pick(['stone_head_crag','stone_head_block']),'HEAD');
 const armType=pick(['stone_arm_slab','stone_arm_hammer','stone_arm_exo','stone_arm_piston']);
 const armScale=.9+Math.random()*.2;
-for(const side of [-1,1]){const a=add(armType,'ARMS',side,[armScale,armScale,armScale]);a.rotation.z=side<0?Math.PI/2:-Math.PI/2;socketPlaceArm(a,body,side);}
+for(const side of [-1,1]){const a=add(armType,'ARMS',side,[armScale,armScale,armScale]);a.rotation.z=side<0?-Math.PI/2:Math.PI/2;socketPlaceArm(a,body,side);}
 const legType=pick(['stone_leg_broken','stone_leg_pillar','stone_leg_exo']);
 add(legType,'LEGS',-1);
 add(legType,'LEGS',1);
@@ -459,8 +484,9 @@ document.querySelector('#reset').onclick=()=>{yaw=35*Math.PI/180;pitch=18*Math.P
 document.querySelector('#orbitY').oninput=e=>yaw=Number(e.target.value)*Math.PI/180;
 document.querySelector('#orbitX').oninput=e=>pitch=Number(e.target.value)*Math.PI/180;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
-canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(objects);if(!hits.length)return;const hit=hits[0].object;if(magnetArmed){attachTo(hit,selected);magnetArmed=false;document.querySelector('#magnet').classList.remove('active');}else if(hit===selected&&rotateMode){checkpoint();selected.rotation.y+=Math.PI/8;}else if(hit===selected&&scaleMode){checkpoint();selected.scale.multiplyScalar(1.12);}else select(hit);});
+canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(objects,true);if(!hits.length)return;let hit=hits[0].object;while(hit.parent&&hit.parent!==scene)hit=hit.parent;if(magnetArmed){attachTo(hit,selected);magnetArmed=false;document.querySelector('#magnet').classList.remove('active');}else if(hit===selected&&rotateMode){checkpoint();selected.rotation.y+=Math.PI/8;}else if(hit===selected&&scaleMode){checkpoint();selected.scale.multiplyScalar(1.12);}else select(hit);});
 function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas);resize();
+const elbowInput=document.querySelector('#elbowAngle');let elbowEditStarted=false;elbowInput.addEventListener('pointerdown',()=>{if(selected?.userData?.joints?.elbow){checkpoint();elbowEditStarted=true;}});elbowInput.addEventListener('input',()=>{if(!selected?.userData?.joints?.elbow)return;const angle=Number(elbowInput.value);selected.userData.joints.elbow.rotation.z=THREE.MathUtils.degToRad(angle);document.querySelector('#elbowValue').textContent=angle+'°';});elbowInput.addEventListener('change',()=>{elbowEditStarted=false;});
 document.querySelector('#undo').onclick=undo;
 function frame(){requestAnimationFrame(frame);updateContacts();const radius=7;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(target);renderer.render(scene,camera);}frame();
 // Start with an empty creature stage.
