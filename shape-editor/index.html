@@ -5,18 +5,18 @@
 <title>FORM / CREATURE LAB</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505;color:#ddd;font-family:Arial,Helvetica,sans-serif}
-#app{height:100dvh;display:flex;flex-direction:column}.view{height:60%;min-height:0;position:relative;background:#050505;border-bottom:1px solid #292929}
+#app{height:100dvh;display:flex;flex-direction:column}.view{flex:0 0 48%;height:48%;min-height:180px;position:relative;background:#050505;border-bottom:1px solid #292929}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 .brand{position:absolute;top:15px;left:17px;font:10px monospace;letter-spacing:.22em;color:#777}.count{position:absolute;right:17px;top:15px;font:10px monospace;color:#666}
 #orbitY{position:absolute;bottom:12px;left:15%;width:70%;accent-color:#ddd;height:18px}#orbitX{position:absolute;right:8px;top:22%;height:55%;writing-mode:vertical-lr;direction:rtl;accent-color:#ddd;width:18px}
-.tools{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-evenly;padding:8px 18px 12px;gap:5px}
+.tools{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:12px 18px max(18px,env(safe-area-inset-bottom));gap:12px}.tools>.row{flex:0 0 auto}.tools::-webkit-scrollbar{width:3px}.tools::-webkit-scrollbar-thumb{background:#444}
 .row{display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,22px)}button{background:none;color:#aaa;border:1px solid #393939;border-radius:0;min-width:46px;height:42px;font-size:20px;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
 button:active,button.active{border-color:#eee;color:#fff;background:#171717}.shape{font-size:23px}.library-head{justify-content:space-between}.categories{gap:5px}.category{height:30px;min-width:0;padding:0 10px;font:10px monospace;letter-spacing:.08em}.parts{gap:6px;overflow-x:auto;justify-content:flex-start;min-height:48px}.part{min-width:64px;height:42px;padding:0 8px;font:10px monospace}.part span{display:block;font-size:19px}.library-actions{gap:10px}.library-actions button{font:10px monospace;height:32px;min-width:90px}.parts::-webkit-scrollbar{display:none}.label{font:9px monospace;letter-spacing:.12em;color:#686868;text-align:center;margin-top:4px}
 .tool{display:flex;flex-direction:column;align-items:center}.tool button{width:48px}
 #pad{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:0;width:102px;height:102px;touch-action:manipulation}#pad:before,#pad:after{content:'';position:absolute;inset:0;clip-path:polygon(40% 34%,40% 20%,22% 0,78% 0,60% 20%,60% 34%,66% 40%,80% 40%,100% 22%,100% 78%,80% 60%,66% 60%,60% 66%,60% 80%,78% 100%,22% 100%,40% 80%,40% 66%,34% 60%,20% 60%,0 78%,0 22%,20% 40%,34% 40%)}#pad:before{z-index:-2;background:#555}#pad:after{z-index:-1;inset:1px;background:#111}#pad button{position:relative;z-index:1;min-width:0;width:34px;height:34px;padding:0;border:0;background:transparent;color:#aaa;font-size:17px}#pad button:active{background:#383838;color:#fff}#pad [data-move='0,0,-1']{grid-column:2;grid-row:1}#pad [data-move='-1,0,0']{grid-column:1;grid-row:2}#pad [data-move='1,0,0']{grid-column:3;grid-row:2}#pad [data-move='0,0,1']{grid-column:2;grid-row:3}#pad .empty{display:none}#pad .vertical{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center}#pad .vertical button{height:17px;font-size:13px;line-height:1}.tools > .row:nth-of-type(3){justify-content:space-between}.tools > .row:nth-of-type(3) #pad{margin-left:auto}.tools > .row:nth-of-type(3) .tool:first-child{margin-left:auto;order:10}
 .small{font-size:15px}
 #rasterPanel{display:flex;align-items:center;gap:8px}#rasterLevel{width:76px;accent-color:#ddd;height:18px}#rasterOverlay{position:absolute;inset:0;pointer-events:none;opacity:0;mix-blend-mode:screen;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(220,220,220,.12) 3px 4px),repeating-linear-gradient(90deg,transparent 0 3px,rgba(220,220,220,.08) 3px 4px)}.view.raster #rasterOverlay{opacity:var(--raster-opacity,.18)}#status{font:9px monospace;letter-spacing:.12em;color:#666;text-align:center;min-height:12px}
-@media(max-height:650px){.view{height:57%}.tools{padding:3px 12px}.row{gap:8px}button{height:36px;min-width:40px}.tool button{width:42px}}@media(max-width:600px){.tools{justify-content:space-around}.categories{justify-content:space-between}.category{padding:0 7px;font-size:9px}.parts{min-height:44px}.part{min-width:58px;height:40px}.library-actions{justify-content:flex-start}.view{height:58%;height:58dvh}.tools{padding:7px 12px max(12px,env(safe-area-inset-bottom));gap:7px}.row{gap:clamp(5px,2vw,12px)}.tools > .row:nth-of-type(3){justify-content:space-between}.tools > .row:nth-of-type(3) .tool:first-child{order:10;margin-left:0}.tools > .row:nth-of-type(3) #pad{grid-template-columns:repeat(3,32px);grid-template-rows:repeat(3,32px);width:96px;height:96px}#pad button{width:32px;height:32px}#pad .vertical button{height:16px}.tools > .row:nth-of-type(3) .tool button{width:42px}.brand{top:max(12px,env(safe-area-inset-top));left:12px}.count{right:12px}}
+@media(max-height:650px){.view{flex-basis:43%;height:43%}.tools{padding:8px 12px 14px}.row{gap:8px}button{height:36px;min-width:40px}.tool button{width:42px}}@media(max-width:600px){.view{flex-basis:48%;height:48%}.tools{justify-content:flex-start}.categories{justify-content:space-between}.category{padding:0 7px;font-size:9px}.parts{min-height:44px}.part{min-width:58px;height:40px}.library-actions{justify-content:flex-start}.view{height:58%;height:58dvh}.tools{padding:7px 12px max(12px,env(safe-area-inset-bottom));gap:7px}.row{gap:clamp(5px,2vw,12px)}.tools > .row:nth-of-type(3){justify-content:space-between}.tools > .row:nth-of-type(3) .tool:first-child{order:10;margin-left:0}.tools > .row:nth-of-type(3) #pad{grid-template-columns:repeat(3,32px);grid-template-rows:repeat(3,32px);width:96px;height:96px}#pad button{width:32px;height:32px}#pad .vertical button{height:16px}.tools > .row:nth-of-type(3) .tool button{width:42px}.brand{top:max(12px,env(safe-area-inset-top));left:12px}.count{right:12px}}
 </style></head>
 <body><div id="app">
 <section class="view"><canvas id="scene"></canvas><div class="brand">FORM / CREATURE LAB · BUILD STRANGE THINGS</div><div class="count" id="count">01 OBJECT</div><div id="rasterOverlay"></div><input id="orbitY" type="range" min="-180" max="180" value="35" aria-label="Вращение по вертикальной оси"><input id="orbitX" type="range" min="-75" max="75" value="18" aria-label="Вращение по горизонтальной оси"></section>
@@ -91,13 +91,35 @@ EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn'
 };
 function renderParts(){const root=document.querySelector('#parts');root.innerHTML='';catalog[currentCategory].forEach(([name,type,sc])=>{const b=document.createElement('button');b.className='part';b.innerHTML='<span>◇</span>'+name;b.onclick=()=>addPart(type,sc,name);root.appendChild(b);});}
 function addPart(type,sc,name){
-checkpoint();const o=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(type)),lineMat);o.userData.type=type;o.userData.part=name;o.scale.set(...sc);
-const base=selected||objects.find(x=>x.userData.part==='CORE'||x.userData.type==='body_core');
-if(base){const offset={HEAD:[0,.95,0],BODY:[0,0,0],ARMS:[.78,.25,0],LEGS:[.32,-1,0],EXTRAS:[0,.65,.45]}[currentCategory]||[0,0,0];o.position.copy(base.position).add(new THREE.Vector3(...offset));}
-else o.position.set(0,0,0);
+checkpoint();
+let body=objects.find(x=>x.userData.type.startsWith('body_')||x.userData.part==='CORE');
+if(currentCategory!=='BODY'&&!body){
+const core=new THREE.LineSegments(new THREE.EdgesGeometry(geometry('body_core')),lineMat);
+core.userData.type='body_core';core.userData.part='CORE';core.position.set(0,0,0);scene.add(core);objects.push(core);body=core;
+}
+const o=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(type)),lineMat);
+o.userData.type=type;o.userData.part=name;o.userData.category=currentCategory;o.scale.set(...sc);
+if(currentCategory==='BODY'){
+o.position.set(0,0,0);
+}else if(currentCategory==='HEAD'){
+o.position.copy(body.position).add(new THREE.Vector3(0,.98,0));
+}else if(currentCategory==='ARMS'){
+const side=objects.filter(x=>x.userData.category==='ARMS').length%2===0?-1:1;
+o.position.copy(body.position).add(new THREE.Vector3(side*.88,.22,0));
+o.userData.side=side;
+}else if(currentCategory==='LEGS'){
+const side=objects.filter(x=>x.userData.category==='LEGS').length%2===0?-1:1;
+o.position.copy(body.position).add(new THREE.Vector3(side*.3,-1.08,0));
+o.userData.side=side;
+}else{
+o.position.copy((selected&&selected!==body?selected:body).position).add(new THREE.Vector3(0,.55,.42));
+}
 scene.add(o);objects.push(o);select(o);updateCount();
-if(mirrorMode&&(currentCategory==='ARMS'||currentCategory==='LEGS')){const m=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(type)),lineMat);m.userData.type=type;m.userData.part=name+' / MIRROR';m.scale.copy(o.scale);m.position.copy(o.position);m.position.x*=-1;scene.add(m);objects.push(m);updateCount();}
-document.querySelector('#status').textContent=name+' ADDED';
+if(mirrorMode&&(currentCategory==='ARMS'||currentCategory==='LEGS')){
+const m=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(type)),lineMat);
+m.userData.type=type;m.userData.part=name+' / MIRROR';m.userData.category=currentCategory;m.scale.copy(o.scale);m.position.copy(o.position);m.position.x=body.position.x*2-o.position.x;m.userData.side=-o.userData.side;scene.add(m);objects.push(m);updateCount();
+}
+document.querySelector('#status').textContent=name+' · SOCKETED TO BODY';
 }
 document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{currentCategory=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.classList.toggle('active',x===b));renderParts();});
 document.querySelector('#mirror').onclick=()=>{mirrorMode=!mirrorMode;document.querySelector('#mirror').classList.toggle('active',mirrorMode);document.querySelector('#status').textContent=mirrorMode?'MIRROR BUILD ON':'MIRROR BUILD OFF';};
