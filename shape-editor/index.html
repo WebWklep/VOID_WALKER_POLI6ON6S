@@ -57,7 +57,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x05
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050505);
 const camera=new THREE.PerspectiveCamera(42,1,.1,100);
 let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
-const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(d.type)),lineMat);o.userData.type=d.type;o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false;
+const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(d.type)),lineMat);o.userData.type=d.type;o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false;
 const lineMat=new THREE.LineBasicMaterial({color:0xbdbdbd,transparent:true,opacity:.82});const contactMat=new THREE.LineBasicMaterial({color:0xbfd9c4,transparent:true,opacity:.9});
 const selectedMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:1});
 function geometry(type){
@@ -90,39 +90,86 @@ LEGS:[['HEAVY','leg_heavy',[1,1,1]],['JOINT','limb',[.85,.85,.85]],['FOOT','foot
 EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn',[1,1,1]]]
 };
 function renderParts(){const select=document.querySelector('#variation');select.innerHTML='';catalog[currentCategory].forEach(([name,type,sc])=>{const option=document.createElement('option');option.value=type;option.textContent=name;option.dataset.scale=sc.join(',');select.appendChild(option);});}
+function localBounds(o){
+const g=geometry(o.userData.type);g.computeBoundingBox();const b=g.boundingBox;
+return {min:new THREE.Vector3(b.min.x*o.scale.x,b.min.y*o.scale.y,b.min.z*o.scale.z),max:new THREE.Vector3(b.max.x*o.scale.x,b.max.y*o.scale.y,b.max.z*o.scale.z)};
+}
+function socketPlace(part,target,role,side=1){
+if(!part||!target)return;
+const p=localBounds(part),t=localBounds(target);
+const center=target.position.clone();
+let socket=new THREE.Vector3(),connector=new THREE.Vector3();
+if(role==='HEAD'){
+socket.set(0,t.max.y,0);connector.set(0,p.min.y,0);
+}else if(role==='ARM'){
+socket.set(side*(t.max.x+.025),t.min.y+(t.max.y-t.min.y)*.66,0);
+connector.set(-side*p.max.x,0,0);
+}else if(role==='LEG'){
+socket.set(side*(t.max.x*.42),t.min.y-.025,0);
+connector.set(0,p.max.y,0);
+}else if(role==='TOP'){
+socket.set(0,t.max.y+.015,0);connector.set(0,p.min.y,0);
+}else if(role==='EYE'){
+socket.set(side*(t.max.x*.23),0,t.max.z+.015);
+connector.set(0,0,p.min.z);
+}
+part.position.copy(center.add(socket).sub(connector));
+part.userData.socketRole=role;part.userData.socketSide=side;
+}
+function getMainBody(){return objects.find(x=>x.userData.category==='BODY'||x.userData.part==='CORE'||x.userData.type.startsWith('body_'))||null;}
+function reflowParts(){
+const body=getMainBody();if(!body)return;
+const head=objects.find(x=>x.userData.category==='HEAD');
+for(const o of objects){if(o===body)continue;
+if(o.userData.category==='HEAD')socketPlace(o,body,'HEAD');
+else if(o.userData.category==='ARMS')socketPlace(o,body,'ARM',o.userData.side||1);
+else if(o.userData.category==='LEGS')socketPlace(o,body,'LEG',o.userData.side||1);
+else if(o.userData.category==='EXTRAS'){const target=head||body;socketPlace(o,target,o.userData.socketRole||'TOP',o.userData.socketSide||1);}
+}
+}
 function addPart(type,sc,name){
 checkpoint();
-let previousHead=null;
-if(currentCategory==='HEAD'){previousHead=objects.find(x=>x.userData.category==='HEAD')||null;if(previousHead){const oldPos=previousHead.position.clone();const oldScale=previousHead.scale.clone();scene.remove(previousHead);objects.splice(objects.indexOf(previousHead),1);previousHead={position:oldPos,scale:oldScale};}}
-if(currentCategory==='BODY'){const oldBody=objects.find(x=>x.userData.category==='BODY'||x.userData.part==='CORE');if(oldBody){scene.remove(oldBody);objects.splice(objects.indexOf(oldBody),1);}}
-let body=objects.find(x=>x.userData.type.startsWith('body_')||x.userData.part==='CORE');
+if(currentCategory==='HEAD'){
+const old=objects.find(x=>x.userData.category==='HEAD');
+if(old){scene.remove(old);objects.splice(objects.indexOf(old),1);}
+}
+if(currentCategory==='BODY'){
+const old=objects.filter(x=>x===getMainBody());
+old.forEach(o=>{scene.remove(o);objects.splice(objects.indexOf(o),1);});
+}
+let body=getMainBody();
 if(currentCategory!=='BODY'&&!body){
-const core=new THREE.LineSegments(new THREE.EdgesGeometry(geometry('body_core')),lineMat);
-core.userData.type='body_core';core.userData.part='CORE';core.position.set(0,0,0);scene.add(core);objects.push(core);body=core;
+body=new THREE.LineSegments(new THREE.EdgesGeometry(geometry('body_core')),lineMat);
+body.userData.type='body_core';body.userData.part='CORE';body.userData.category='BODY';body.userData.baseScale=[1,1,1];
+body.position.set(0,0,0);scene.add(body);objects.push(body);
 }
 const o=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(type)),lineMat);
-o.userData.type=type;o.userData.part=name;o.userData.category=currentCategory;o.userData.baseScale=sc.slice();const factor=sizeFactor[currentSize];o.scale.set(sc[0]*factor,sc[1]*factor,sc[2]*factor);
-if(currentCategory==='BODY'){
-o.position.set(0,0,0);
-}else if(currentCategory==='HEAD'){
-if(previousHead){o.position.copy(previousHead.position); }else{o.position.copy(body.position).add(new THREE.Vector3(0,.98,0));}
-}else if(currentCategory==='ARMS'){
+o.userData.type=type;o.userData.part=name;o.userData.category=currentCategory;o.userData.baseScale=sc.slice();
+const factor=sizeFactor[currentSize];o.scale.set(sc[0]*factor,sc[1]*factor,sc[2]*factor);
+if(currentCategory==='BODY'){o.position.set(0,0,0);}
+else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
+else if(currentCategory==='ARMS'){
 const side=objects.filter(x=>x.userData.category==='ARMS').length%2===0?-1:1;
-o.position.copy(body.position).add(new THREE.Vector3(side*.88,.22,0));
-o.userData.side=side;
+o.userData.side=side;socketPlace(o,body,'ARM',side);
 }else if(currentCategory==='LEGS'){
 const side=objects.filter(x=>x.userData.category==='LEGS').length%2===0?-1:1;
-o.position.copy(body.position).add(new THREE.Vector3(side*.3,-1.08,0));
-o.userData.side=side;
+o.userData.side=side;socketPlace(o,body,'LEG',side);
 }else{
-o.position.copy((selected&&selected!==body?selected:body).position).add(new THREE.Vector3(0,.55,.42));
+const head=objects.find(x=>x.userData.category==='HEAD');
+const target=head||body;
+const role=(type==='eye')?'EYE':'TOP';
+const side=objects.filter(x=>x.userData.category==='EXTRAS'&&x.userData.type==='eye').length%2===0?-1:1;
+socketPlace(o,target,role,side);
 }
-scene.add(o);objects.push(o);select(o);updateCount();
+scene.add(o);objects.push(o);
 if(mirrorMode&&(currentCategory==='ARMS'||currentCategory==='LEGS')){
 const m=new THREE.LineSegments(new THREE.EdgesGeometry(geometry(type)),lineMat);
-m.userData.type=type;m.userData.part=name+' / MIRROR';m.userData.category=currentCategory;m.scale.copy(o.scale);m.position.copy(o.position);m.position.x=body.position.x*2-o.position.x;m.userData.side=-o.userData.side;scene.add(m);objects.push(m);updateCount();
+m.userData.type=type;m.userData.part=name+' / MIRROR';m.userData.category=currentCategory;m.userData.baseScale=sc.slice();m.userData.side=-o.userData.side;
+m.scale.copy(o.scale);socketPlace(m,body,currentCategory==='ARMS'?'ARM':'LEG',m.userData.side);scene.add(m);objects.push(m);
 }
-document.querySelector('#status').textContent=name+' · SOCKETED TO BODY';
+if(currentCategory==='BODY')reflowParts();
+select(o);updateCount();
+document.querySelector('#status').textContent=name+' · SOCKET CONNECTED';
 }
 document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{currentCategory=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.classList.toggle('active',x===b));renderParts();});
 document.querySelector('#variation').onchange=e=>{const option=e.target.selectedOptions[0];addPart(e.target.value,option.dataset.scale.split(',').map(Number),option.textContent);};
