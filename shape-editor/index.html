@@ -70,6 +70,11 @@ for(let i=0;i<7200;i++){seed=(seed*16807)%2147483647;const x=seed%128;seed=(seed
 for(let i=0;i<18;i++){const y=(i*37)%128;ctx.strokeStyle='rgba(205,198,181,.10)';ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(128,y+(i%2?8:-5));ctx.stroke();}
 for(let i=0;i<13;i++){let x=(i*47+13)%128,y=(i*29+7)%128;ctx.strokeStyle='rgba(20,19,18,.72)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y);for(let j=0;j<4;j++){x+=((i+j*3)%2?1:-1)*(5+(j%3)*3);y+=4+(j%2)*5;ctx.lineTo(x,y);}ctx.stroke();ctx.strokeStyle='rgba(210,204,188,.22)';ctx.stroke();}
 for(let i=0;i<90;i++){const x=(i*71)%128,y=(i*43)%128;ctx.fillStyle=i%3?'rgba(210,204,190,.22)':'rgba(12,12,11,.42)';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+2+(i%5),y-1);ctx.lineTo(x+1,y+2+(i%4));ctx.closePath();ctx.fill();}
+}else if(kind==='clay'){
+ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
+let seed=4219;
+for(let i=0;i<3600;i++){seed=(seed*16807)%2147483647;const x=seed%128;seed=(seed*16807)%2147483647;const y=seed%128;seed=(seed*16807)%2147483647;const v=75+(seed%65);ctx.fillStyle='rgba('+v+','+(v-9)+','+(v-17)+','+(.08+(seed%25)/100)+')';ctx.beginPath();ctx.ellipse(x,y,1+(seed%5),1+(seed%3),seed%6,0,Math.PI*2);ctx.fill();}
+for(let i=0;i<24;i++){const y=(i*23)%128;ctx.strokeStyle='rgba(220,190,160,.10)';ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(-5,y);ctx.bezierCurveTo(35,y-8,85,y+9,134,y-3);ctx.stroke();}
 }else if(kind==='raster'){
 const step=Math.max(3,Math.round(Number(document.querySelector('#rasterLevel')?.value||18)/2));
 for(let y=0;y<128;y+=step)for(let x=0;x<128;x+=step){
@@ -81,10 +86,10 @@ let seed=17;for(let i=0;i<2800;i++){seed=(seed*16807)%2147483647;const px=seed%1
 }else{ctx.fillStyle='#292929';ctx.fillRect(0,0,128,128);ctx.strokeStyle='rgba(255,255,255,.035)';for(let i=0;i<128;i+=16){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,128);ctx.moveTo(0,i);ctx.lineTo(128,i);ctx.stroke();}}
 const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t;
 }
-function activeTexture(){return textureCanvases[['graphite','grain','raster','stone'][skinMode]];}
+function activeTexture(){return textureCanvases[['stone','clay'][skinMode]];}
 function createPart(type){
 const g=geometry(type);
-const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:activeTexture(),color:0xffffff,side:THREE.DoubleSide}));
+const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:activeTexture(),color:0xffffff,side:THREE.DoubleSide,flatShading:type.startsWith('stone_')}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g),lineMat);mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
@@ -111,6 +116,29 @@ function ringForm(profiles,segments=7,style='organic'){
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingBox();return g;
 }
 function geometry(type){
+const sculpted={
+stone_head_block:[[-.58,.30,.30,0,0],[-.48,.48,.38,0,0],[-.12,.52,.43,.02,0],[.24,.48,.40,-.02,.02],[.52,.34,.31,-.04,0]],
+stone_head_crag:[[-.58,.18,.22,0,0],[-.42,.38,.34,-.08,0],[-.18,.50,.42,.02,.02],[.12,.40,.38,.12,0],[.42,.30,.28,.04,-.02],[.62,.12,.16,-.08,0]],
+clay_head_roll:[[-.62,.18,.22,0,0],[-.48,.34,.30,-.04,0],[-.22,.46,.38,.02,0],[.08,.49,.40,.08,.02],[.38,.38,.34,.02,.02],[.58,.20,.23,-.06,0]],
+stone_body_slab:[[-.78,.28,.28,0,0],[-.58,.52,.40,-.06,0],[-.22,.62,.43,.04,0],[.18,.55,.39,-.03,.02],[.58,.40,.31,.04,0]],
+stone_body_boulder:[[-.78,.20,.24,0,0],[-.56,.43,.38,-.08,0],[-.26,.58,.47,.04,-.04],[.08,.66,.50,.08,0],[.42,.52,.43,-.05,.02],[.68,.25,.28,.02,0]],
+clay_body_roll:[[-.78,.18,.23,0,0],[-.58,.38,.33,-.08,0],[-.30,.54,.42,-.02,-.03],[.02,.60,.46,.08,0],[.34,.53,.41,.10,.03],[.62,.34,.31,0,0]],
+clay_body_taper:[[-.78,.18,.22,0,0],[-.52,.32,.29,.05,0],[-.18,.42,.34,.12,0],[.16,.52,.39,.04,0],[.48,.43,.34,-.08,0],[.72,.20,.22,-.10,0]],
+stone_arm_slab:[[-.78,.14,.17,0,0],[-.58,.26,.24,-.04,0],[-.36,.22,.22,.10,0],[-.12,.30,.27,.18,0],[.14,.22,.21,.10,0],[.42,.31,.27,-.02,0],[.68,.23,.22,-.12,0],[.80,.12,.15,-.16,0]],
+stone_arm_hammer:[[-.78,.12,.14,0,0],[-.55,.19,.19,-.04,0],[-.30,.16,.17,.10,0],[-.06,.22,.20,.20,0],[.16,.34,.30,.24,0],[.42,.38,.33,.20,0],[.62,.30,.27,.12,0],[.78,.16,.17,.08,0]],
+clay_arm_bent:[[-.78,.10,.13,0,0],[-.56,.17,.18,-.10,0],[-.34,.14,.16,-.22,0],[-.12,.19,.18,-.26,0],[.10,.16,.16,-.12,0],[.32,.20,.18,.02,0],[.56,.25,.22,.12,0],[.76,.13,.15,.16,0]],
+clay_arm_long:[[-.82,.09,.12,0,0],[-.58,.15,.16,.02,0],[-.30,.13,.15,.14,0],[-.02,.18,.17,.20,0],[.24,.15,.14,.12,0],[.50,.20,.18,-.02,0],[.76,.12,.14,-.08,0]],
+stone_leg_pillar:[[-.88,.18,.20,0,0],[-.62,.30,.27,-.04,0],[-.32,.27,.25,.02,0],[-.04,.34,.30,.10,0],[.24,.29,.27,.12,0],[.56,.36,.31,.06,0],[.82,.28,.26,-.04,-.08]],
+stone_leg_broken:[[-.88,.12,.16,0,0],[-.64,.22,.22,.08,0],[-.38,.16,.18,.18,0],[-.12,.28,.25,.10,0],[.12,.20,.20,-.04,0],[.38,.30,.26,-.16,0],[.66,.20,.20,-.22,-.04],[.84,.12,.15,-.16,-.16]],
+clay_leg_bent:[[-.88,.10,.13,0,0],[-.62,.17,.18,.12,0],[-.36,.13,.15,.24,0],[-.12,.20,.19,.18,0],[.12,.14,.16,.02,0],[.36,.18,.18,-.12,0],[.62,.25,.22,-.16,-.02],[.84,.14,.16,-.08,-.18]],
+clay_leg_digit:[[-.88,.08,.12,0,-.10],[-.62,.14,.16,-.10,-.04],[-.36,.12,.14,-.18,0],[-.08,.18,.17,-.08,0],[.18,.13,.14,.08,0],[.42,.18,.17,.18,0],[.66,.25,.22,.12,-.02],[.84,.15,.17,.02,-.20]]
+};
+if(sculpted[type]){
+const isStone=type.startsWith('stone_'),g=ringForm(sculpted[type],isStone?7:12,isStone?'armor':'organic');
+if(isStone){const a=g.getAttribute('position');let seed=type.length*917;for(let i=0;i<a.count;i++){seed=(seed*16807)%2147483647;const n=((seed%1000)/1000-.5);a.setXYZ(i,a.getX(i)*(1+n*.10),a.getY(i)+n*.035,a.getZ(i)*(1-n*.08));}a.needsUpdate=true;g.computeVertexNormals();}
+if(type.includes('_arm_'))g.rotateZ(-Math.PI/2);
+return g;
+}
 const forms={
 head_skull:[[-.62,.18,.25,0,0],[-.48,.32,.34,0,0],[-.22,.48,.39,0,-.015],[.12,.52,.43,0,0],[.42,.43,.38,0,.015],[.62,.22,.25,0,.02]],
 head_insect:[[-.58,.2,.27,0,-.02],[-.38,.36,.34,0,0],[-.12,.48,.42,0,.03],[.16,.43,.48,0,.07],[.4,.31,.42,0,.09],[.56,.12,.2,0,.1]],
@@ -169,7 +197,7 @@ if(type==='horn')return new THREE.ConeGeometry(.2,.75,5);
 if(type==='cylinder')return new THREE.CylinderGeometry(.48,.48,1.15,8,1);
 return new THREE.PlaneGeometry(1.35,1.35,1,1);
 }
-textureCanvases.graphite=makeTexture('graphite');textureCanvases.grain=makeTexture('grain');textureCanvases.raster=makeTexture('raster');textureCanvases.stone=makeTexture('stone');
+textureCanvases.stone=makeTexture('stone');textureCanvases.clay=makeTexture('clay');
 function dims(o){const b=new THREE.Box3().setFromObject(o);const v=new THREE.Vector3();b.getSize(v);return v;}
 function make(type){checkpoint();const mesh=createPart(type);mesh.position.set(0,0,0);scene.add(mesh);objects.push(mesh);select(mesh);document.querySelector('#status').textContent=type.toUpperCase()+' CREATED';updateCount();}
 function select(o){if(selected)setPartLine(selected,lineMat);lastSelected=selected;selected=o;if(selected)setPartLine(selected,selectedMat);document.querySelector('#status').textContent=o?'SELECTED · '+o.userData.type.toUpperCase():'NO SELECTION';}
@@ -178,10 +206,10 @@ function intersects(a,b){const A=new THREE.Box3().setFromObject(a),B=new THREE.B
 function attachTo(targetObj,moving){if(!targetObj||!moving||targetObj===moving)return;checkpoint();const a=new THREE.Box3().setFromObject(targetObj),b=new THREE.Box3().setFromObject(moving);const ac=a.getCenter(new THREE.Vector3()),bc=b.getCenter(new THREE.Vector3());const delta=bc.sub(ac);let axis='x';if(Math.abs(delta.y)>Math.abs(delta.x)&&Math.abs(delta.y)>Math.abs(delta.z))axis='y';else if(Math.abs(delta.z)>Math.abs(delta.x))axis='z';const gap=.015;const pos=targetObj.position.clone();const da=dims(targetObj),db=dims(moving);const sign=delta[axis]>=0?1:-1;pos[axis]+=sign*(da[axis]+db[axis])/2+sign*gap;moving.position.copy(pos);document.querySelector('#status').textContent='MAGNETICALLY ALIGNED';}
 
 const catalog={
-HEAD:[['SKULL','head_skull',[.95,.95,.95]],['INSECT','head_insect',[1,1,1]],['BEAK','head_beak',[1,1,1]],['MASK','head_mask',[1,1,1]],['CROWN','head_crown',[1,1,1]],['PARASITE','head_parasite',[1,1,1]]],
-BODY:[['TORSO','body_torso',[1,1,1]],['SHELL','body_shell',[1,1,1]],['RIBCAGE','body_ribcage',[1,1,1]],['HUNCH','body_hunch',[1,1,1]],['BELL','body_bell',[1,1,1]],['CRAWLER','body_crawler',[1,1,1]]],
-ARMS:[['STONE HAND','arm_stone_hand',[1,1,1]],['BRAWLER','arm_brawler',[1,1,1]],['BLADE','arm_blade',[1,1,1]],['CRUSTACEAN','arm_crustacean',[1,1,1]],['SPINDLE','arm_spindle',[1,1,1]],['GRABBER','arm_grabber',[1,1,1]]],
-LEGS:[['STALKER','leg_stalker',[1,1,1]],['DIGITIGRADE','leg_digitigrade',[1,1,1]],['BRUTE','leg_brute',[1,1,1]],['INSECT','leg_insect',[1,1,1]],['HOOF','leg_hoof',[1,1,1]]],
+HEAD:[['STONE BLOCK','stone_head_block',[1,1,1]],['STONE CRAG','stone_head_crag',[1,1,1]],['CLAY ROLL','clay_head_roll',[1,1,1]]],
+BODY:[['STONE SLAB','stone_body_slab',[1,1,1]],['BOULDER','stone_body_boulder',[1,1,1]],['CLAY ROLL','clay_body_roll',[1,1,1]],['CLAY TAPER','clay_body_taper',[1,1,1]]],
+ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]],['CLAY BENT','clay_arm_bent',[1,1,1]],['CLAY LONG','clay_arm_long',[1,1,1]]],
+LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]],['CLAY BENT','clay_leg_bent',[1,1,1]],['CLAY DIGIT','clay_leg_digit',[1,1,1]]],
 EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn',[1,1,1]]]
 };
 function renderParts(){const select=document.querySelector('#variation');select.innerHTML='';const prompt=document.createElement('option');prompt.value='';prompt.textContent='— SELECT PART —';prompt.disabled=true;prompt.selected=true;select.appendChild(prompt);catalog[currentCategory].forEach(([name,type,sc])=>{const option=document.createElement('option');option.value=type;option.textContent=name;option.dataset.scale=sc.join(',');select.appendChild(option);});}
@@ -260,7 +288,7 @@ document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{currentCa
 document.querySelector('#variation').onchange=e=>{const option=e.target.selectedOptions[0];if(!e.target.value||!option)return;addPart(e.target.value,option.dataset.scale.split(',').map(Number),option.textContent);e.target.selectedIndex=0;};
 document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{currentSize=b.dataset.size;document.querySelectorAll('[data-size]').forEach(x=>x.classList.toggle('active',x===b));if(selected&&selected.userData.baseScale){const f=sizeFactor[currentSize],v=selected.userData.baseScale;checkpoint();selected.scale.set(v[0]*f,v[1]*f,v[2]*f);reflowParts();document.querySelector('#status').textContent='PROPORTION · '+currentSize;}});
 
-document.querySelector('#skin').onclick=()=>{skinMode=(skinMode+1)%4;const labels=['GRAPHITE','GRAIN','RASTER','STONE'];document.querySelector('#skin').textContent='◈ SKIN: '+labels[skinMode];applySkin();document.querySelector('.view').classList.toggle('raster',skinMode===2);document.querySelector('#rasterOverlay').style.opacity=skinMode===1?'.12':'';};
+document.querySelector('#skin').onclick=()=>{skinMode=(skinMode+1)%2;const labels=['STONE','CLAY'];document.querySelector('#skin').textContent='◈ MATERIAL: '+labels[skinMode];applySkin();document.querySelector('.view').classList.remove('raster');document.querySelector('#rasterOverlay').style.opacity='0';};
 document.querySelector('#random').onclick=()=>{
 checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;
 const body=createPart('body_hunch');body.userData.part='HUNCH';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
@@ -282,7 +310,7 @@ document.querySelector('#orbitX').oninput=e=>pitch=Number(e.target.value)*Math.P
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(objects);if(!hits.length)return;const hit=hits[0].object;if(magnetArmed){attachTo(hit,selected);magnetArmed=false;document.querySelector('#magnet').classList.remove('active');}else if(hit===selected&&rotateMode){checkpoint();selected.rotation.y+=Math.PI/8;}else if(hit===selected&&scaleMode){checkpoint();selected.scale.multiplyScalar(1.12);}else select(hit);});
 function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas);resize();
-document.querySelector('#undo').onclick=undo;document.querySelector('#raster').onclick=()=>{skinMode=2;document.querySelector('#skin').textContent='◈ SKIN: RASTER';applySkin();document.querySelector('.view').classList.add('raster');document.querySelector('#raster').classList.add('active');};document.querySelector('#rasterLevel').oninput=e=>{textureCanvases.raster.dispose();textureCanvases.raster=makeTexture('raster');if(skinMode===2)applySkin();document.querySelector('.view').style.setProperty('--raster-opacity',Number(e.target.value)/100);};
+document.querySelector('#undo').onclick=undo;document.querySelector('#raster').onclick=()=>{skinMode=2;skinMode=0;document.querySelector('#skin').textContent='◈ MATERIAL: STONE';applySkin();document.querySelector('.view').classList.remove('raster');document.querySelector('#raster').classList.remove('active');};document.querySelector('#rasterLevel').oninput=e=>{textureCanvases.raster.dispose();textureCanvases.raster=makeTexture('raster');if(skinMode===2)applySkin();document.querySelector('.view').style.setProperty('--raster-opacity',Number(e.target.value)/100);};
 function frame(){requestAnimationFrame(frame);updateContacts();const radius=7;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(target);renderer.render(scene,camera);}frame();
 // Start with an empty creature stage.
 </script></body></html>
