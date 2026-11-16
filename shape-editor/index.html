@@ -54,12 +54,12 @@ import * as THREE from 'three';
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x050505);
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050505);
-scene.add(new THREE.HemisphereLight(0xc8d8e0,0x302b27,1.75));
-const keyLight=new THREE.DirectionalLight(0xffdfbd,2.65);keyLight.position.set(-4,6,5);scene.add(keyLight);
-const fillLight=new THREE.DirectionalLight(0x8bb6cf,1.45);fillLight.position.set(5,1,-4);scene.add(fillLight);
-const rimLight=new THREE.DirectionalLight(0xd1c6ef,1.15);rimLight.position.set(1,4,-6);scene.add(rimLight);
+scene.add(new THREE.HemisphereLight(0xd0d5e2,0x252b39,1.55));
+const keyLight=new THREE.DirectionalLight(0xd8d8e8,2.25);keyLight.position.set(-4,6,5);scene.add(keyLight);
+const fillLight=new THREE.DirectionalLight(0x9baecb,1.15);fillLight.position.set(5,1,-4);scene.add(fillLight);
+const rimLight=new THREE.DirectionalLight(0xc5c5df,.85);rimLight.position.set(1,4,-6);scene.add(rimLight);
 const camera=new THREE.PerspectiveCamera(42,1,.1,100);
 let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
 const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type,d.side||1);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
@@ -70,7 +70,7 @@ function makeTexture(kind){
 const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
 ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
 if(kind==='stone'){
-c.width=c.height=512;ctx.fillStyle='#788995';ctx.fillRect(0,0,512,512);let seed=19371;
+c.width=c.height=512;ctx.fillStyle='#858b99';ctx.fillRect(0,0,512,512);let seed=19371;
 const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
 // Large, soft mineral fields: cool blue-grey sandstone with restrained warm deposits.
 for(let i=0;i<34;i++){
@@ -83,13 +83,14 @@ for(let i=0;i<34;i++){
  ctx.fillStyle=g;ctx.save();ctx.translate(x,y);ctx.scale(rx/Math.max(rx,ry),ry/Math.max(rx,ry));ctx.beginPath();ctx.arc(0,0,Math.max(rx,ry),0,Math.PI*2);ctx.fill();ctx.restore();
 }
 // Broken sediment bands, irregular and discontinuous rather than decorative stripes.
-for(let i=0;i<27;i++){
+for(let i=0;i<42;i++){
  const y=rand()*512,amp=3+rand()*18,phase=rand()*6.28;
  ctx.beginPath();ctx.moveTo(-10,y);
  ctx.bezierCurveTo(105,y+Math.sin(phase)*amp,190,y+Math.cos(phase*1.7)*amp,285,y+(rand()-.5)*amp);
  ctx.bezierCurveTo(370,y+Math.sin(phase+1)*amp,445,y+Math.cos(phase)*amp,522,y+(rand()-.5)*amp);
- ctx.strokeStyle=i%5===0?'rgba(190,169,142,.22)':'rgba(43,65,77,.13)';
- ctx.lineWidth=1+rand()*4;ctx.stroke();
+ ctx.strokeStyle=i%4===0?'rgba(194,194,207,.25)':'rgba(42,53,72,.22)';
+ ctx.lineWidth=2+rand()*5;ctx.stroke();
+ if(i%2===0){ctx.beginPath();ctx.moveTo(-8,y+5);ctx.bezierCurveTo(120,y+amp+5,340,y-amp+5,520,y+7);ctx.strokeStyle='rgba(34,43,59,.20)';ctx.lineWidth=1+rand()*2;ctx.stroke();}
 }
 // Cloudy, fractured mineral patches with soft boundaries.
 for(let i=0;i<210;i++){
@@ -105,7 +106,7 @@ for(let i=0;i<31000;i++){
  const s=rand();ctx.fillRect(x,y,s>.985?2:1,s>.992?2:1);
 }
 // Eroded pores: dark cavities with a broken, mineral-lit upper rim.
-for(let i=0;i<1450;i++){
+for(let i=0;i<1050;i++){
  const x=rand()*512,y=rand()*512,rx=.8+rand()*4.8,ry=rx*(.48+rand()*.62),rot=rand()*Math.PI;
  ctx.fillStyle='rgba(25,38,44,'+(.13+rand()*.25)+')';
  ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
@@ -177,7 +178,7 @@ const isStone=type.startsWith('stone_');
 const eye=type==='eye';
 // Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
 const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.16:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.94:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.22:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
