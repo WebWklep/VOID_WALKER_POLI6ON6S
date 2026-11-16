@@ -64,16 +64,19 @@ let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
 const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
 const lineMat=new THREE.LineBasicMaterial({color:0xbdbdbd,transparent:true,opacity:.82});const contactMat=new THREE.LineBasicMaterial({color:0xbfd9c4,transparent:true,opacity:.9});
 const selectedMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:1});
-const textureCanvases={graphite:null,grain:null,raster:null,stone:null};
+const textureCanvases={graphite:null,grain:null,raster:null,stone:null,stoneBump:null};
 function makeTexture(kind){
 const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
 ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
 if(kind==='stone'){
-ctx.fillStyle='#55534e';ctx.fillRect(0,0,128,128);let seed=9127;
-for(let i=0;i<7200;i++){seed=(seed*16807)%2147483647;const x=seed%128;seed=(seed*16807)%2147483647;const y=seed%128;seed=(seed*16807)%2147483647;const v=42+(seed%115);ctx.fillStyle='rgba('+v+','+(v-2)+','+(v-7)+','+(.12+(seed%35)/100)+')';ctx.fillRect(x,y,1+(seed%3),1+(seed%2));}
-for(let i=0;i<18;i++){const y=(i*37)%128;ctx.strokeStyle='rgba(205,198,181,.10)';ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(128,y+(i%2?8:-5));ctx.stroke();}
-for(let i=0;i<13;i++){let x=(i*47+13)%128,y=(i*29+7)%128;ctx.strokeStyle='rgba(20,19,18,.72)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y);for(let j=0;j<4;j++){x+=((i+j*3)%2?1:-1)*(5+(j%3)*3);y+=4+(j%2)*5;ctx.lineTo(x,y);}ctx.stroke();ctx.strokeStyle='rgba(210,204,188,.22)';ctx.stroke();}
-for(let i=0;i<90;i++){const x=(i*71)%128,y=(i*43)%128;ctx.fillStyle=i%3?'rgba(210,204,190,.22)':'rgba(12,12,11,.42)';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+2+(i%5),y-1);ctx.lineTo(x+1,y+2+(i%4));ctx.closePath();ctx.fill();}
+c.width=c.height=256;ctx.fillStyle='#777f84';ctx.fillRect(0,0,256,256);let seed=9127;
+for(let i=0;i<19000;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;seed=(seed*16807)%2147483647;const v=105+(seed%90),warm=seed%17;ctx.fillStyle='rgba('+Math.min(255,v+warm)+','+Math.min(255,v+warm-2)+','+Math.min(255,v+warm+5)+','+(.08+(seed%30)/100)+')';ctx.fillRect(x,y,1+(seed%3),1+(seed%2));}
+for(let i=0;i<1500;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;seed=(seed*16807)%2147483647;const r=1+(seed%4);ctx.fillStyle='rgba(39,48,53,'+(.12+(seed%22)/100)+')';ctx.beginPath();ctx.ellipse(x,y,r*1.25,r*.8,seed%6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(205,204,194,.18)';ctx.lineWidth=.7;ctx.beginPath();ctx.ellipse(x-.5,y-.5,r*1.25,r*.8,seed%6,Math.PI,Math.PI*1.8);ctx.stroke();}
+for(let i=0;i<42;i++){seed=(seed*16807)%2147483647;const y=seed%256;ctx.strokeStyle=i%3?'rgba(190,177,157,.13)':'rgba(48,61,68,.14)';ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(0,y);ctx.bezierCurveTo(70,y-7,170,y+8,256,y-3);ctx.stroke();}
+for(let i=0;i<240;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;const r=1+(seed%5);ctx.fillStyle=i%4?'rgba(210,203,188,.20)':'rgba(32,43,48,.24)';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+}else if(kind==='stone-bump'){
+c.width=c.height=256;ctx.fillStyle='#858585';ctx.fillRect(0,0,256,256);let seed=7813;
+for(let i=0;i<4200;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;seed=(seed*16807)%2147483647;const r=1+(seed%5),v=70+(seed%130);ctx.fillStyle='rgba('+v+','+v+','+v+','+(.25+(seed%35)/100)+')';ctx.beginPath();ctx.ellipse(x,y,r*1.2,r*.75,seed%6,0,Math.PI*2);ctx.fill();}
 }else if(kind==='clay'){
 ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
 let seed=4219;
@@ -94,12 +97,12 @@ function activeTexture(){return textureCanvases[['stone','clay'][skinMode]];}
 function createPart(type){
 const g=geometry(type);
 const isStone=type.startsWith('stone_');
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:activeTexture(),bumpMap:activeTexture(),bumpScale:isStone?.075:.035,color:0xffffff,side:THREE.DoubleSide,roughness:isStone?.96:.88,metalness:0,flatShading:isStone}));
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),bumpScale:isStone?.11:.035,color:0xffffff,side:THREE.DoubleSide,roughness:isStone?.96:.88,metalness:0,flatShading:isStone}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
 function setPartLine(o,mat){if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=activeTexture();o.material.bumpScale=skinMode===0?.075:.035;o.material.needsUpdate=true;}}
+function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.11:.035;o.material.needsUpdate=true;}}
 document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects)if(o.userData.edge)o.userData.edge.visible=nakedMode;document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
@@ -139,9 +142,21 @@ stone_leg_broken:[[-.88,.12,.16,0,0],[-.64,.22,.22,.08,0],[-.38,.16,.18,.18,0],[
 clay_leg_bent:[[-.88,.10,.13,0,0],[-.62,.17,.18,.12,0],[-.36,.13,.15,.24,0],[-.12,.20,.19,.18,0],[.12,.14,.16,.02,0],[.36,.18,.18,-.12,0],[.62,.25,.22,-.16,-.02],[.84,.14,.16,-.08,-.18]],
 clay_leg_digit:[[-.88,.08,.12,0,-.10],[-.62,.14,.16,-.10,-.04],[-.36,.12,.14,-.18,0],[-.08,.18,.17,-.08,0],[.18,.13,.14,.08,0],[.42,.18,.17,.18,0],[.66,.25,.22,.12,-.02],[.84,.15,.17,.02,-.20]]
 };
+function stoneDetail(source,type){
+let g=source;
+for(let pass=0;pass<2;pass++){
+const p=g.getAttribute('position'),idx=g.index?g.index.array:Array.from({length:p.count},(_,i)=>i),verts=Array.from(p.array),faces=[],cache=new Map();
+const mid=(a,b)=>{const key=a<b?a+':'+b:b+':'+a;if(cache.has(key))return cache.get(key);const n=verts.length/3;verts.push((verts[a*3]+verts[b*3])*.5,(verts[a*3+1]+verts[b*3+1])*.5,(verts[a*3+2]+verts[b*3+2])*.5);cache.set(key,n);return n;};
+for(let i=0;i<idx.length;i+=3){const a=idx[i],b=idx[i+1],c=idx[i+2],ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);faces.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);}
+const next=new THREE.BufferGeometry();next.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));next.setIndex(faces);g.dispose();g=next;
+}
+g.computeVertexNormals();const p=g.getAttribute('position'),n=g.getAttribute('normal');let seed=type.length*1171;
+for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);const broad=Math.sin(x*8.1+y*5.7+z*4.3)*Math.cos(y*9.2-z*6.1);const fine=Math.sin(x*31.7+z*27.1+y*19.3)*Math.cos(z*23.4-y*17.8);seed=(seed*16807)%2147483647;const grain=((seed%1000)/500-1);const d=broad*.014+fine*.004+grain*.0018;p.setXYZ(i,x+n.getX(i)*d,y+n.getY(i)*d,z+n.getZ(i)*d);}
+p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();return g;
+}
 if(sculpted[type]){
-const isStone=type.startsWith('stone_'),segments=type==='stone_head_block'?4:(isStone?7:12),g=ringForm(sculpted[type],segments,isStone?'armor':'organic');
-if(isStone){const a=g.getAttribute('position');let seed=type.length*917;for(let i=0;i<a.count;i++){seed=(seed*16807)%2147483647;const n=((seed%1000)/1000-.5);a.setXYZ(i,a.getX(i)*(1+n*.10),a.getY(i)+n*.035,a.getZ(i)*(1-n*.08));}a.needsUpdate=true;g.computeVertexNormals();}
+const isStone=type.startsWith('stone_'),segments=type==='stone_head_block'?4:(isStone?7:12),base=ringForm(sculpted[type],segments,isStone?'armor':'organic');
+const g=isStone?stoneDetail(base,type):base;
 if(type.includes('_arm_'))g.rotateZ(-Math.PI/2);
 return g;
 }
@@ -203,7 +218,7 @@ if(type==='horn')return new THREE.ConeGeometry(.2,.75,5);
 if(type==='cylinder')return new THREE.CylinderGeometry(.48,.48,1.15,8,1);
 return new THREE.PlaneGeometry(1.35,1.35,1,1);
 }
-textureCanvases.stone=makeTexture('stone');textureCanvases.clay=makeTexture('clay');
+textureCanvases.stone=makeTexture('stone');textureCanvases.stoneBump=makeTexture('stone-bump');textureCanvases.clay=makeTexture('clay');
 function dims(o){const b=new THREE.Box3().setFromObject(o);const v=new THREE.Vector3();b.getSize(v);return v;}
 function make(type){checkpoint();const mesh=createPart(type);mesh.position.set(0,0,0);scene.add(mesh);objects.push(mesh);select(mesh);document.querySelector('#status').textContent=type.toUpperCase()+' CREATED';updateCount();}
 function select(o){if(selected)setPartLine(selected,lineMat);lastSelected=selected;selected=o;if(selected)setPartLine(selected,selectedMat);document.querySelector('#status').textContent=o?'SELECTED · '+o.userData.type.toUpperCase():'NO SELECTION';}
