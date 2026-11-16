@@ -70,70 +70,60 @@ function makeTexture(kind){
 const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
 ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
 if(kind==='stone'){
-c.width=c.height=512;ctx.fillStyle='#a1a9ba';ctx.fillRect(0,0,512,512);let seed=29417;
-const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-// Broad, cold limestone-grey mineral variation; avoid obvious painted cloud spots.
-for(let i=0;i<150;i++){
- const x=rand()*512,y=rand()*512,rx=18+rand()*85,ry=10+rand()*34;
- const dark=rand()>.56, tone=dark?[65,77,99]:[210,215,226];
- const alpha=.035+rand()*.085;
- ctx.fillStyle='rgba('+tone[0]+','+tone[1]+','+tone[2]+','+alpha+')';
- ctx.beginPath();ctx.ellipse(x,y,rx,ry,rand()*.25-.12,0,Math.PI*2);ctx.fill();
+c.width=c.height=512;
+const size=512,seedBase=81731;
+const hash=(x,y)=>{let n=(x*374761393+y*668265263+seedBase)|0;n=(n^(n>>>13))*1274126177;return ((n^(n>>>16))>>>0)/4294967295;};
+const smooth=t=>t*t*(3-2*t);
+const noise=(x,y,scale)=>{
+ const fx=x/scale,fy=y/scale,ix=Math.floor(fx),iy=Math.floor(fy),tx=smooth(fx-ix),ty=smooth(fy-iy);
+ const a=hash(ix,iy),b=hash(ix+1,iy),d=hash(ix,iy+1),e=hash(ix+1,iy+1);
+ return (a+(b-a)*tx)+((d+(e-d)*tx)-(a+(b-a)*tx))*ty;
+};
+const data=ctx.createImageData(size,size);
+for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+ const broad=noise(x,y,118),mid=noise(x,y,39),grain=noise(x,y,9),micro=hash(x,y);
+ // Sediment bands are softly warped and broken, never perfectly parallel.
+ const warp=(noise(x,y,82)-.5)*24+(noise(x,y,23)-.5)*8;
+ const band=noise(x+warp,y+warp*.16,54);
+ const strata=Math.sin((y+warp+noise(x,y,17)*5)*.115);
+ const layered=Math.pow(Math.max(0,strata),7)*.5+(band-.5)*.17;
+ const mineral=(broad-.5)*27+(mid-.5)*17+(grain-.5)*11+(micro-.5)*8+layered*17;
+ const cool=noise(x+51,y-23,73)-.5;
+ const i=(y*size+x)*4;
+ data.data[i]=Math.max(0,Math.min(255,146+mineral+cool*4));
+ data.data[i+1]=Math.max(0,Math.min(255,155+mineral+cool*2));
+ data.data[i+2]=Math.max(0,Math.min(255,170+mineral-cool*3));
+ data.data[i+3]=255;
 }
-// Dense, uneven sediment ribbons: broken, compressed, craggy horizontal strata.
-for(let i=0;i<31;i++){
- const y=rand()*512,amp=3+rand()*15,phase=rand()*6.28,thick=3+rand()*9;
- const path=()=>{ctx.beginPath();ctx.moveTo(-18,y);
- ctx.bezierCurveTo(70,y+Math.sin(phase)*amp,155,y+Math.cos(phase*1.3)*amp,245,y+(rand()-.5)*amp*1.5);
- ctx.bezierCurveTo(335,y+Math.sin(phase+2)*amp,425,y+Math.cos(phase*.7)*amp,530,y+(rand()-.5)*amp);};
- // Dark undercut beneath each broken shelf.
- path();ctx.strokeStyle='rgba(39,49,68,'+(.20+rand()*.19)+')';ctx.lineWidth=thick+2;ctx.stroke();
- path();ctx.strokeStyle='rgba(210,216,230,'+(.10+rand()*.16)+')';ctx.lineWidth=Math.max(1,thick*.38);ctx.stroke();
- // Short fractured ledges interrupt the long strata.
- for(let j=0;j<2+Math.floor(rand()*4);j++){
-  const x=rand()*470,len=12+rand()*78,yy=y+(rand()-.5)*amp*2;
-  ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+len*.28,yy+(rand()-.5)*5);ctx.lineTo(x+len*.68,yy+(rand()-.5)*7);ctx.lineTo(x+len,yy+(rand()-.5)*4);
-  ctx.strokeStyle=rand()>.5?'rgba(225,228,236,.22)':'rgba(34,44,63,.24)';ctx.lineWidth=1+rand()*4;ctx.stroke();
- }
-}
-// Coarse, chalky grains and chipped mineral fragments, intentionally non-uniform.
-for(let i=0;i<11500;i++){
- const x=rand()*512,y=rand()*512,v=rand()>.48?150+Math.floor(rand()*75):72+Math.floor(rand()*65),alpha=.045+rand()*.17;
- ctx.fillStyle='rgba('+Math.floor(v*.84)+','+Math.floor(v*.89)+','+Math.min(255,v+8)+','+alpha+')';
- const w=rand()>.94?3:rand()>.65?2:1,h=rand()>.75?2:1;ctx.fillRect(x,y,w,h);
-}
-for(let i=0;i<2100;i++){
- const x=rand()*512,y=rand()*512,rx=1+rand()*5.5,ry=.45+rand()*2.4,rot=(rand()-.5)*.4;
- ctx.fillStyle='rgba(36,46,64,'+(.12+rand()*.24)+')';ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle='rgba(226,230,238,'+(.08+rand()*.16)+')';ctx.lineWidth=.6+rand()*1.2;ctx.beginPath();ctx.ellipse(x-rx*.25,y-ry*.25,rx*.72,ry*.65,rot,Math.PI*1.05,Math.PI*1.85);ctx.stroke();
-}
-// Tiny pits and rough chalk flecks.
-for(let i=0;i<900;i++){
- const x=rand()*512,y=rand()*512,r=.5+rand()*2.4;
- ctx.fillStyle='rgba(35,45,62,'+(.12+rand()*.20)+')';ctx.fillRect(x,y,r*1.5,r*.6);
- ctx.fillStyle='rgba(225,230,239,'+(.07+rand()*.16)+')';ctx.fillRect(x-r*.35,y-r*.45,r,r*.45);
+ctx.putImageData(data,0,0);
+// Sparse mineral flecks and shallow weathering pits, blended into the grain.
+let seed=9217;const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+for(let i=0;i<1350;i++){
+ const x=rand()*size,y=rand()*size,rx=.5+rand()*2.8,ry=.35+rand()*1.6;
+ ctx.fillStyle=rand()>.48?'rgba(38,48,65,.16)':'rgba(226,229,235,.15)';
+ ctx.beginPath();ctx.ellipse(x,y,rx,ry,(rand()-.5)*.5,0,Math.PI*2);ctx.fill();
 }
 }else if(kind==='stone-bump'){
-c.width=c.height=512;ctx.fillStyle='#858585';ctx.fillRect(0,0,512,512);let seed=7813;
-const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-// Strong, broken horizontal relief rather than soft round bumps.
-for(let i=0;i<31;i++){
- const y=rand()*512,amp=3+rand()*15,phase=rand()*6.28,thick=5+rand()*12;
- const path=()=>{ctx.beginPath();ctx.moveTo(-18,y);
- ctx.bezierCurveTo(70,y+Math.sin(phase)*amp,155,y+Math.cos(phase*1.3)*amp,245,y+(rand()-.5)*amp*1.5);
- ctx.bezierCurveTo(335,y+Math.sin(phase+2)*amp,425,y+Math.cos(phase*.7)*amp,530,y+(rand()-.5)*amp);};
- path();ctx.strokeStyle='rgba(190,190,190,.34)';ctx.lineWidth=thick;ctx.stroke();
- path();ctx.strokeStyle='rgba(65,65,65,.34)';ctx.lineWidth=Math.max(1,thick*.3);ctx.stroke();
+c.width=c.height=512;
+const size=512,seedBase=81731;
+const hash=(x,y)=>{let n=(x*374761393+y*668265263+seedBase)|0;n=(n^(n>>>13))*1274126177;return ((n^(n>>>16))>>>0)/4294967295;};
+const smooth=t=>t*t*(3-2*t);
+const noise=(x,y,scale)=>{
+ const fx=x/scale,fy=y/scale,ix=Math.floor(fx),iy=Math.floor(fy),tx=smooth(fx-ix),ty=smooth(fy-iy);
+ const a=hash(ix,iy),b=hash(ix+1,iy),d=hash(ix,iy+1),e=hash(ix+1,iy+1);
+ const top=a+(b-a)*tx,bot=d+(e-d)*tx;return top+(bot-top)*ty;
+};
+const data=ctx.createImageData(size,size);
+for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+ const broad=noise(x,y,112),mid=noise(x,y,36),fine=noise(x,y,10),micro=hash(x,y);
+ const warp=(noise(x,y,76)-.5)*24+(noise(x,y,24)-.5)*8;
+ const strata=Math.sin((y+warp+noise(x,y,18)*5)*.115);
+ const ridge=Math.pow(Math.max(0,strata),8);
+ const height=128+(broad-.5)*42+(mid-.5)*34+(fine-.5)*24+(micro-.5)*15+(ridge-.22)*42;
+ const v=Math.max(0,Math.min(255,height)),i=(y*size+x)*4;
+ data.data[i]=data.data[i+1]=data.data[i+2]=v;data.data[i+3]=255;
 }
-for(let i=0;i<1250;i++){
- const x=rand()*512,y=rand()*512,rx=1+rand()*5,ry=.5+rand()*2.5;
- const dark=rand()>.48,v=dark?65+rand()*25:175+rand()*45;
- ctx.fillStyle='rgba('+v+','+v+','+v+','+(.22+rand()*.34)+')';
- ctx.beginPath();ctx.ellipse(x,y,rx,ry,(rand()-.5)*.4,0,Math.PI*2);ctx.fill();
-}
-for(let i=0;i<19000;i++){
- const x=rand()*512,y=rand()*512,v=rand()>.5?160+Math.floor(rand()*35):88+Math.floor(rand()*42),alpha=.08+rand()*.19;
- ctx.fillStyle='rgba('+v+','+v+','+v+','+alpha+')';ctx.fillRect(x,y,rand()>.94?2:1,1);
+ctx.putImageData(data,0,0);
 }}else if(kind==='clay'){
 ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
 let seed=4219;
@@ -169,12 +159,12 @@ const isStone=type.startsWith('stone_');
 const eye=type==='eye';
 // Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
 const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.30:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.19:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
 function setPartLine(o,mat){if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.30:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
+function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.19:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
 document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects)if(o.userData.edge)o.userData.edge.visible=nakedMode;document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
