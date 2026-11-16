@@ -241,8 +241,8 @@ function attachTo(targetObj,moving){if(!targetObj||!moving||targetObj===moving)r
 const catalog={
 HEAD:[['STONE BLOCK','stone_head_block',[1,1,1]],['STONE CRAG','stone_head_crag',[1,1,1]],['CLAY ROLL','clay_head_roll',[1,1,1]]],
 BODY:[['STONE SLAB','stone_body_slab',[1,1,1]],['BOULDER','stone_body_boulder',[1,1,1]],['CLAY ROLL','clay_body_roll',[1,1,1]],['CLAY TAPER','clay_body_taper',[1,1,1]]],
-ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]],['CLAY BENT','clay_arm_bent',[1,1,1]],['CLAY LONG','clay_arm_long',[1,1,1]]],
-LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]],['CLAY BENT','clay_leg_bent',[1,1,1]],['CLAY DIGIT','clay_leg_digit',[1,1,1]]],
+ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]]],
+LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]]],
 EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn',[1,1,1]]]
 };
 function renderParts(){const select=document.querySelector('#variation');select.innerHTML='';const prompt=document.createElement('option');prompt.value='';prompt.textContent='— SELECT PART —';prompt.disabled=true;prompt.selected=true;select.appendChild(prompt);catalog[currentCategory].forEach(([name,type,sc])=>{const option=document.createElement('option');option.value=type;option.textContent=name;option.dataset.scale=sc.join(',');select.appendChild(option);});}
@@ -291,7 +291,7 @@ checkpoint();
 if(currentCategory!=='EXTRAS')removeCategory(currentCategory);
 let body=getMainBody();
 if(currentCategory!=='BODY'&&!body){
-body=createPart('body_torso');body.userData.part='TORSO';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
+body=createPart('stone_body_boulder');body.userData.part='STONE BODY';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
 }
 const factor=sizeFactor[currentSize];
 const addOne=(side=1)=>{
@@ -299,8 +299,15 @@ const o=createPart(type);o.userData.part=name;o.userData.category=currentCategor
 o.scale.set(sc[0]*factor,sc[1]*factor,sc[2]*factor);
 if(currentCategory==='BODY'){o.position.set(0,0,0);o.userData.category='BODY';}
 else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
-else if(currentCategory==='ARMS'){o.userData.side=side;socketPlace(o,body,'ARM',side);}
-else if(currentCategory==='LEGS'){o.userData.side=side;socketPlace(o,body,'LEG',side);}
+else if(currentCategory==='ARMS'){
+o.userData.side=side;socketPlace(o,body,'ARM',side);
+o.rotation.y=side<0?Math.PI:0;
+o.rotation.z=side<0?.34:-.34;
+}
+else if(currentCategory==='LEGS'){
+o.userData.side=side;socketPlace(o,body,'LEG',side);
+o.rotation.y=side<0?Math.PI:0;
+}
 else{
 const head=objects.find(p=>p.userData.category==='HEAD');const target=head||body;
 const role=type==='eye'?'EYE':'TOP';const extraSide=objects.filter(p=>p.userData.category==='EXTRAS'&&p.userData.type==='eye').length%2===0?-1:1;
@@ -315,13 +322,13 @@ first=addOne(-1);addOne(1);
 if(currentCategory==='BODY'){body=first;reflowParts();}
 if(currentCategory==='BODY'||currentCategory==='HEAD')reflowParts();
 select(first);updateCount();
-document.querySelector('#status').textContent=currentCategory==='ARMS'||currentCategory==='LEGS'?name+' · PAIR CONNECTED':name+' · SOCKET CONNECTED';
+document.querySelector('#status').textContent=currentCategory==='ARMS'||currentCategory==='LEGS'?name+' · MIRRORED PAIR':name+' · SOCKET CONNECTED';
 }
 document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{currentCategory=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.classList.toggle('active',x===b));renderParts();});
 document.querySelector('#variation').onchange=e=>{const option=e.target.selectedOptions[0];if(!e.target.value||!option)return;addPart(e.target.value,option.dataset.scale.split(',').map(Number),option.textContent);e.target.selectedIndex=0;};
 document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{currentSize=b.dataset.size;document.querySelectorAll('[data-size]').forEach(x=>x.classList.toggle('active',x===b));if(selected&&selected.userData.baseScale){const f=sizeFactor[currentSize],v=selected.userData.baseScale;checkpoint();selected.scale.set(v[0]*f,v[1]*f,v[2]*f);reflowParts();document.querySelector('#status').textContent='PROPORTION · '+currentSize;}});
 
-document.querySelector('#skin').onclick=()=>{skinMode=(skinMode+1)%2;const labels=['STONE','CLAY'];document.querySelector('#skin').textContent='◈ MATERIAL: '+labels[skinMode];applySkin();document.querySelector('.view').classList.remove('raster');document.querySelector('#rasterOverlay').style.opacity='0';};
+skinMode=0;document.querySelector('#skin').textContent='◈ MATERIAL: STONE';document.querySelector('#skin').onclick=()=>{skinMode=0;applySkin();document.querySelector('#status').textContent='STONE MATERIAL ACTIVE';};
 document.querySelector('#random').onclick=()=>{
 try{
 checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;selected=null;
@@ -329,10 +336,13 @@ const body=createPart('clay_body_roll');body.userData.part='CLAY ROLL';body.user
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
 add(pick(['stone_head_crag','stone_head_block','clay_head_roll']),'HEAD');
-add(pick(['stone_arm_slab','stone_arm_hammer','clay_arm_bent']),'ARMS',-1,[.9+Math.random()*.2,.9+Math.random()*.2,.9+Math.random()*.2]);
-add(pick(['stone_arm_slab','clay_arm_bent','clay_arm_long']),'ARMS',1,[.9+Math.random()*.2,.9+Math.random()*.2,.9+Math.random()*.2]);
-add(pick(['stone_leg_broken','stone_leg_pillar','clay_leg_bent']),'LEGS',-1);
-add(pick(['stone_leg_broken','clay_leg_bent','clay_leg_digit']),'LEGS',1);
+const armType=pick(['stone_arm_slab','stone_arm_hammer']);
+const armScale=.9+Math.random()*.2;
+add(armType,'ARMS',-1,[armScale,armScale,armScale]);
+add(armType,'ARMS',1,[armScale,armScale,armScale]);
+const legType=pick(['stone_leg_broken','stone_leg_pillar']);
+add(legType,'LEGS',-1);
+add(legType,'LEGS',1);
 select(body);updateCount();document.querySelector('#status').textContent='CREATURE GENERATED · RANDOM';
 }catch(err){console.error('CREATURE LAB random:',err);document.querySelector('#status').textContent='RANDOM ERROR · '+(err?.message||'CHECK CONSOLE');}
 };
