@@ -156,7 +156,7 @@ let g=geometry(type);
 if(type.startsWith('stone_arm_'))g=combineArmJoint(g,side);
 else if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
 // Limb meshes are authored around their attachment pivots: shoulder for arms, hip for legs.
-if(type.startsWith('stone_arm_'))g.translate(0,-.80,0);
+if(type.startsWith('stone_arm_'))g.translate(side*.80,0,0);
 else if(type.startsWith('stone_leg_'))g.translate(0,-.88,0);
 const isStone=type.startsWith('stone_');
 const eye=type==='eye';
