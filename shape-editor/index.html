@@ -53,12 +53,13 @@ button:active,button.active{border-color:#eee;color:#fff;background:#171717}.sha
 import * as THREE from 'three';
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x050505);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x050505);
-scene.add(new THREE.HemisphereLight(0xbfc6d0,0x29231d,2.0));
-const keyLight=new THREE.DirectionalLight(0xffead2,3.0);keyLight.position.set(-4,6,5);scene.add(keyLight);
-const fillLight=new THREE.DirectionalLight(0x9daec8,1.25);fillLight.position.set(5,1,-4);scene.add(fillLight);
-const rimLight=new THREE.DirectionalLight(0xffffff,1.8);rimLight.position.set(1,4,-6);scene.add(rimLight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x10171d);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x10171d);
+scene.add(new THREE.HemisphereLight(0xc8d8e0,0x302b27,1.75));
+const keyLight=new THREE.DirectionalLight(0xffdfbd,2.65);keyLight.position.set(-4,6,5);scene.add(keyLight);
+const fillLight=new THREE.DirectionalLight(0x8bb6cf,1.45);fillLight.position.set(5,1,-4);scene.add(fillLight);
+const rimLight=new THREE.DirectionalLight(0xd1c6ef,1.15);rimLight.position.set(1,4,-6);scene.add(rimLight);
 const camera=new THREE.PerspectiveCamera(42,1,.1,100);
 let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
 const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type,d.side||1);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
@@ -69,11 +70,44 @@ function makeTexture(kind){
 const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
 ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
 if(kind==='stone'){
-c.width=c.height=256;ctx.fillStyle='#777f84';ctx.fillRect(0,0,256,256);let seed=9127;
-for(let i=0;i<19000;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;seed=(seed*16807)%2147483647;const v=105+(seed%90),warm=seed%17;ctx.fillStyle='rgba('+Math.min(255,v+warm)+','+Math.min(255,v+warm-2)+','+Math.min(255,v+warm+5)+','+(.08+(seed%30)/100)+')';ctx.fillRect(x,y,1+(seed%3),1+(seed%2));}
-for(let i=0;i<1500;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;seed=(seed*16807)%2147483647;const r=1+(seed%4);ctx.fillStyle='rgba(39,48,53,'+(.12+(seed%22)/100)+')';ctx.beginPath();ctx.ellipse(x,y,r*1.25,r*.8,seed%6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(205,204,194,.18)';ctx.lineWidth=.7;ctx.beginPath();ctx.ellipse(x-.5,y-.5,r*1.25,r*.8,seed%6,Math.PI,Math.PI*1.8);ctx.stroke();}
-for(let i=0;i<42;i++){seed=(seed*16807)%2147483647;const y=seed%256;ctx.strokeStyle=i%3?'rgba(190,177,157,.13)':'rgba(48,61,68,.14)';ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(0,y);ctx.bezierCurveTo(70,y-7,170,y+8,256,y-3);ctx.stroke();}
-for(let i=0;i<240;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;const r=1+(seed%5);ctx.fillStyle=i%4?'rgba(210,203,188,.20)':'rgba(32,43,48,.24)';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+c.width=c.height=512;ctx.fillStyle='#737f86';ctx.fillRect(0,0,512,512);let seed=9127;
+const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+// Broad mineral clouds: cool slate, muted blue and a little warm sandstone.
+for(let i=0;i<95;i++){
+ const x=rand()*512,y=rand()*512,r=24+rand()*105;
+ const hue=rand();
+ const col=hue<.62?'rgba(91,119,135,':'rgba(157,139,119,';
+ const gr=ctx.createRadialGradient(x,y,1,x,y,r);
+ gr.addColorStop(0,col+(0.10+rand()*.09)+')');gr.addColorStop(1,'rgba(90,100,105,0)');
+ ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+}
+// Fine granular mineral variation at several scales.
+for(let i=0;i<52000;i++){
+ const x=rand()*512,y=rand()*512,v=92+Math.floor(rand()*92),a=.035+rand()*.12;
+ const cool=rand()>.48;
+ ctx.fillStyle=cool?'rgba('+Math.floor(v*.78)+','+Math.floor(v*.91)+','+Math.min(255,v+12)+','+a+')':'rgba('+Math.min(255,v+15)+','+Math.floor(v*.93)+','+Math.floor(v*.79)+','+a+')';
+ const z=rand();ctx.fillRect(x,y,z>.94?2:1,z>.97?2:1);
+}
+// Layered sediment lines, deliberately irregular and low contrast.
+for(let i=0;i<38;i++){
+ const y=rand()*512,amp=2+rand()*13,phase=rand()*6;
+ ctx.beginPath();ctx.moveTo(0,y);
+ ctx.bezierCurveTo(120,y+Math.sin(phase)*amp,330,y+Math.cos(phase)*amp,512,y+(rand()-.5)*amp);
+ ctx.strokeStyle=i%4===0?'rgba(190,169,139,.22)':'rgba(47,69,81,.17)';
+ ctx.lineWidth=1+rand()*3;ctx.stroke();
+}
+// Small pores with shaded rims and pale mineral edges.
+for(let i=0;i<2100;i++){
+ const x=rand()*512,y=rand()*512,rx=.7+rand()*3.8,ry=rx*(.55+rand()*.55);
+ ctx.fillStyle='rgba(30,43,49,'+(.10+rand()*.24)+')';ctx.beginPath();ctx.ellipse(x,y,rx,ry,rand()*Math.PI,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='rgba(211,207,190,'+(.06+rand()*.12)+')';ctx.lineWidth=.6;ctx.beginPath();ctx.ellipse(x-.55,y-.55,rx,ry,0,Math.PI,Math.PI*1.8);ctx.stroke();
+}
+// A few larger mineral inclusions, not bright enough to read as stars.
+for(let i=0;i<95;i++){
+ const x=rand()*512,y=rand()*512,r=1+rand()*5;
+ ctx.fillStyle=i%3===0?'rgba(177,157,126,.28)':'rgba(113,151,166,.24)';
+ ctx.beginPath();ctx.ellipse(x,y,r*1.5,r*.65,rand()*Math.PI,0,Math.PI*2);ctx.fill();
+}
 }else if(kind==='stone-bump'){
 c.width=c.height=256;ctx.fillStyle='#858585';ctx.fillRect(0,0,256,256);let seed=7813;
 for(let i=0;i<4200;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;seed=(seed*16807)%2147483647;const r=1+(seed%5),v=70+(seed%130);ctx.fillStyle='rgba('+v+','+v+','+v+','+(.25+(seed%35)/100)+')';ctx.beginPath();ctx.ellipse(x,y,r*1.2,r*.75,seed%6,0,Math.PI*2);ctx.fill();}
@@ -110,12 +144,12 @@ if(type.startsWith('stone_arm_'))g=combineArmJoint(g,side);
 else if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
 const isStone=type.startsWith('stone_');
 const eye=type==='eye';
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),bumpScale:isStone?.11:.035,color:eye?0x101316:0xffffff,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.96:.88),metalness:0,flatShading:isStone}));
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.16:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.94:.88),metalness:0,flatShading:isStone}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
 function setPartLine(o,mat){if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.11:.035;o.material.needsUpdate=true;}}
+function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.16:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
 document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects)if(o.userData.edge)o.userData.edge.visible=nakedMode;document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
