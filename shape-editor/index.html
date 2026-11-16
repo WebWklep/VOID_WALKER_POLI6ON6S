@@ -53,9 +53,9 @@ button:active,button.active{border-color:#eee;color:#fff;background:#171717}.sha
 import * as THREE from 'three';
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x10171d);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x050505);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x10171d);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x050505);
 scene.add(new THREE.HemisphereLight(0xc8d8e0,0x302b27,1.75));
 const keyLight=new THREE.DirectionalLight(0xffdfbd,2.65);keyLight.position.set(-4,6,5);scene.add(keyLight);
 const fillLight=new THREE.DirectionalLight(0x8bb6cf,1.45);fillLight.position.set(5,1,-4);scene.add(fillLight);
