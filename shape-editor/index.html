@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>FORM / 001</title>
+<title>FORM / CREATURE LAB</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505;color:#ddd;font-family:Arial,Helvetica,sans-serif}
 #app{height:100dvh;display:flex;flex-direction:column}.view{height:60%;min-height:0;position:relative;background:#050505;border-bottom:1px solid #292929}
@@ -19,7 +19,7 @@ button:active,button.active{border-color:#eee;color:#fff;background:#171717}.sha
 @media(max-height:650px){.view{height:57%}.tools{padding:3px 12px}.row{gap:8px}button{height:36px;min-width:40px}.tool button{width:42px}}@media(max-width:600px){.tools{justify-content:space-around}.categories{justify-content:space-between}.category{padding:0 7px;font-size:9px}.parts{min-height:44px}.part{min-width:58px;height:40px}.library-actions{justify-content:flex-start}.view{height:58%;height:58dvh}.tools{padding:7px 12px max(12px,env(safe-area-inset-bottom));gap:7px}.row{gap:clamp(5px,2vw,12px)}.tools > .row:nth-of-type(3){justify-content:space-between}.tools > .row:nth-of-type(3) .tool:first-child{order:10;margin-left:0}.tools > .row:nth-of-type(3) #pad{grid-template-columns:repeat(3,32px);grid-template-rows:repeat(3,32px);width:96px;height:96px}#pad button{width:32px;height:32px}#pad .vertical button{height:16px}.tools > .row:nth-of-type(3) .tool button{width:42px}.brand{top:max(12px,env(safe-area-inset-top));left:12px}.count{right:12px}}
 </style></head>
 <body><div id="app">
-<section class="view"><canvas id="scene"></canvas><div class="brand">FORM / SPATIAL OBJECT EDITOR</div><div class="count" id="count">01 OBJECT</div><div id="rasterOverlay"></div><input id="orbitY" type="range" min="-180" max="180" value="35" aria-label="Вращение по вертикальной оси"><input id="orbitX" type="range" min="-75" max="75" value="18" aria-label="Вращение по горизонтальной оси"></section>
+<section class="view"><canvas id="scene"></canvas><div class="brand">FORM / CREATURE LAB · BUILD STRANGE THINGS</div><div class="count" id="count">01 OBJECT</div><div id="rasterOverlay"></div><input id="orbitY" type="range" min="-180" max="180" value="35" aria-label="Вращение по вертикальной оси"><input id="orbitX" type="range" min="-75" max="75" value="18" aria-label="Вращение по горизонтальной оси"></section>
 <section class="tools">
 <div class="row library-head"><div class="label">CREATURE PARTS / LIBRARY</div><button id="random" class="small">✳ RANDOM</button></div>
 <div class="row categories" id="categories">
@@ -119,5 +119,5 @@ canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect()
 function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas);resize();
 document.querySelector('#undo').onclick=undo;document.querySelector('#raster').onclick=()=>{document.querySelector('.view').classList.toggle('raster');document.querySelector('#raster').classList.toggle('active');};document.querySelector('#rasterLevel').oninput=e=>document.querySelector('.view').style.setProperty('--raster-opacity',Number(e.target.value)/100);
 function frame(){requestAnimationFrame(frame);updateContacts();const radius=7;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(target);renderer.render(scene,camera);}frame();
-make('box');
+// Start with an empty creature stage.
 </script></body></html>
