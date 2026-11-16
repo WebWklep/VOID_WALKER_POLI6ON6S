@@ -107,6 +107,7 @@ merged.computeVertexNormals();merged.computeBoundingBox();return merged;
 function createPart(type,side=1){
 let g=geometry(type);
 if(type.startsWith('stone_arm_'))g=combineArmJoint(g,side);
+else if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
 const isStone=type.startsWith('stone_');
 const eye=type==='eye';
 const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),bumpScale:isStone?.11:.035,color:eye?0x101316:0xffffff,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.96:.88),metalness:0,flatShading:isStone}));
@@ -332,7 +333,6 @@ socketPlaceArm(o,body,side);
 }
 else if(currentCategory==='LEGS'){
 o.userData.side=side;socketPlace(o,body,'LEG',side);
-o.rotation.y=side<0?Math.PI:0;
 }
 else{
 const head=objects.find(p=>p.userData.category==='HEAD');const target=head||body;
@@ -361,7 +361,7 @@ try{
 checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;selected=null;
 const body=createPart('stone_body_boulder');body.userData.part='STONE BOULDER';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type,side);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
+const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type,side);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlaceArm(o,body,side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
 add(pick(['stone_head_crag','stone_head_block']),'HEAD');
 const armType=pick(['stone_arm_slab','stone_arm_hammer','stone_arm_exo','stone_arm_piston']);
 const armScale=.9+Math.random()*.2;
