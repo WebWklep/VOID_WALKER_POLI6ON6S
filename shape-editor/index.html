@@ -186,69 +186,66 @@ function limbMesh(g,material){
 const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);mesh.userData.edge=edge;return mesh;
 }
-function splitArmGeometry(source,splitX,side,distal=false){
-const p=source.getAttribute('position'),uv=source.getAttribute('uv'),idx=source.index?source.index.array:Array.from({length:p.count},(_,i)=>i),positions=[],uvs=[];
-const vertex=id=>({x:p.getX(id),y:p.getY(id),z:p.getZ(id),u:uv?uv.getX(id):.5,v:uv?uv.getY(id):.5});
-const clip=(poly,keepPositive)=>{
- const out=[];
- for(let i=0;i<poly.length;i++){
-  const a=poly[i],b=poly[(i+1)%poly.length],da=(a.x-splitX)*side,db=(b.x-splitX)*side;
-  const ina=keepPositive?da>=-1e-7:da<=1e-7,inb=keepPositive?db>=-1e-7:db<=1e-7;
-  if(ina)out.push(a);
-  if(ina!==inb){
-   const t=da/(da-db);
-   out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,u:a.u+(b.u-a.u)*t,v:a.v+(b.v-a.v)*t});
+function splitArmGeometry(source,splitY,keepUpper=false){
+ const p=source.getAttribute('position'),uv=source.getAttribute('uv');
+ const idx=source.index?source.index.array:Array.from({length:p.count},(_,i)=>i),positions=[],uvs=[];
+ const vertex=id=>({x:p.getX(id),y:p.getY(id),z:p.getZ(id),u:uv?uv.getX(id):.5,v:uv?uv.getY(id):.5});
+ const clip=poly=>{
+  const out=[];
+  for(let i=0;i<poly.length;i++){
+   const a=poly[i],b=poly[(i+1)%poly.length],da=a.y-splitY,db=b.y-splitY;
+   const ina=keepUpper?da>=-1e-7:da<=1e-7,inb=keepUpper?db>=-1e-7:db<=1e-7;
+   if(ina)out.push(a);
+   if(ina!==inb){const t=da/(da-db);out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,u:a.u+(b.u-a.u)*t,v:a.v+(b.v-a.v)*t});}
   }
+  return out;
+ };
+ for(let i=0;i<idx.length;i+=3){
+  const poly=clip([vertex(idx[i]),vertex(idx[i+1]),vertex(idx[i+2])]);
+  if(poly.length<3)continue;
+  for(let j=1;j<poly.length-1;j++)for(const v of [poly[0],poly[j],poly[j+1]]){positions.push(v.x,v.y,v.z);uvs.push(v.u,v.v);}
  }
- return out;
-};
-for(let i=0;i<idx.length;i+=3){
- let poly=clip([vertex(idx[i]),vertex(idx[i+1]),vertex(idx[i+2])],distal);
- if(poly.length<3)continue;
- for(let j=1;j<poly.length-1;j++)for(const v of [poly[0],poly[j],poly[j+1]]){
-  positions.push(v.x-(distal?splitX:0),v.y,v.z);uvs.push(v.u,v.v);
- }
-}
-const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();g.computeBoundingBox();return g;
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+ g.computeVertexNormals();g.computeBoundingBox();return g;
 }
 function clubArmGeometry(type){
-const profiles=[
-[-.82,.13,.15,0,0],[-.68,.17,.18,-.015,0],[-.48,.19,.19,.015,0],
-[-.26,.22,.21,.025,0],[-.04,.255,.24,0,0],[.16,.29,.27,-.015,0],
-[.36,.33,.30,-.025,0],[.55,.37,.34,0,0],[.72,.405,.37,.015,0],[.82,.35,.33,.015,0]
-];
-const base=ringForm(profiles,10,'armor');
-base.rotateZ(-Math.PI/2);
-base.computeVertexNormals();base.computeBoundingBox();
-return stoneDetail(base,type);
+ const profiles=[
+ [-.82,.13,.15,0,0],[-.68,.17,.18,-.015,0],[-.48,.19,.19,.015,0],
+ [-.26,.22,.21,.025,0],[-.04,.255,.24,0,0],[.16,.29,.27,-.015,0],
+ [.36,.33,.30,-.025,0],[.55,.37,.34,0,0],[.72,.405,.37,.015,0],[.82,.35,.33,.015,0]
+ ];
+ const base=ringForm(profiles,10,'armor');
+ base.computeVertexNormals();base.computeBoundingBox();
+ return stoneDetail(base,type);
 }
 function createArticulatedArm(type,side=1){
-const source=clubArmGeometry(type);
-if(side<0)source.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
-source.translate(side*.80,0,0);
-const elbowX=side*.80,turn=side<0?Math.PI/2:-Math.PI/2,material=limbMaterial(type),root=new THREE.Group();
-root.userData.type=type;root.userData.isCreatureRoot=true;root.userData.pivot='SHOULDER';root.userData.joint='ELBOW';root.userData.rigVersion=3;
-const upperGeometry=splitArmGeometry(source,elbowX,side,false);
-const forearmGeometry=splitArmGeometry(source,elbowX,side,true);
-upperGeometry.rotateZ(turn);forearmGeometry.rotateZ(turn);
-const upper=limbMesh(upperGeometry,material);upper.userData.segment='UPPER_ARM';root.add(upper);
-const elbow=new THREE.Group();elbow.position.set(0,-.80,0);elbow.userData.pivot='ELBOW';elbow.userData.isJoint=true;
-const forearm=limbMesh(forearmGeometry,material);forearm.userData.segment='STONE_CLUB';elbow.add(forearm);
-// Three stone spikes replace fingers; they are part of the forearm rig and follow the elbow.
-const spikeEdges=[];
-for(let n=0;n<3;n++){
- const spikeGeometry=stoneDetail(new THREE.ConeGeometry(.125,.38,5,1),type);
- const spike=limbMesh(spikeGeometry,material);
- spike.position.set((n-1)*.17,-.70,n===1?0:.015);
- spike.rotation.z=Math.PI+(n-1)*.24;
- spike.userData.segment='CLUB_SPIKE_'+(n+1);
- elbow.add(spike);spikeEdges.push(spike.userData.edge);
-}
-root.add(elbow);
-// A small internal pivot core closes the cut without an exposed ball or torus.
-const jointCore=new THREE.Mesh(new THREE.SphereGeometry(.125,10,8),material);
-jointCore.position.set(0,-.80,0);jointCore.castShadow=true;jointCore.receiveShadow=true;root.add(jointCore);
-root.userData.joints={elbow};root.userData.edges=[upper.userData.edge,forearm.userData.edge,...spikeEdges];root.userData.edge=upper.userData.edge;root.userData.material=material;root.userData.side=side;root.userData.rigType='ARM_2_SEGMENT';return root;
+ const source=clubArmGeometry(type);
+ if(side<0)source.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
+ const material=limbMaterial(type),root=new THREE.Group();
+ root.userData.type=type;root.userData.isCreatureRoot=true;root.userData.pivot='SHOULDER';root.userData.joint='ELBOW';root.userData.rigVersion=4;
+ // Both sides use the same vertical coordinate system: upper arm above Y=0, club below it.
+ const upperGeometry=splitArmGeometry(source,0,true);
+ const forearmGeometry=splitArmGeometry(source,0,false);
+ upperGeometry.translate(0,-.82,0);
+ const upper=limbMesh(upperGeometry,material);upper.userData.segment='UPPER_ARM';root.add(upper);
+ const elbow=new THREE.Group();elbow.position.set(0,-.82,0);elbow.userData.pivot='ELBOW';elbow.userData.isJoint=true;
+ const forearm=limbMesh(forearmGeometry,material);forearm.userData.segment='STONE_CLUB';elbow.add(forearm);
+ const spikeEdges=[];
+ for(let n=0;n<3;n++){
+  const spikeGeometry=stoneDetail(new THREE.ConeGeometry(.125,.38,5,1),type);
+  const spike=limbMesh(spikeGeometry,material);
+  spike.position.set((n-1)*.17,-.70,n===1?0:.015);
+  spike.rotation.z=Math.PI+(n-1)*.24;
+  spike.userData.segment='CLUB_SPIKE_'+(n+1);
+  elbow.add(spike);spikeEdges.push(spike.userData.edge);
+ }
+ root.add(elbow);
+ const jointCore=new THREE.Mesh(new THREE.SphereGeometry(.125,10,8),material);
+ jointCore.position.set(0,-.82,0);jointCore.castShadow=true;jointCore.receiveShadow=true;root.add(jointCore);
+ root.userData.joints={elbow};root.userData.edges=[upper.userData.edge,forearm.userData.edge,...spikeEdges];root.userData.edge=upper.userData.edge;root.userData.material=material;root.userData.side=side;root.userData.rigType='ARM_2_SEGMENT';
+ source.dispose();return root;
 }
 function createPart(type,side=1){
 if(type.startsWith('stone_arm_'))return createArticulatedArm(type,side);
