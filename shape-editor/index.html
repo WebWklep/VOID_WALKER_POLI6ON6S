@@ -211,23 +211,44 @@ for(let i=0;i<idx.length;i+=3){
 }
 const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.computeVertexNormals();g.computeBoundingBox();return g;
 }
+function clubArmGeometry(type){
+const profiles=[
+[-.82,.13,.15,0,0],[-.68,.17,.18,-.015,0],[-.48,.19,.19,.015,0],
+[-.26,.22,.21,.025,0],[-.04,.255,.24,0,0],[.16,.29,.27,-.015,0],
+[.36,.33,.30,-.025,0],[.55,.37,.34,0,0],[.72,.405,.37,.015,0],[.82,.35,.33,.015,0]
+];
+const base=ringForm(profiles,10,'armor');
+base.rotateZ(-Math.PI/2);
+base.computeVertexNormals();base.computeBoundingBox();
+return stoneDetail(base,type);
+}
 function createArticulatedArm(type,side=1){
-const source=geometry(type);
+const source=clubArmGeometry(type);
 if(side<0)source.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
 source.translate(side*.80,0,0);
 const elbowX=side*.80,turn=side<0?Math.PI/2:-Math.PI/2,material=limbMaterial(type),root=new THREE.Group();
-root.userData.type=type;root.userData.isCreatureRoot=true;root.userData.pivot='SHOULDER';root.userData.joint='ELBOW';root.userData.rigVersion=2;
-// Build the arm downwards in its own local space. The shoulder stays at (0,0,0).
+root.userData.type=type;root.userData.isCreatureRoot=true;root.userData.pivot='SHOULDER';root.userData.joint='ELBOW';root.userData.rigVersion=3;
 const upperGeometry=splitArmGeometry(source,elbowX,side,false);
 const forearmGeometry=splitArmGeometry(source,elbowX,side,true);
 upperGeometry.rotateZ(turn);forearmGeometry.rotateZ(turn);
 const upper=limbMesh(upperGeometry,material);upper.userData.segment='UPPER_ARM';root.add(upper);
 const elbow=new THREE.Group();elbow.position.set(0,-.80,0);elbow.userData.pivot='ELBOW';elbow.userData.isJoint=true;
-const forearm=limbMesh(forearmGeometry,material);forearm.userData.segment='FOREARM';elbow.add(forearm);root.add(elbow);
-const cap=new THREE.Mesh(new THREE.SphereGeometry(.205,12,10),material);cap.position.set(0,-.80,0);cap.castShadow=true;cap.receiveShadow=true;root.add(cap);
-const collar=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,6,12),material);collar.position.set(0,-.80,0);collar.rotation.y=Math.PI/2;collar.castShadow=true;root.add(collar);
-const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),material);shoulder.position.set(0,0,0);shoulder.scale.set(1,.94,1);shoulder.castShadow=true;shoulder.receiveShadow=true;root.add(shoulder);
-root.userData.joints={elbow};root.userData.edges=[upper.userData.edge,forearm.userData.edge];root.userData.edge=upper.userData.edge;root.userData.material=material;root.userData.side=side;root.userData.rigType='ARM_2_SEGMENT';return root;
+const forearm=limbMesh(forearmGeometry,material);forearm.userData.segment='STONE_CLUB';elbow.add(forearm);
+// Three stone spikes replace fingers; they are part of the forearm rig and follow the elbow.
+const spikeEdges=[];
+for(let n=0;n<3;n++){
+ const spikeGeometry=stoneDetail(new THREE.ConeGeometry(.125,.38,5,1),type);
+ const spike=limbMesh(spikeGeometry,material);
+ spike.position.set((n-1)*.17,-.70,n===1?0:.015);
+ spike.rotation.z=Math.PI+(n-1)*.24;
+ spike.userData.segment='CLUB_SPIKE_'+(n+1);
+ elbow.add(spike);spikeEdges.push(spike.userData.edge);
+}
+root.add(elbow);
+// A small internal pivot core closes the cut without an exposed ball or torus.
+const jointCore=new THREE.Mesh(new THREE.SphereGeometry(.125,10,8),material);
+jointCore.position.set(0,-.80,0);jointCore.castShadow=true;jointCore.receiveShadow=true;root.add(jointCore);
+root.userData.joints={elbow};root.userData.edges=[upper.userData.edge,forearm.userData.edge,...spikeEdges];root.userData.edge=upper.userData.edge;root.userData.material=material;root.userData.side=side;root.userData.rigType='ARM_2_SEGMENT';return root;
 }
 function createPart(type,side=1){
 if(type.startsWith('stone_arm_'))return createArticulatedArm(type,side);
