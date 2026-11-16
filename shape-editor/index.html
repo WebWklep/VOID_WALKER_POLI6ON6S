@@ -192,7 +192,7 @@ checkpoint();
 if(currentCategory!=='EXTRAS')removeCategory(currentCategory);
 let body=getMainBody();
 if(currentCategory!=='BODY'&&!body){
-body=createPart('body_core');body.userData.part='CORE';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
+body=createPart('body_torso');body.userData.part='TORSO';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
 }
 const factor=sizeFactor[currentSize];
 const addOne=(side=1)=>{
@@ -225,9 +225,9 @@ document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{currentSize=b
 document.querySelector('#skin').onclick=()=>{skinMode=(skinMode+1)%3;const labels=['GRAPHITE','GRAIN','RASTER'];document.querySelector('#skin').textContent='◈ SKIN: '+labels[skinMode];applySkin();document.querySelector('.view').classList.toggle('raster',skinMode===2);document.querySelector('#rasterOverlay').style.opacity=skinMode===1?'.12':'';};
 document.querySelector('#random').onclick=()=>{
 checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;
-const body=createPart('body_core');body.userData.part='CORE';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
+const body=createPart('body_hunch');body.userData.part='HUNCH';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
 const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
-add('head_mask','HEAD');add('limb','ARMS',-1);add('limb','ARMS',1);add('leg_heavy','LEGS',-1);add('leg_heavy','LEGS',1);
+add('head_insect','HEAD');add('limb','ARMS',-1);add('limb','ARMS',1);add('leg_heavy','LEGS',-1);add('leg_heavy','LEGS',1);
 select(body);updateCount();document.querySelector('#status').textContent='UNEXPECTED CREATURE GENERATED · SOCKETED';
 };
 renderParts();
