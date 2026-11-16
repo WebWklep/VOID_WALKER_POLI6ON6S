@@ -94,7 +94,7 @@ function addPart(type,sc,name){
 checkpoint();
 let previousHead=null;
 if(currentCategory==='HEAD'){previousHead=objects.find(x=>x.userData.category==='HEAD')||null;if(previousHead){const oldPos=previousHead.position.clone();const oldScale=previousHead.scale.clone();scene.remove(previousHead);objects.splice(objects.indexOf(previousHead),1);previousHead={position:oldPos,scale:oldScale};}}
-if(currentCategory==='BODY'){const oldBody=objects.find(x=>x.userData.category==='BODY');if(oldBody){scene.remove(oldBody);objects.splice(objects.indexOf(oldBody),1);}}
+if(currentCategory==='BODY'){const oldBody=objects.find(x=>x.userData.category==='BODY'||x.userData.part==='CORE');if(oldBody){scene.remove(oldBody);objects.splice(objects.indexOf(oldBody),1);}}
 let body=objects.find(x=>x.userData.type.startsWith('body_')||x.userData.part==='CORE');
 if(currentCategory!=='BODY'&&!body){
 const core=new THREE.LineSegments(new THREE.EdgesGeometry(geometry('body_core')),lineMat);
