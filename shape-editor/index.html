@@ -28,7 +28,7 @@ button:active,button.active{border-color:#eee;color:#fff;background:#171717}.sha
 <div class="row variation-row"><select id="variation" class="variation-select" aria-label="Вариант детали"></select><div class="sizes" id="sizes" aria-label="Размер детали"><button data-size="S">S</button><button data-size="M" class="active">M</button><button data-size="L">L</button></div></div>
 <div class="row library-actions">
 
-<button id="skin" class="small">◈ SKIN: GRAPHITE</button>
+<button id="skin" class="small">◈ MATERIAL: STONE</button>
 </div>
 <div class="row">
 <div class="tool"><button id="magnet" aria-label="Магнит">⌁</button><div class="label">MAGNET</div></div>
@@ -45,7 +45,7 @@ button:active,button.active{border-color:#eee;color:#fff;background:#171717}.sha
 <button data-move="0,0,1" aria-label="Вперёд по глубине">↓</button>
 </div><div class="label">XYZ / MOVE</div></div>
 <div class="tool"><button id="undo" class="small" aria-label="Назад">↶</button><div class="label">UNDO</div></div><div class="tool"><button id="delete" class="small" aria-label="Удалить">×</button><div class="label">DELETE</div></div>
-<div class="tool"><button id="reset" class="small" aria-label="Сброс камеры">◎</button><div class="label">CENTER</div></div><div class="tool" id="rasterPanel"><button id="raster" aria-label="Растровая заливка">▦</button><input id="rasterLevel" type="range" min="5" max="45" value="18" aria-label="Плотность растра"><div class="label">RASTER</div></div>
+<div class="tool"><button id="reset" class="small" aria-label="Сброс камеры">◎</button><div class="label">CENTER</div></div>
 </div><div id="status">SELECT SHAPE · CREATE IN CENTER</div>
 </section></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
@@ -134,7 +134,7 @@ clay_leg_bent:[[-.88,.10,.13,0,0],[-.62,.17,.18,.12,0],[-.36,.13,.15,.24,0],[-.1
 clay_leg_digit:[[-.88,.08,.12,0,-.10],[-.62,.14,.16,-.10,-.04],[-.36,.12,.14,-.18,0],[-.08,.18,.17,-.08,0],[.18,.13,.14,.08,0],[.42,.18,.17,.18,0],[.66,.25,.22,.12,-.02],[.84,.15,.17,.02,-.20]]
 };
 if(sculpted[type]){
-const isStone=type.startsWith('stone_'),g=ringForm(sculpted[type],isStone?7:12,isStone?'armor':'organic');
+const isStone=type.startsWith('stone_'),segments=type==='stone_head_block'?4:(isStone?7:12),g=ringForm(sculpted[type],segments,isStone?'armor':'organic');
 if(isStone){const a=g.getAttribute('position');let seed=type.length*917;for(let i=0;i<a.count;i++){seed=(seed*16807)%2147483647;const n=((seed%1000)/1000-.5);a.setXYZ(i,a.getX(i)*(1+n*.10),a.getY(i)+n*.035,a.getZ(i)*(1-n*.08));}a.needsUpdate=true;g.computeVertexNormals();}
 if(type.includes('_arm_'))g.rotateZ(-Math.PI/2);
 return g;
@@ -291,9 +291,9 @@ document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{currentSize=b
 document.querySelector('#skin').onclick=()=>{skinMode=(skinMode+1)%2;const labels=['STONE','CLAY'];document.querySelector('#skin').textContent='◈ MATERIAL: '+labels[skinMode];applySkin();document.querySelector('.view').classList.remove('raster');document.querySelector('#rasterOverlay').style.opacity='0';};
 document.querySelector('#random').onclick=()=>{
 checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;
-const body=createPart('body_hunch');body.userData.part='HUNCH';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
+const body=createPart('clay_body_roll');body.userData.part='CLAY ROLL';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
 const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
-add('head_insect','HEAD');add('arm_crustacean','ARMS',-1);add('arm_crustacean','ARMS',1);add('leg_digitigrade','LEGS',-1);add('leg_digitigrade','LEGS',1);
+add('stone_head_crag','HEAD');add('clay_arm_bent','ARMS',-1);add('clay_arm_long','ARMS',1);add('stone_leg_broken','LEGS',-1);add('clay_leg_bent','LEGS',1);
 select(body);updateCount();document.querySelector('#status').textContent='UNEXPECTED CREATURE GENERATED · SOCKETED';
 };
 renderParts();
