@@ -155,6 +155,9 @@ function createPart(type,side=1){
 let g=geometry(type);
 if(type.startsWith('stone_arm_'))g=combineArmJoint(g,side);
 else if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
+// Limb meshes are authored around their attachment pivots: shoulder for arms, hip for legs.
+if(type.startsWith('stone_arm_'))g.translate(0,-.80,0);
+else if(type.startsWith('stone_leg_'))g.translate(0,-.88,0);
 const isStone=type.startsWith('stone_');
 const eye=type==='eye';
 // Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
@@ -327,7 +330,7 @@ socket.set(side*(t.max.x+.025),t.min.y+(t.max.y-t.min.y)*.66,0);
 connector.set(-side*p.max.x,0,0);
 }else if(role==='LEG'){
 socket.set(side*(t.max.x*.42),t.min.y-.025,0);
-connector.set(0,p.max.y,0);
+connector.set(0,0,0);
 }else if(role==='TOP'){
 socket.set(0,t.max.y+.015,0);connector.set(0,p.min.y,0);
 }else if(role==='EYE'){
@@ -339,14 +342,14 @@ socket.set(side*.12,t.min.y+.025,0);connector.set(0,p.max.y,0);
 }
 part.position.copy(center.add(socket).sub(connector));
 part.userData.socketRole=role;part.userData.socketSide=side;
+if(role==='LEG')part.userData.pivot='HIP';
 }
 function socketPlaceArm(part,target,side=1){
-const p=localBounds(part),t=localBounds(target);
+const t=localBounds(target);
+// The arm object's origin is now its shoulder pivot, so rotation happens at the socket.
 const socket=new THREE.Vector3(side*(t.max.x-.045),.18,0);
-const connector=new THREE.Vector3(side>0?p.min.x:p.max.x,0,0);
-connector.applyQuaternion(part.quaternion);
-part.position.copy(target.position).add(socket).sub(connector);
-part.userData.socketRole='ARM';part.userData.socketSide=side;
+part.position.copy(target.position).add(socket);
+part.userData.socketRole='ARM';part.userData.socketSide=side;part.userData.pivot='SHOULDER';
 }
 function getMainBody(){return objects.find(x=>x.userData.category==='BODY'||x.userData.part==='CORE'||x.userData.type.startsWith('body_'))||null;}
 function reflowParts(){
