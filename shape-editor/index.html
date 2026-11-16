@@ -190,7 +190,7 @@ function splitArmGeometry(source,splitX,side,distal=false){
 const p=source.getAttribute('position'),uv=source.getAttribute('uv'),idx=source.index?source.index.array:Array.from({length:p.count},(_,i)=>i),positions=[],uvs=[];
 for(let i=0;i<idx.length;i+=3){
  const ids=[idx[i],idx[i+1],idx[i+2]],cx=(p.getX(ids[0])+p.getX(ids[1])+p.getX(ids[2]))/3;
- const isUpper=(cx-splitX)*side>0;
+ const isUpper=(cx-splitX)*side<0;
  if(isUpper===distal)continue;
  for(const id of ids){positions.push(p.getX(id)-(distal?splitX:0),p.getY(id),p.getZ(id));uvs.push(uv?uv.getX(id):.5,uv?uv.getY(id):.5);}
 }
