@@ -206,8 +206,9 @@ const upper=limbMesh(splitArmGeometry(source,elbowX,side,false),material);upper.
 const elbow=new THREE.Group();elbow.position.set(elbowX,0,0);elbow.userData.pivot='ELBOW';elbow.userData.isJoint=true;
 const forearm=limbMesh(splitArmGeometry(source,elbowX,side,true),material);forearm.userData.segment='FOREARM';elbow.add(forearm);root.add(elbow);
 const cap=new THREE.Mesh(new THREE.SphereGeometry(.205,12,10),material);cap.position.set(elbowX,0,0);cap.castShadow=true;cap.receiveShadow=true;root.add(cap);
-const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),material);shoulder.position.set(side*1.53,0,0);shoulder.scale.set(1,.94,1);shoulder.castShadow=true;shoulder.receiveShadow=true;root.add(shoulder);
-root.userData.elbowPivot=elbow;root.userData.edge=upper.userData.edge;root.userData.material=material;return root;
+const collar=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,6,12),material);collar.position.set(elbowX,0,0);collar.rotation.y=Math.PI/2;collar.castShadow=true;root.add(collar);
+const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),material);shoulder.position.set(side*.07,0,0);shoulder.scale.set(1,.94,1);shoulder.castShadow=true;shoulder.receiveShadow=true;root.add(shoulder);
+root.userData.joints={elbow};root.userData.edges=[upper.userData.edge,forearm.userData.edge];root.userData.edge=upper.userData.edge;root.userData.material=material;root.userData.side=side;root.userData.rigType='ARM_2_SEGMENT';return root;
 }
 function createPart(type,side=1){
 if(type.startsWith('stone_arm_'))return createArticulatedArm(type,side);
