@@ -175,7 +175,9 @@ if(type.startsWith('stone_arm_'))g=combineArmJoint(g,side);
 else if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
 const isStone=type.startsWith('stone_');
 const eye=type==='eye';
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.16:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.94:.88),metalness:0,flatShading:isStone}));
+// Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
+const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.16:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.94:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
@@ -248,7 +250,7 @@ p.setXYZ(i,x+n.getX(i)*d,y+n.getY(i)*d,z+n.getZ(i)*d);
 p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();return g;
 }
 if(sculpted[type]){
-const isStone=type.startsWith('stone_'),segments=type==='stone_head_block'?4:(isStone?7:12),base=ringForm(sculpted[type],segments,isStone?'armor':'organic');
+const isStone=type.startsWith('stone_'),keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab',segments=keepStarterFacets?(type==='stone_head_block'?4:7):(isStone?12:14),base=ringForm(sculpted[type],segments,isStone?'armor':'organic');
 const g=isStone?stoneDetail(base,type):base;
 if(type.includes('_arm_'))g.rotateZ(-Math.PI/2);
 return g;
