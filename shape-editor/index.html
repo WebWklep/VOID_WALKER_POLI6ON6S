@@ -239,8 +239,8 @@ function intersects(a,b){const A=new THREE.Box3().setFromObject(a),B=new THREE.B
 function attachTo(targetObj,moving){if(!targetObj||!moving||targetObj===moving)return;checkpoint();const a=new THREE.Box3().setFromObject(targetObj),b=new THREE.Box3().setFromObject(moving);const ac=a.getCenter(new THREE.Vector3()),bc=b.getCenter(new THREE.Vector3());const delta=bc.sub(ac);let axis='x';if(Math.abs(delta.y)>Math.abs(delta.x)&&Math.abs(delta.y)>Math.abs(delta.z))axis='y';else if(Math.abs(delta.z)>Math.abs(delta.x))axis='z';const gap=.015;const pos=targetObj.position.clone();const da=dims(targetObj),db=dims(moving);const sign=delta[axis]>=0?1:-1;pos[axis]+=sign*(da[axis]+db[axis])/2+sign*gap;moving.position.copy(pos);document.querySelector('#status').textContent='MAGNETICALLY ALIGNED';}
 
 const catalog={
-HEAD:[['STONE BLOCK','stone_head_block',[1,1,1]],['STONE CRAG','stone_head_crag',[1,1,1]],['CLAY ROLL','clay_head_roll',[1,1,1]]],
-BODY:[['STONE SLAB','stone_body_slab',[1,1,1]],['BOULDER','stone_body_boulder',[1,1,1]],['CLAY ROLL','clay_body_roll',[1,1,1]],['CLAY TAPER','clay_body_taper',[1,1,1]]],
+HEAD:[['STONE BLOCK','stone_head_block',[1,1,1]],['STONE CRAG','stone_head_crag',[1,1,1]]],
+BODY:[['STONE SLAB','stone_body_slab',[1,1,1]],['BOULDER','stone_body_boulder',[1,1,1]]],
 ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]]],
 LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]]],
 EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn',[1,1,1]]]
@@ -332,10 +332,10 @@ skinMode=0;document.querySelector('#skin').textContent='◈ MATERIAL: STONE';doc
 document.querySelector('#random').onclick=()=>{
 try{
 checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;selected=null;
-const body=createPart('clay_body_roll');body.userData.part='CLAY ROLL';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
+const body=createPart('stone_body_boulder');body.userData.part='STONE BOULDER';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
-add(pick(['stone_head_crag','stone_head_block','clay_head_roll']),'HEAD');
+add(pick(['stone_head_crag','stone_head_block']),'HEAD');
 const armType=pick(['stone_arm_slab','stone_arm_hammer']);
 const armScale=.9+Math.random()*.2;
 add(armType,'ARMS',-1,[armScale,armScale,armScale]);
