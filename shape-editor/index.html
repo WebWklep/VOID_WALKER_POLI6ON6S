@@ -213,6 +213,8 @@ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32Bu
 }
 function createArticulatedArm(type,side=1){
 let source=geometry(type);
+// Arm catalog geometry is authored vertically; restore its rig axis to local +X before splitting.
+source.rotateZ(Math.PI/2);
 if(side<0)source.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
 source.translate(side*.80,0,0);
 const elbowX=side*.80,material=limbMaterial(type),root=new THREE.Group();
@@ -457,7 +459,7 @@ if(currentCategory==='BODY'){o.position.set(0,0,0);o.userData.category='BODY';}
 else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
 else if(currentCategory==='ARMS'){
 o.userData.side=side;
-o.rotation.z=side<0?-Math.PI/2:Math.PI/2;
+o.rotation.z=side<0?Math.PI/2:-Math.PI/2;
 socketPlaceArm(o,body,side);
 }
 else if(currentCategory==='LEGS'){
