@@ -145,13 +145,25 @@ clay_leg_digit:[[-.88,.08,.12,0,-.10],[-.62,.14,.16,-.10,-.04],[-.36,.12,.14,-.1
 function stoneDetail(source,type){
 let g=source;
 for(let pass=0;pass<2;pass++){
-const p=g.getAttribute('position'),idx=g.index?g.index.array:Array.from({length:p.count},(_,i)=>i),verts=Array.from(p.array),faces=[],cache=new Map();
-const mid=(a,b)=>{const key=a<b?a+':'+b:b+':'+a;if(cache.has(key))return cache.get(key);const n=verts.length/3;verts.push((verts[a*3]+verts[b*3])*.5,(verts[a*3+1]+verts[b*3+1])*.5,(verts[a*3+2]+verts[b*3+2])*.5);cache.set(key,n);return n;};
+const p=g.getAttribute('position'),uv=g.getAttribute('uv'),idx=g.index?g.index.array:Array.from({length:p.count},(_,i)=>i),verts=Array.from(p.array),uvs=uv?Array.from(uv.array):Array.from({length:p.count*2},(_,i)=>i%2?.5:.5),faces=[],cache=new Map();
+const mid=(a,b)=>{const key=a<b?a+':'+b:b+':'+a;if(cache.has(key))return cache.get(key);const n=verts.length/3;verts.push((verts[a*3]+verts[b*3])*.5,(verts[a*3+1]+verts[b*3+1])*.5,(verts[a*3+2]+verts[b*3+2])*.5);uvs.push((uvs[a*2]+uvs[b*2])*.5,(uvs[a*2+1]+uvs[b*2+1])*.5);cache.set(key,n);return n;};
 for(let i=0;i<idx.length;i+=3){const a=idx[i],b=idx[i+1],c=idx[i+2],ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);faces.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);}
-const next=new THREE.BufferGeometry();next.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));next.setIndex(faces);g.dispose();g=next;
+const next=new THREE.BufferGeometry();next.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));next.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));next.setIndex(faces);g.dispose();g=next;
 }
-g.computeVertexNormals();const p=g.getAttribute('position'),n=g.getAttribute('normal');let seed=type.length*1171;
-for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);const broad=Math.sin(x*8.1+y*5.7+z*4.3)*Math.cos(y*9.2-z*6.1);const fine=Math.sin(x*31.7+z*27.1+y*19.3)*Math.cos(z*23.4-y*17.8);seed=(seed*16807)%2147483647;const grain=((seed%1000)/500-1);const d=broad*.014+fine*.004+grain*.0018;p.setXYZ(i,x+n.getX(i)*d,y+n.getY(i)*d,z+n.getZ(i)*d);}
+g.computeVertexNormals();
+const p=g.getAttribute('position'),n=g.getAttribute('normal');
+const noise=(x,y,z,k)=>Math.sin(x*12.9898*k+y*78.233*k+z*37.719*k)*.5+Math.sin(x*5.13*k-z*8.71*k+y*3.7*k)*.25;
+for(let i=0;i<p.count;i++){
+const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+const broad=noise(x+.13,y,z-.07,.72),medium=noise(x,y,z,1.9),fine=noise(x,y,z,6.8);
+const strata=Math.sin((y+noise(x,y,z,2.1)*.08)*31+Math.sin(x*5+z*4)*.8);
+const shelf=Math.pow(Math.max(0,strata),18)*.014;
+const crackA=Math.abs(Math.sin((x*1.7+z*.9+noise(x,y,z,1.3)*.12)*19));
+const crackB=Math.abs(Math.sin((y*1.3-z*.8+noise(x,y,z,1.7)*.1)*16));
+const fissure=(crackA<.045&&crackB<.22)?.018:0;
+const d=broad*.027+medium*.011+fine*.0035+shelf-fissure;
+p.setXYZ(i,x+n.getX(i)*d,y+n.getY(i)*d,z+n.getZ(i)*d);
+}
 p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();return g;
 }
 if(sculpted[type]){
