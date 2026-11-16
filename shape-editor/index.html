@@ -521,7 +521,7 @@ const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type,side);o.us
 add(pick(['stone_head_crag','stone_head_block']),'HEAD');
 const armType=pick(['stone_arm_slab','stone_arm_hammer','stone_arm_exo','stone_arm_piston']);
 const armScale=.9+Math.random()*.2;
-for(const side of [-1,1]){const a=add(armType,'ARMS',side,[armScale,armScale,armScale]);a.rotation.z=side<0?-Math.PI/2:Math.PI/2;socketPlaceArm(a,body,side);}
+for(const side of [-1,1])add(armType,'ARMS',side,[armScale,armScale,armScale]);
 const legType=pick(['stone_leg_broken','stone_leg_pillar','stone_leg_exo']);
 add(legType,'LEGS',-1);
 add(legType,'LEGS',1);
