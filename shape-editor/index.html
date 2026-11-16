@@ -183,6 +183,7 @@ if(currentCategory==='ARMS'||currentCategory==='LEGS'){
 first=addOne(-1);addOne(1);
 }else first=addOne(1);
 if(currentCategory==='BODY'){body=first;reflowParts();}
+if(currentCategory==='BODY'||currentCategory==='HEAD')reflowParts();
 select(first);updateCount();
 document.querySelector('#status').textContent=currentCategory==='ARMS'||currentCategory==='LEGS'?name+' · PAIR CONNECTED':name+' · SOCKET CONNECTED';
 }
@@ -191,7 +192,13 @@ document.querySelector('#variation').onchange=e=>{const option=e.target.selected
 document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{currentSize=b.dataset.size;document.querySelectorAll('[data-size]').forEach(x=>x.classList.toggle('active',x===b));if(selected&&selected.userData.baseScale){const f=sizeFactor[currentSize],v=selected.userData.baseScale;checkpoint();selected.scale.set(v[0]*f,v[1]*f,v[2]*f);reflowParts();document.querySelector('#status').textContent='PROPORTION · '+currentSize;}});
 
 document.querySelector('#skin').onclick=()=>{skinMode=(skinMode+1)%3;const labels=['GRAPHITE','GRAIN','RASTER'];document.querySelector('#skin').textContent='◈ SKIN: '+labels[skinMode];applySkin();document.querySelector('.view').classList.toggle('raster',skinMode===2);document.querySelector('#rasterOverlay').style.opacity=skinMode===1?'.12':'';};
-document.querySelector('#random').onclick=()=>{checkpoint();const choices=[['body_core',[1,1,1]],['head_mask',[1,1,1]],['limb',[1,1,1]],['leg_heavy',[1,1,1]],['horn',[.7,.7,.7]]];const body=createPart('body_core');body.userData.type='body_core';body.userData.part='CORE';body.userData.category='BODY';scene.add(body);objects.push(body);const add=(type,sc,pos)=>{const o=createPart(type);o.userData.type=type;o.scale.set(...sc);o.position.set(...pos);scene.add(o);objects.push(o);};add('head_mask',[1,1,1],[0,1,0],'HEAD');add('limb',[1,1,1],[-.8,.2,0],'ARMS');add('limb',[1,1,1],[.8,.2,0],'ARMS');add('leg_heavy',[1,1,1],[-.3,-1,0],'LEGS');add('leg_heavy',[1,1,1],[.3,-1,0],'LEGS');select(body);updateCount();document.querySelector('#status').textContent='UNEXPECTED CREATURE GENERATED';};
+document.querySelector('#random').onclick=()=>{
+checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;
+const body=createPart('body_core');body.userData.part='CORE';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
+const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlace(o,body,'ARM',side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
+add('head_mask','HEAD');add('limb','ARMS',-1);add('limb','ARMS',1);add('leg_heavy','LEGS',-1);add('leg_heavy','LEGS',1);
+select(body);updateCount();document.querySelector('#status').textContent='UNEXPECTED CREATURE GENERATED · SOCKETED';
+};
 renderParts();
 document.querySelector('#magnet').onclick=()=>{magnetArmed=!magnetArmed;document.querySelector('#magnet').classList.toggle('active',magnetArmed);document.querySelector('#status').textContent=magnetArmed?'MAGNET: SELECT TARGET':'MAGNET OFF';};
 document.querySelector('#snap').onclick=()=>{autoMagnet=!autoMagnet;document.querySelector('#snap').classList.toggle('active',autoMagnet);document.querySelector('#status').textContent=autoMagnet?'AUTO MAGNET ON':'AUTO MAGNET OFF';};
