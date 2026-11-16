@@ -54,12 +54,14 @@ import * as THREE from 'three';
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x050505);
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050505);
-scene.add(new THREE.HemisphereLight(0xd0d5e2,0x252b39,1.55));
-const keyLight=new THREE.DirectionalLight(0xd8d8e8,2.25);keyLight.position.set(-4,6,5);scene.add(keyLight);
-const fillLight=new THREE.DirectionalLight(0x9baecb,1.15);fillLight.position.set(5,1,-4);scene.add(fillLight);
-const rimLight=new THREE.DirectionalLight(0xc5c5df,.85);rimLight.position.set(1,4,-6);scene.add(rimLight);
+// Airless industrial moonlight: one hard, cold key and very restrained ambient fill.
+scene.add(new THREE.HemisphereLight(0xb8c5dc,0x080d18,.42));
+const keyLight=new THREE.DirectionalLight(0xe1e8f5,3.35);keyLight.position.set(-4,7,5);keyLight.castShadow=true;keyLight.shadow.mapSize.set(1024,1024);keyLight.shadow.camera.near=.5;keyLight.shadow.camera.far=24;keyLight.shadow.camera.left=-5;keyLight.shadow.camera.right=5;keyLight.shadow.camera.top=6;keyLight.shadow.camera.bottom=-6;keyLight.shadow.bias=-.00035;keyLight.shadow.normalBias=.025;scene.add(keyLight);
+const fillLight=new THREE.DirectionalLight(0x7188ad,.20);fillLight.position.set(5,1,-4);scene.add(fillLight);
+const rimLight=new THREE.DirectionalLight(0xaabbd8,.32);rimLight.position.set(1,4,-6);scene.add(rimLight);
 const camera=new THREE.PerspectiveCamera(42,1,.1,100);
 let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
 const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray()})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type,d.side||1);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
@@ -163,6 +165,7 @@ const eye=type==='eye';
 // Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
 const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
 const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:null,bumpScale:isStone?.12:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?1:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
+mesh.castShadow=true;mesh.receiveShadow=true;
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 // Integrated stone articulation: rounded elbow/knee cap follows the limb transform.
 if(type.startsWith('stone_arm_')||type.startsWith('stone_leg_')){
@@ -176,10 +179,11 @@ if(type.startsWith('stone_arm_')||type.startsWith('stone_leg_')){
    mesh.userData.pivot='HIP';mesh.userData.joint='KNEE';
    if(type==='stone_leg_bigboot'){
      const boot=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),mesh.material);
-     boot.position.set(0,-1.69,.16);boot.scale.set(.39,.25,.53);mesh.add(boot);
+     boot.position.set(0,-1.69,.16);boot.scale.set(.39,.25,.53);boot.castShadow=true;boot.receiveShadow=true;mesh.add(boot);
      mesh.userData.footStyle='BIG STONE BOOT';
    }
  }
+ joint.castShadow=true;joint.receiveShadow=true;
  mesh.add(joint);
 }
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
