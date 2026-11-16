@@ -457,7 +457,7 @@ if(currentCategory==='BODY'){o.position.set(0,0,0);o.userData.category='BODY';}
 else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
 else if(currentCategory==='ARMS'){
 o.userData.side=side;
-o.rotation.z=side<0?Math.PI/2:-Math.PI/2;
+o.rotation.z=side<0?-Math.PI/2:Math.PI/2;
 socketPlaceArm(o,body,side);
 }
 else if(currentCategory==='LEGS'){
