@@ -70,71 +70,71 @@ function makeTexture(kind){
 const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
 ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
 if(kind==='stone'){
-c.width=c.height=512;ctx.fillStyle='#858994';ctx.fillRect(0,0,512,512);let seed=19371;
+c.width=c.height=512;ctx.fillStyle='#a1a9ba';ctx.fillRect(0,0,512,512);let seed=29417;
 const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-// Broad mineral mottling: cool ash, blue-grey and muted graphite only.
-for(let i=0;i<95;i++){
- const x=rand()*512,y=rand()*512,r=28+rand()*105;
- const shade=rand()>.52? 'rgba(65,79,101,' : 'rgba(190,194,203,';
- const g=ctx.createRadialGradient(x-r*.15,y-r*.18,2,x,y,r);
- g.addColorStop(0,shade+(.07+rand()*.07)+')');g.addColorStop(.7,shade+(.025+rand()*.035)+')');g.addColorStop(1,'rgba(133,137,148,0)');
- ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,r*1.25,r*(.5+rand()*.65),rand()*Math.PI,0,Math.PI*2);ctx.fill();
+// Broad, cold limestone-grey mineral variation; avoid obvious painted cloud spots.
+for(let i=0;i<150;i++){
+ const x=rand()*512,y=rand()*512,rx=18+rand()*85,ry=10+rand()*34;
+ const dark=rand()>.56, tone=dark?[65,77,99]:[210,215,226];
+ const alpha=.035+rand()*.085;
+ ctx.fillStyle='rgba('+tone[0]+','+tone[1]+','+tone[2]+','+alpha+')';
+ ctx.beginPath();ctx.ellipse(x,y,rx,ry,rand()*.25-.12,0,Math.PI*2);ctx.fill();
 }
-// Thick, irregular sediment plates. Each layer has a soft pale top and a narrow shadow seam.
-for(let i=0;i<11;i++){
- const y=18+i*47+(rand()-.5)*20,amp=5+rand()*12,phase=rand()*6.28;
- const path=()=>{ctx.beginPath();ctx.moveTo(-15,y);
- ctx.bezierCurveTo(95,y+Math.sin(phase)*amp,175,y+Math.cos(phase)*amp,260,y+(rand()-.5)*amp);
- ctx.bezierCurveTo(355,y+Math.sin(phase+1.7)*amp,435,y+Math.cos(phase+2)*amp,528,y+(rand()-.5)*amp);};
- path();ctx.lineTo(528,y+13+rand()*8);ctx.bezierCurveTo(420,y+20,320,y+8,255,y+18);ctx.bezierCurveTo(150,y+8,75,y+20,-15,y+14);ctx.closePath();
- ctx.fillStyle=rand()>.5?'rgba(177,183,195,.13)':'rgba(67,79,99,.10)';ctx.fill();
- path();ctx.strokeStyle='rgba(43,51,68,.30)';ctx.lineWidth=1.5+rand()*2.2;ctx.stroke();
- ctx.beginPath();ctx.moveTo(-10,y-2);ctx.bezierCurveTo(110,y+amp-1,300,y-amp,522,y+1);ctx.strokeStyle='rgba(211,214,220,.17)';ctx.lineWidth=1+rand()*2;ctx.stroke();
+// Dense, uneven sediment ribbons: broken, compressed, craggy horizontal strata.
+for(let i=0;i<31;i++){
+ const y=rand()*512,amp=3+rand()*15,phase=rand()*6.28,thick=3+rand()*9;
+ const path=()=>{ctx.beginPath();ctx.moveTo(-18,y);
+ ctx.bezierCurveTo(70,y+Math.sin(phase)*amp,155,y+Math.cos(phase*1.3)*amp,245,y+(rand()-.5)*amp*1.5);
+ ctx.bezierCurveTo(335,y+Math.sin(phase+2)*amp,425,y+Math.cos(phase*.7)*amp,530,y+(rand()-.5)*amp);};
+ // Dark undercut beneath each broken shelf.
+ path();ctx.strokeStyle='rgba(39,49,68,'+(.20+rand()*.19)+')';ctx.lineWidth=thick+2;ctx.stroke();
+ path();ctx.strokeStyle='rgba(210,216,230,'+(.10+rand()*.16)+')';ctx.lineWidth=Math.max(1,thick*.38);ctx.stroke();
+ // Short fractured ledges interrupt the long strata.
+ for(let j=0;j<2+Math.floor(rand()*4);j++){
+  const x=rand()*470,len=12+rand()*78,yy=y+(rand()-.5)*amp*2;
+  ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+len*.28,yy+(rand()-.5)*5);ctx.lineTo(x+len*.68,yy+(rand()-.5)*7);ctx.lineTo(x+len,yy+(rand()-.5)*4);
+  ctx.strokeStyle=rand()>.5?'rgba(225,228,236,.22)':'rgba(34,44,63,.24)';ctx.lineWidth=1+rand()*4;ctx.stroke();
+ }
 }
-// Local chips and mineral flakes follow the sediment direction, avoiding a uniform speckle.
-for(let i=0;i<260;i++){
- const x=rand()*512,y=rand()*512,w=4+rand()*17,h=.8+rand()*3;
- ctx.fillStyle=rand()>.5?'rgba(210,213,220,.10)':'rgba(39,48,65,.10)';
- ctx.beginPath();ctx.moveTo(x-w,y);ctx.lineTo(x-w*.3,y-h);ctx.lineTo(x+w,y-h*.25);ctx.lineTo(x+w*.45,y+h);ctx.lineTo(x-w*.65,y+h*.35);ctx.closePath();ctx.fill();
+// Coarse, chalky grains and chipped mineral fragments, intentionally non-uniform.
+for(let i=0;i<11500;i++){
+ const x=rand()*512,y=rand()*512,v=rand()>.48?150+Math.floor(rand()*75):72+Math.floor(rand()*65),alpha=.045+rand()*.17;
+ ctx.fillStyle='rgba('+Math.floor(v*.84)+','+Math.floor(v*.89)+','+Math.min(255,v+8)+','+alpha+')';
+ const w=rand()>.94?3:rand()>.65?2:1,h=rand()>.75?2:1;ctx.fillRect(x,y,w,h);
 }
-// Fine chalky mineral grain.
-for(let i=0;i<21000;i++){
- const x=rand()*512,y=rand()*512,v=118+Math.floor(rand()*55),al=.018+rand()*.065;
- ctx.fillStyle=rand()>.48?'rgba('+v+','+(v+2)+','+(Math.min(255,v+9))+','+al+')':'rgba('+(v-14)+','+(v-10)+','+(v+1)+','+al+')';
- ctx.fillRect(x,y,rand()>.985?2:1,1);
+for(let i=0;i<2100;i++){
+ const x=rand()*512,y=rand()*512,rx=1+rand()*5.5,ry=.45+rand()*2.4,rot=(rand()-.5)*.4;
+ ctx.fillStyle='rgba(36,46,64,'+(.12+rand()*.24)+')';ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='rgba(226,230,238,'+(.08+rand()*.16)+')';ctx.lineWidth=.6+rand()*1.2;ctx.beginPath();ctx.ellipse(x-rx*.25,y-ry*.25,rx*.72,ry*.65,rot,Math.PI*1.05,Math.PI*1.85);ctx.stroke();
 }
-// Small, shallow pores with soft rims; sparse and subdued.
-for(let i=0;i<620;i++){
- const x=rand()*512,y=rand()*512,rx=.7+rand()*2.8,ry=rx*(.45+rand()*.7),rot=rand()*Math.PI;
- ctx.fillStyle='rgba(34,42,57,'+(.10+rand()*.15)+')';ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle='rgba(218,220,224,'+(.035+rand()*.06)+')';ctx.lineWidth=.45;ctx.beginPath();ctx.ellipse(x-rx*.2,y-ry*.2,rx*.8,ry*.8,rot,Math.PI*1.05,Math.PI*1.8);ctx.stroke();
+// Tiny pits and rough chalk flecks.
+for(let i=0;i<900;i++){
+ const x=rand()*512,y=rand()*512,r=.5+rand()*2.4;
+ ctx.fillStyle='rgba(35,45,62,'+(.12+rand()*.20)+')';ctx.fillRect(x,y,r*1.5,r*.6);
+ ctx.fillStyle='rgba(225,230,239,'+(.07+rand()*.16)+')';ctx.fillRect(x-r*.35,y-r*.45,r,r*.45);
 }
 }else if(kind==='stone-bump'){
 c.width=c.height=512;ctx.fillStyle='#858585';ctx.fillRect(0,0,512,512);let seed=7813;
 const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-// Low, broad relief for compressed layers; not a field of round bumps.
-for(let i=0;i<11;i++){
- const y=18+i*47+(rand()-.5)*20,amp=5+rand()*12,phase=rand()*6.28;
- ctx.beginPath();ctx.moveTo(-12,y);
- ctx.bezierCurveTo(95,y+Math.sin(phase)*amp,175,y+Math.cos(phase)*amp,260,y+(rand()-.5)*amp);
- ctx.bezierCurveTo(355,y+Math.sin(phase+1.7)*amp,435,y+Math.cos(phase+2)*amp,525,y+(rand()-.5)*amp);
- ctx.strokeStyle='rgba(185,185,185,.28)';ctx.lineWidth=7+rand()*8;ctx.stroke();
- ctx.beginPath();ctx.moveTo(-12,y+5);ctx.bezierCurveTo(120,y+amp+5,330,y-amp+5,525,y+7);
- ctx.strokeStyle='rgba(72,72,72,.28)';ctx.lineWidth=2+rand()*3;ctx.stroke();
+// Strong, broken horizontal relief rather than soft round bumps.
+for(let i=0;i<31;i++){
+ const y=rand()*512,amp=3+rand()*15,phase=rand()*6.28,thick=5+rand()*12;
+ const path=()=>{ctx.beginPath();ctx.moveTo(-18,y);
+ ctx.bezierCurveTo(70,y+Math.sin(phase)*amp,155,y+Math.cos(phase*1.3)*amp,245,y+(rand()-.5)*amp*1.5);
+ ctx.bezierCurveTo(335,y+Math.sin(phase+2)*amp,425,y+Math.cos(phase*.7)*amp,530,y+(rand()-.5)*amp);};
+ path();ctx.strokeStyle='rgba(190,190,190,.34)';ctx.lineWidth=thick;ctx.stroke();
+ path();ctx.strokeStyle='rgba(65,65,65,.34)';ctx.lineWidth=Math.max(1,thick*.3);ctx.stroke();
 }
-for(let i=0;i<85;i++){
- const x=rand()*512,y=rand()*512,r=12+rand()*44,v=rand()>.5?155:104;
- const g=ctx.createRadialGradient(x,y,1,x,y,r);g.addColorStop(0,'rgba('+v+','+v+','+v+',.10)');g.addColorStop(1,'rgba(128,128,128,0)');
- ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+for(let i=0;i<1250;i++){
+ const x=rand()*512,y=rand()*512,rx=1+rand()*5,ry=.5+rand()*2.5;
+ const dark=rand()>.48,v=dark?65+rand()*25:175+rand()*45;
+ ctx.fillStyle='rgba('+v+','+v+','+v+','+(.22+rand()*.34)+')';
+ ctx.beginPath();ctx.ellipse(x,y,rx,ry,(rand()-.5)*.4,0,Math.PI*2);ctx.fill();
 }
-for(let i=0;i<700;i++){
- const x=rand()*512,y=rand()*512,rx=.8+rand()*3.2,ry=rx*(.45+rand()*.7),rot=rand()*Math.PI;
- const g=ctx.createRadialGradient(x-rx*.2,y-ry*.2,.2,x,y,Math.max(rx,ry)*1.5);
- g.addColorStop(0,'rgba(75,75,75,.38)');g.addColorStop(1,'rgba(128,128,128,0)');
- ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
-}
-for(let i=0;i<13000;i++){const x=rand()*512,y=rand()*512,v=115+Math.floor(rand()*32),al=.045+rand()*.09;ctx.fillStyle='rgba('+v+','+v+','+v+','+al+')';ctx.fillRect(x,y,1,1);}
-}else if(kind==='clay'){
+for(let i=0;i<19000;i++){
+ const x=rand()*512,y=rand()*512,v=rand()>.5?160+Math.floor(rand()*35):88+Math.floor(rand()*42),alpha=.08+rand()*.19;
+ ctx.fillStyle='rgba('+v+','+v+','+v+','+alpha+')';ctx.fillRect(x,y,rand()>.94?2:1,1);
+}}else if(kind==='clay'){
 ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
 let seed=4219;
 for(let i=0;i<3600;i++){seed=(seed*16807)%2147483647;const x=seed%128;seed=(seed*16807)%2147483647;const y=seed%128;seed=(seed*16807)%2147483647;const v=75+(seed%65);ctx.fillStyle='rgba('+v+','+(v-9)+','+(v-17)+','+(.08+(seed%25)/100)+')';ctx.beginPath();ctx.ellipse(x,y,1+(seed%5),1+(seed%3),seed%6,0,Math.PI*2);ctx.fill();}
@@ -169,12 +169,12 @@ const isStone=type.startsWith('stone_');
 const eye=type==='eye';
 // Keep the two approved starter forms exactly as they are; give the remaining stone parts smoother light response.
 const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
-const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.22:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
+const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:isStone?textureCanvases.stoneBump:null,bumpScale:isStone?.30:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?.98:.88),metalness:0,flatShading:isStone&&keepStarterFacets}));
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
 mesh.userData.type=type;mesh.userData.edge=edge;return mesh;
 }
 function setPartLine(o,mat){if(o?.userData?.edge)o.userData.edge.material=mat;}
-function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.16:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
+function applySkin(){for(const o of objects)if(o.material){o.material.map=activeTexture();o.material.bumpMap=skinMode===0?textureCanvases.stoneBump:activeTexture();o.material.bumpScale=skinMode===0?.30:.035;o.material.roughnessMap=skinMode===0?textureCanvases.stoneBump:null;o.material.needsUpdate=true;}}
 document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects)if(o.userData.edge)o.userData.edge.visible=nakedMode;document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
 
 function ringForm(profiles,segments=7,style='organic'){
