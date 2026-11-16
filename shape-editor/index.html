@@ -70,80 +70,77 @@ function makeTexture(kind){
 const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
 ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
 if(kind==='stone'){
-c.width=c.height=512;ctx.fillStyle='#788995';ctx.fillRect(0,0,512,512);let seed=28411;
+c.width=c.height=512;ctx.fillStyle='#788995';ctx.fillRect(0,0,512,512);let seed=19371;
 const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-// The blue-grey slate/sandstone tone is now the dominant body colour.
-for(let i=0;i<58;i++){
- const x=rand()*512,y=rand()*512,r=35+rand()*125;
- const warm=rand()>.88;
- const col=warm?'rgba(153,139,119,':'rgba('+(91+Math.floor(rand()*13))+','+(119+Math.floor(rand()*13))+','+(137+Math.floor(rand()*13))+',';
- const g=ctx.createRadialGradient(x-r*.18,y-r*.2,2,x,y,r);
- g.addColorStop(0,col+(warm?.09:.13)+')');
- g.addColorStop(.62,col+(warm?.045:.055)+')');
+// Large, soft mineral fields: cool blue-grey sandstone with restrained warm deposits.
+for(let i=0;i<34;i++){
+ const x=rand()*512,y=rand()*512,rx=45+rand()*125,ry=32+rand()*105;
+ const hue=rand(),col=hue<.66?'rgba(83,112,130,':'rgba(164,143,119,';
+ const g=ctx.createRadialGradient(x,y,2,x,y,Math.max(rx,ry));
+ g.addColorStop(0,col+(0.13+rand()*.12)+')');
+ g.addColorStop(.58,col+(0.045+rand()*.035)+')');
  g.addColorStop(1,'rgba(120,137,149,0)');
- ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,r*(.8+rand()*.6),r*(.55+rand()*.5),rand()*3.14,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=g;ctx.save();ctx.translate(x,y);ctx.scale(rx/Math.max(rx,ry),ry/Math.max(rx,ry));ctx.beginPath();ctx.arc(0,0,Math.max(rx,ry),0,Math.PI*2);ctx.fill();ctx.restore();
 }
-// A few broad, low-contrast sediment seams create natural stone flow.
-for(let i=0;i<19;i++){
- const y=rand()*512,amp=4+rand()*16,phase=rand()*6.28;
+// Broken sediment bands, irregular and discontinuous rather than decorative stripes.
+for(let i=0;i<27;i++){
+ const y=rand()*512,amp=3+rand()*18,phase=rand()*6.28;
  ctx.beginPath();ctx.moveTo(-10,y);
- ctx.bezierCurveTo(100,y+Math.sin(phase)*amp,205,y+Math.cos(phase*1.4)*amp,300,y+(rand()-.5)*amp);
- ctx.bezierCurveTo(390,y+Math.sin(phase+1)*amp,455,y+Math.cos(phase)*amp,522,y+(rand()-.5)*amp);
- ctx.strokeStyle=i%5===0?'rgba(179,165,145,.13)':'rgba(42,66,81,.10)';
- ctx.lineWidth=1+rand()*3;ctx.stroke();
+ ctx.bezierCurveTo(105,y+Math.sin(phase)*amp,190,y+Math.cos(phase*1.7)*amp,285,y+(rand()-.5)*amp);
+ ctx.bezierCurveTo(370,y+Math.sin(phase+1)*amp,445,y+Math.cos(phase)*amp,522,y+(rand()-.5)*amp);
+ ctx.strokeStyle=i%5===0?'rgba(190,169,142,.22)':'rgba(43,65,77,.13)';
+ ctx.lineWidth=1+rand()*4;ctx.stroke();
 }
-// Subtle cloudy mottling replaces the conspicuous scattered pixel specks.
-for(let i=0;i<145;i++){
- const x=rand()*512,y=rand()*512,rx=5+rand()*25,ry=3+rand()*15;
- const g=ctx.createRadialGradient(x,y,1,x,y,Math.max(rx,ry));
- const dark=rand()>.5;
- g.addColorStop(0,dark?'rgba(43,65,79,.09)':'rgba(169,184,190,.075)');
- g.addColorStop(1,'rgba(120,137,149,0)');
- ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rand()*3.14,0,Math.PI*2);ctx.fill();
+// Cloudy, fractured mineral patches with soft boundaries.
+for(let i=0;i<210;i++){
+ const x=rand()*512,y=rand()*512,r=4+rand()*24;
+ ctx.fillStyle=rand()>.62?'rgba(185,164,135,.075)':'rgba(45,70,84,.075)';
+ ctx.beginPath();ctx.ellipse(x,y,r*1.5,r*(.45+rand()*.8),rand()*3.14,0,Math.PI*2);ctx.fill();
 }
-// Fine grain is restrained: no obvious white/black dots across the cube.
-for(let i=0;i<12500;i++){
- const x=rand()*512,y=rand()*512,v=rand()>.5?1:-1,a=.018+rand()*.045;
- ctx.fillStyle=v>0?'rgba(190,202,205,'+a+')':'rgba(42,59,70,'+a+')';
- ctx.fillRect(x,y,1,1);
+// Fine mineral grains; kept low contrast so the broad structure remains readable.
+for(let i=0;i<31000;i++){
+ const x=rand()*512,y=rand()*512,v=105+Math.floor(rand()*83),a=.025+rand()*.095;
+ const cool=rand()>.42;
+ ctx.fillStyle=cool?'rgba('+Math.floor(v*.76)+','+Math.floor(v*.9)+','+Math.min(255,v+15)+','+a+')':'rgba('+Math.min(255,v+12)+','+Math.floor(v*.94)+','+Math.floor(v*.81)+','+a+')';
+ const s=rand();ctx.fillRect(x,y,s>.985?2:1,s>.992?2:1);
 }
-// Pores are fewer, slightly larger and grouped like real erosion.
-for(let i=0;i<430;i++){
- const x=rand()*512,y=rand()*512,rx=1+rand()*4.4,ry=rx*(.5+rand()*.65),rot=rand()*Math.PI;
- ctx.fillStyle='rgba(30,45,54,'+(.12+rand()*.17)+')';
+// Eroded pores: dark cavities with a broken, mineral-lit upper rim.
+for(let i=0;i<1450;i++){
+ const x=rand()*512,y=rand()*512,rx=.8+rand()*4.8,ry=rx*(.48+rand()*.62),rot=rand()*Math.PI;
+ ctx.fillStyle='rgba(25,38,44,'+(.13+rand()*.25)+')';
  ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle='rgba(205,207,196,'+(.035+rand()*.07)+')';ctx.lineWidth=.5;
- ctx.beginPath();ctx.ellipse(x-rx*.2,y-ry*.22,rx*.86,ry*.82,rot,Math.PI*1.05,Math.PI*1.8);ctx.stroke();
+ ctx.strokeStyle='rgba(211,205,188,'+(.055+rand()*.10)+')';ctx.lineWidth=.55+rand()*.5;
+ ctx.beginPath();ctx.ellipse(x-rx*.22,y-ry*.24,rx*.9,ry*.88,rot,Math.PI*1.05,Math.PI*1.82);ctx.stroke();
 }
-// Warm mineral inclusions remain rare accents, not a second overall colour.
-for(let i=0;i<42;i++){
- const x=rand()*512,y=rand()*512,rx=1+rand()*4,ry=rx*(.4+rand()*.5);
- ctx.fillStyle='rgba(177,157,129,'+(.07+rand()*.08)+')';
- ctx.beginPath();ctx.ellipse(x,y,rx*1.6,ry,rand()*Math.PI,0,Math.PI*2);ctx.fill();
+// Sparse pale grains and darker inclusions, never bright enough to look emissive.
+for(let i=0;i<125;i++){
+ const x=rand()*512,y=rand()*512,r=.8+rand()*4;
+ ctx.fillStyle=i%4===0?'rgba(196,178,151,.24)':'rgba(102,139,153,.19)';
+ ctx.beginPath();ctx.ellipse(x,y,r*1.8,r*.7,rand()*Math.PI,0,Math.PI*2);ctx.fill();
 }
 }else if(kind==='stone-bump'){
 c.width=c.height=512;ctx.fillStyle='#858585';ctx.fillRect(0,0,512,512);let seed=7813;
 const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-// Softer, more continuous relief; avoid a field of isolated pinprick bumps.
-for(let i=0;i<115;i++){
- const x=rand()*512,y=rand()*512,r=16+rand()*82,v=rand()>.5?146:111;
- const g=ctx.createRadialGradient(x-r*.18,y-r*.18,1,x,y,r);
- g.addColorStop(0,'rgba('+v+','+v+','+v+',.22)');
- g.addColorStop(.68,'rgba('+v+','+v+','+v+',.09)');
+// Broad shallow undulations, then smaller pits and grain for a layered tactile relief.
+for(let i=0;i<95;i++){
+ const x=rand()*512,y=rand()*512,r=18+rand()*72,v=rand()>.5?151:105;
+ const g=ctx.createRadialGradient(x-r*.16,y-r*.18,1,x,y,r);
+ g.addColorStop(0,'rgba('+v+','+v+','+v+',.18)');
+ g.addColorStop(.72,'rgba('+v+','+v+','+v+',.07)');
  g.addColorStop(1,'rgba(128,128,128,0)');
- ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,r*(.7+rand()*.7),r*(.55+rand()*.55),rand()*3.14,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
 }
-for(let i=0;i<850;i++){
- const x=rand()*512,y=rand()*512,rx=1.5+rand()*5.5,ry=rx*(.5+rand()*.7),v=rand()>.48?83+rand()*24:158+rand()*23,rot=rand()*Math.PI;
+for(let i=0;i<1850;i++){
+ const x=rand()*512,y=rand()*512,rx=1+rand()*5.5,ry=rx*(.5+rand()*.7),v=rand()>.48?65+rand()*28:178+rand()*35,rot=rand()*Math.PI;
  const g=ctx.createRadialGradient(x-rx*.25,y-ry*.25,.2,x,y,Math.max(rx,ry)*1.5);
- g.addColorStop(0,'rgba('+Math.floor(v)+','+Math.floor(v)+','+Math.floor(v)+',.42)');
- g.addColorStop(.72,'rgba(128,128,128,.12)');
+ g.addColorStop(0,'rgba('+Math.floor(v)+','+Math.floor(v)+','+Math.floor(v)+',.65)');
+ g.addColorStop(.72,'rgba(128,128,128,.16)');
  g.addColorStop(1,'rgba(128,128,128,0)');
  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fill();
 }
-for(let i=0;i<8500;i++){
- const x=rand()*512,y=rand()*512,v=rand()>.5?145:111,a=.025+rand()*.06;
- ctx.fillStyle='rgba('+v+','+v+','+v+','+a+')';ctx.fillRect(x,y,1,1);
+for(let i=0;i<19000;i++){
+ const x=rand()*512,y=rand()*512,v=105+Math.floor(rand()*48),a=.08+rand()*.16;
+ ctx.fillStyle='rgba('+v+','+v+','+v+','+a+')';ctx.fillRect(x,y,rand()>.97?2:1,1);
 }
 }else if(kind==='clay'){
 ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
