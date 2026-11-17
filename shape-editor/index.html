@@ -82,17 +82,20 @@ function makeMaps(seed,pal){
   const broad=fbm(u*7+seed*.0001,v*7+3,seed*.0002);
   const mid=fbm(u*27+13,v*27+5,seed*.001);
   const grain=fbm(u*92+4,v*92+19,seed*.002);
+  const microGrain=fbm(u*190+21,v*190+9,seed*.004);
+  const mottling=fbm(u*13+seed*.0003,v*13+17,seed*.0007);
   const fleck=hash(Math.floor(x/2),Math.floor(y/2),seed%997);
   const band=layered?Math.sin(v*27+Math.sin(u*8+seed*.00001)*1.5)*3.8:Math.sin(v*11+u*4)*.9;
   const mineral=Math.pow(Math.max(0,fleck-.88),2)*170;
+  const quartzFleck=fleck>.982?13:(fleck<.018?-8:0);
   const pore=(hash(Math.floor(x/3),Math.floor(y/3),seed%431)>.982)?-19:0;
-  const micro=(rand()-.5)*8;
-  const value=(broad-.5)*30+(mid-.5)*21+(grain-.5)*12+band+mineral+pore+micro;
+  const micro=(rand()-.5)*7;
+  const oxide=pal.name==='IRONSTONE'?Math.max(0,mottling-.48)*25:pal.name==='SANDSTONE'?Math.max(0,mottling-.58)*13:0;
+  const value=(broad-.5)*31+(mid-.5)*23+(grain-.5)*13+(microGrain-.5)*7+band+mineral+pore+micro;
   const i=(y*size+x)*4;
-  const tint=warmth?1:0;
-  im.data[i]=THREE.MathUtils.clamp(pal.base[0]+value+mineral*.16,0,255);
-  im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+value+(fleck>.94?2:0),0,255);
-  im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+value+(tint? -mineral*.08:0),0,255);im.data[i+3]=255;
+  im.data[i]=THREE.MathUtils.clamp(pal.base[0]+value+oxide+quartzFleck*.65,0,255);
+  im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+value+oxide*.38+quartzFleck*.8,0,255);
+  im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+value-oxide*.22+quartzFleck,0,255);im.data[i+3]=255;
   const relief=fbm(u*66+3,v*66+8,seed*.001);
   const pit=hash(Math.floor(x/2),Math.floor(y/2),seed%173)>.986?-.17:0;
   const height=THREE.MathUtils.clamp(128+(relief-.5)*118+(grain-.5)*40+pit*255+(rand()-.5)*18,0,255);
@@ -143,6 +146,11 @@ function makeGeometry(seed,type){
  const scars=Array.from({length:cfg.scar},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.86+rand()*.12,depth:.012+rand()*.035,soft:.055+rand()*.12};});
  const pits=Array.from({length:cfg.pits},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.012+rand()*(type==='porous'?.052:.028),depth:.006+rand()*(type==='porous'?.04:.022)};});
  const chips=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,cut:.91+rand()*.075,depth:.012+rand()*.028};});
+ // A few broad, soft mineral swellings keep each silhouette from feeling stamped from one template.
+ const lobes=Array.from({length:4+Math.floor(rand()*5)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.20+rand()*.30,amp:.012+rand()*.028};});
+ // Rounded abrasion planes and impact-worn areas, never hard polygonal cuts.
+ const wornFaces=Array.from({length:1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.84+rand()*.11,depth:.009+rand()*.022,soft:.075+rand()*.12};});
+ const flowAxis=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();
  const asym=[(rand()-.5)*.11,(rand()-.5)*.10,(rand()-.5)*.11];
  const drift=[rand()*8,rand()*8,rand()*8];
  for(let i=0;i<p.count;i++){
@@ -158,6 +166,9 @@ function makeGeometry(seed,type){
   for(const scar of scars){const facing=v.dot(scar.d);if(facing>scar.limit){const t=THREE.MathUtils.smoothstep(facing,scar.limit,Math.min(.999,scar.limit+scar.soft));radius-=scar.depth*t;}}
   for(const pit of pits){const d=v.distanceTo(pit.d);if(d<pit.r){const t=1-d/pit.r;radius-=pit.depth*t*t;}}
   for(const chip of chips){const facing=v.dot(chip.d);if(facing>chip.cut)radius-=chip.depth*THREE.MathUtils.smoothstep(facing,chip.cut,Math.min(1,chip.cut+.045));}
+  for(const lobe of lobes){const d=v.distanceTo(lobe.d);if(d<lobe.r){const t=1-d/lobe.r;radius+=lobe.amp*t*t*(3-2*t);}}
+  for(const face of wornFaces){const facing=v.dot(face.d);if(facing>face.limit){const t=THREE.MathUtils.smoothstep(facing,face.limit,Math.min(.999,face.limit+face.soft));radius-=face.depth*t;}}
+  const abrasion=Math.max(0,(Math.abs(v.dot(flowAxis))-.72)/.28);radius-=abrasion*abrasion*.016;
   v.multiplyScalar(radius);
   // Keep the underlying silhouette organic: scale and gently bend a sphere, never turn it into a superellipsoid/cube.
   v.x*=cfg.scale[0]*(1+asym[0]);v.y*=cfg.scale[1]*(1+asym[1]);v.z*=cfg.scale[2]*(1+asym[2]);
