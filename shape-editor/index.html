@@ -156,7 +156,7 @@ function makeGeometry(seed,type){
   if(type==='pebble'){
    v.x*=1.28;v.y*=.72;v.z*=.98;
    v.y+=.12*Math.max(0,-v.y);
-  }else if(type==='boulder'||type==='moss'){
+  }else if(type==='moss'){
    v.x*=1.16;v.y*=.91;v.z*=1.04;
    v.x+=.07*Math.sin(v.y*3+phase[0]);v.z+=.05*Math.cos(v.x*3+phase[1]);
   }else if(type==='sandstone'){
