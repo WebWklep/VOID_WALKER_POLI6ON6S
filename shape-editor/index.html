@@ -1,291 +1,170 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>CREATURE LAB — FELIX</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>STONE STUDY — Random Rock Generator</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505;color:#dce3e8;font-family:Arial,Helvetica,sans-serif}
-#app{height:100dvh;display:flex;flex-direction:column;background:#050505}
-.view{height:78%;flex:1;min-height:0;position:relative;background:radial-gradient(ellipse at 50% 47%,#111820 0%,#080b0f 44%,#050505 76%)}
-canvas{display:block;width:100%;height:100%;touch-action:none}
-.brand{position:absolute;top:15px;left:17px;font:10px monospace;letter-spacing:.22em;color:#79858e;pointer-events:none}
-.subbrand{position:absolute;top:29px;left:17px;font:8px monospace;letter-spacing:.16em;color:#424d55;pointer-events:none}
-.axis{position:absolute;opacity:.78;accent-color:#9eabb5}
-#orbitY{bottom:13px;left:15%;width:70%;height:18px}
-#orbitX{right:8px;top:22%;height:55%;writing-mode:vertical-lr;direction:rtl;width:18px}
-.controls{height:22%;min-height:104px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:10px 18px max(15px,env(safe-area-inset-bottom));border-top:1px solid #20272d;background:#080a0d}
-button{height:44px;min-width:188px;padding:0 24px;border:1px solid #60717c;background:#11171c;color:#e0e8ed;font:10px monospace;letter-spacing:.17em;cursor:pointer}
-button:active{background:#202c34;border-color:#a3b7c2}
-.hint{font:8px monospace;letter-spacing:.15em;color:#53606a;text-align:center}
-@media(max-height:600px){.view{height:72%}.controls{height:28%;gap:7px}button{height:38px}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090a;color:#d8dadd;font-family:Arial,sans-serif}
+#app{height:100dvh;display:flex;flex-direction:column;background:#08090a}.view{position:relative;flex:1;min-height:0;background:radial-gradient(ellipse at 50% 46%,#20252a 0%,#101316 48%,#08090a 82%)}canvas{width:100%;height:100%;display:block;touch-action:none}
+.brand{position:absolute;top:17px;left:18px;font:10px monospace;letter-spacing:.24em;color:#aab0b5}.subtitle{position:absolute;top:32px;left:18px;font:8px monospace;letter-spacing:.18em;color:#626a70}
+.readout{position:absolute;right:17px;top:17px;text-align:right;font:8px monospace;letter-spacing:.12em;color:#626a70;line-height:1.7}
+.controls{padding:12px 14px max(13px,env(safe-area-inset-bottom));border-top:1px solid #24282b;background:#0b0d0f;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+button{height:43px;border:1px solid #41494f;background:#15191c;color:#dce0e2;font:9px monospace;letter-spacing:.12em}
+button:active{background:#30383d;border-color:#89949b}button.primary{background:#d6dadd;color:#111619;border-color:#d6dadd}
+.hint{grid-column:1/-1;text-align:center;font:8px monospace;letter-spacing:.14em;color:#626a70;padding-top:2px}
+#gallery{position:absolute;inset:0;background:rgba(5,7,8,.96);z-index:5;display:none;flex-direction:column;padding:20px 16px max(16px,env(safe-area-inset-bottom));}
+.galleryHead{display:flex;justify-content:space-between;align-items:center;font:10px monospace;letter-spacing:.18em;padding:2px 0 18px}
+#items{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start}
+.card{border:1px solid #343b40;background:#111518;min-width:0}.thumb{width:100%;aspect-ratio:1.25;background:#090b0d;display:block}.cardInfo{display:flex;align-items:center;justify-content:space-between;padding:8px;font:8px monospace;color:#aeb7bd}.cardInfo button{height:27px;padding:0 8px;font-size:8px}
+.empty{grid-column:1/-1;color:#727b81;font:10px monospace;line-height:1.8;padding:20px 2px}
+@media(min-width:700px){.controls{padding-left:calc((100% - 560px)/2);padding-right:calc((100% - 560px)/2)}#items{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
-<body>
-<main id="app">
- <section class="view">
-  <canvas id="scene"></canvas>
-  <div class="brand">CREATURE LAB</div><div class="subbrand">FELIX · ARTICULATED SERIES 01</div>
-  <input class="axis" id="orbitY" type="range" min="-180" max="180" value="24" aria-label="Вращение по горизонтальной оси">
-  <input class="axis" id="orbitX" type="range" min="-70" max="70" value="8" aria-label="Вращение по вертикальной оси">
- </section>
- <section class="controls">
-  <button id="generate">GENERATE FELIX ↻</button>
-  <div class="hint">DRAG TO ROTATE · AXIS CONTROLS</div>
- </section>
-</main>
+<body><main id="app">
+<section class="view"><canvas id="scene"></canvas><div class="brand">STONE STUDY</div><div class="subtitle">RANDOM GEOLOGY · MATERIAL LAB</div><div class="readout" id="readout">SPECIMEN 001<br>UNCLASSIFIED</div>
+<div id="gallery"><div class="galleryHead"><span>COLLECTED SPECIMENS</span><button id="closeGallery">CLOSE ×</button></div><div id="items"></div></div>
+</section>
+<section class="controls">
+<button class="primary" id="generate">NEW STONE ↻</button><button id="save">SAVE SPECIMEN +</button><button id="collection">COLLECTION ◇</button>
+<div class="hint">DRAG TO ROTATE · GENERATE · KEEP THE ONES YOU LOVE</div>
+</section></main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
 
 const canvas=document.querySelector('#scene');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-renderer.setClearColor(0x050505);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.12;
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x050505);
-scene.add(new THREE.HemisphereLight(0xc8d8e8,0x111923,.95));
-const key=new THREE.DirectionalLight(0xe4efff,3.0);
-key.position.set(-4.5,7,6);
-key.castShadow=true;
-key.shadow.mapSize.set(1024,1024);
-key.shadow.camera.near=.5;key.shadow.camera.far=24;
-key.shadow.camera.left=-5;key.shadow.camera.right=5;
-key.shadow.camera.top=6;key.shadow.camera.bottom=-6;
-key.shadow.bias=-.0003;key.shadow.normalBias=.035;
-scene.add(key);
-const rim=new THREE.DirectionalLight(0x86a8c6,1.35);
-rim.position.set(4,3,-5);scene.add(rim);
-const lowFill=new THREE.DirectionalLight(0x657e94,.45);
-lowFill.position.set(0,-4,4);scene.add(lowFill);
-
-const camera=new THREE.PerspectiveCamera(36,1,.1,100);
-let yaw=24*Math.PI/180,pitch=8*Math.PI/180,drag=null;
-let character=null;
-
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x090b0d);scene.fog=new THREE.Fog(0x090b0d,9,20);
+scene.add(new THREE.HemisphereLight(0xcbd5df,0x24272a,.78));
+const key=new THREE.DirectionalLight(0xfff4e5,3.1);key.position.set(-4.5,7,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-7;key.shadow.camera.right=7;key.shadow.camera.top=7;key.shadow.camera.bottom=-7;key.shadow.bias=-.00025;key.shadow.normalBias=.025;scene.add(key);
+const fill=new THREE.DirectionalLight(0x9eb6cf,1.05);fill.position.set(5,2,-4);scene.add(fill);
+const soft=new THREE.DirectionalLight(0xffffff,.55);soft.position.set(1,5,4);scene.add(soft);
+const camera=new THREE.PerspectiveCamera(34,1,.1,80);
+let yaw=.55,pitch=.22,drag=null,currentSeed=1,currentName='UNCLASSIFIED',specimenNo=1,rockGroup=null;
+const groundMat=new THREE.MeshStandardMaterial({color:0x171a1c,roughness:.94});
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),groundMat);ground.rotation.x=-Math.PI/2;ground.position.y=-1.36;ground.receiveShadow=true;scene.add(ground);
+const root=new THREE.Group();scene.add(root);
 const palettes=[
- {shell:0x687f90,light:0x8499a7,dark:0x263641,edge:0xb0c2ca,glow:0x91c4d1},
- {shell:0x75838d,light:0x9aa8af,dark:0x303b45,edge:0xc0cbd0,glow:0x9ec4c9},
- {shell:0x536d78,light:0x718b96,dark:0x202f39,edge:0xa2b8bf,glow:0x8ebcc0},
- {shell:0x667887,light:0x899ba8,dark:0x29343f,edge:0xb3c2cc,glow:0xa8c9d5}
+ {name:'SLATE',base:[65,75,82],light:[111,123,130],dark:[34,41,46]},
+ {name:'BASALT',base:[52,57,60],light:[94,101,103],dark:[24,28,30]},
+ {name:'LIMESTONE',base:[119,123,119],light:[166,166,155],dark:[65,69,67]},
+ {name:'GRANITE',base:[104,103,99],light:[151,148,139],dark:[48,49,48]},
+ {name:'QUARTZITE',base:[119,126,128],light:[183,190,190],dark:[57,63,66]},
+ {name:'OBSIDIAN',base:[37,43,48],light:[85,96,103],dark:[13,17,21]},
+ {name:'SANDSTONE',base:[133,119,99],light:[177,160,134],dark:[69,60,49]}
 ];
-const mat=(color,roughness=.52,metalness=.12,extra={})=>new THREE.MeshStandardMaterial({color,roughness,metalness,...extra});
-const sphereGeo=new THREE.SphereGeometry(1,18,14);
-const jointGeo=new THREE.SphereGeometry(1,16,12);
-const dummyY=new THREE.Vector3(0,1,0);
-
-function addMesh(parent,geo,material,pos=[0,0,0],scale=[1,1,1],rot=[0,0,0]){
- const m=new THREE.Mesh(geo,material);
- m.position.set(...pos);m.scale.set(...scale);m.rotation.set(...rot);
- m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+function hash(x,y,z){let n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return n-Math.floor(n);}
+function noise(x,y,z){let X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),u=x-X,v=y-Y,w=z-Z;u=u*u*(3-2*u);v=v*v*(3-2*v);w=w*w*(3-2*w);
+ const a=hash(X,Y,Z),b=hash(X+1,Y,Z),c=hash(X,Y+1,Z),d=hash(X+1,Y+1,Z),e=hash(X,Y,Z+1),f=hash(X+1,Y,Z+1),g=hash(X,Y+1,Z+1),h=hash(X+1,Y+1,Z+1);
+ return THREE.MathUtils.lerp(THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,u),THREE.MathUtils.lerp(c,d,u),v),THREE.MathUtils.lerp(THREE.MathUtils.lerp(e,f,u),THREE.MathUtils.lerp(g,h,u),v),w);}
+function fbm(x,y,z){return noise(x,y,z)*.52+noise(x*2.03+8,y*2.03,z*2.03)*.27+noise(x*4.1,y*4.1,z*4.1)*.14+noise(x*8.2,y*8.2,z*8.2)*.07;}
+function makeStoneTexture(seed,pal){
+ const rand=rng(seed),size=256,data=new Uint8Array(size*size*4);
+ const grain=Array.from({length:18},()=>[rand()*2,rand()*2,rand()*2,rand()]);
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const u=x/size,v=y/size;
+  const n=fbm(u*9+seed*.001,v*9,seed*.002);
+  const strata=Math.sin(v*39+fbm(u*5,v*3,seed)*7+noise(u*15,v*4,seed)*2);
+  const fleck=rand()>.994?(rand()>.5?28:-25):0;
+  const value=(n-.5)*34+strata*5+fleck;
+  const i=(y*size+x)*4;
+  data[i]=THREE.MathUtils.clamp(pal.base[0]+value,0,255);
+  data[i+1]=THREE.MathUtils.clamp(pal.base[1]+value,0,255);
+  data[i+2]=THREE.MathUtils.clamp(pal.base[2]+value,0,255);
+  data[i+3]=255;
+ }
+ const tex=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(2,2);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;tex.needsUpdate=true;return tex;
 }
-function ellipsoid(parent,material,pos,scale,rot=[0,0,0]){
- return addMesh(parent,sphereGeo,material,pos,scale,rot);
+function makeRockGeometry(rand,shape){
+ const geo=new THREE.IcosahedronGeometry(1,4);const pos=geo.attributes.position;
+ const phase=[rand()*20,rand()*20,rand()*20];
+ for(let i=0;i<pos.count;i++){
+  let x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+  const n=fbm(x*3+phase[0],y*3+phase[1],z*3+phase[2]);
+  const ridges=Math.sin(y*15+noise(x*5,z*5,y*3)*5)*.025;
+  const irregular=1+(n-.5)*.34+ridges+(rand()-.5)*.025;
+  x*=irregular;y*=irregular;z*=irregular;
+  if(shape==='flat')y*=.55+rand()*.12;
+  if(shape==='sharp'){const fac=1+Math.max(0,y)*.34;y*=fac;}
+  if(shape==='rounded'){x*=.92;y*=.9;z*=.95;}
+  pos.setXYZ(i,x,y,z);
+ }
+ geo.computeVertexNormals();return geo;
 }
-function link(parent,a,b,rTop,rBottom,material,segments=12){
- const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A);
- const mesh=new THREE.Mesh(new THREE.CylinderGeometry(rTop,rBottom,d.length(),segments,1),material);
- mesh.position.copy(A).add(B).multiplyScalar(.5);
- mesh.quaternion.setFromUnitVectors(dummyY,d.clone().normalize());
- mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
- ellipsoid(parent,material,a,[rBottom,rBottom,rBottom]);
- ellipsoid(parent,material,b,[rTop,rTop,rTop]);
+function createRock(parent,rand,pal,seed,scale,offset,shape='natural'){
+ const texture=makeStoneTexture(seed,pal);
+ const rough=new THREE.MeshStandardMaterial({map:texture,color:0xffffff,roughness:.68+rand()*.23,metalness:.015, bumpMap:texture,bumpScale:.035, envMapIntensity:.75});
+ const geo=makeRockGeometry(rand,shape);
+ const mesh=new THREE.Mesh(geo,rough);mesh.scale.set(...scale);mesh.position.set(...offset);mesh.rotation.set(rand()*.3,rand()*Math.PI*2,rand()*.3);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
+ // A few naturally broken facets catch the key light.
  return mesh;
 }
-function joint(parent,pos,r,materials,frontZ=.34){
- const g=new THREE.Group();g.position.set(pos[0],pos[1],pos[2]);parent.add(g);
- addMesh(g,jointGeo,materials.dark,[0,0,0],[r,r,r]);
- // The bearing ring is deliberately offset to the front so armor cannot bury it.
- const ring=new THREE.Mesh(new THREE.TorusGeometry(r*.78,r*.105,8,20),materials.edge);
- ring.position.z=frontZ-pos[2];ring.castShadow=true;g.add(ring);
- const pin=new THREE.Mesh(new THREE.CylinderGeometry(r*.22,r*.22,r*.13,12),materials.dark);
- pin.rotation.x=Math.PI/2;pin.position.z=frontZ-pos[2]+r*.10;g.add(pin);
- const cap=new THREE.Mesh(new THREE.CircleGeometry(r*.18,12),materials.glow);
- cap.position.z=frontZ-pos[2]+r*.18;g.add(cap);
- return g;
+function disposeGroup(g){g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map)m.map.dispose();if(m.bumpMap&&m.bumpMap!==m.map)m.bumpMap.dispose();m.dispose();});}});}
+function build(seed){
+ if(rockGroup){root.remove(rockGroup);disposeGroup(rockGroup);}
+ currentSeed=seed;const rand=rng(seed);const pal=palettes[Math.floor(rand()*palettes.length)];currentName=pal.name;
+ const group=new THREE.Group();rockGroup=group;root.add(group);
+ const style=Math.floor(rand()*5);
+ if(style===0){
+  const size=.88+rand()*.38;
+  createRock(group,rand,pal,seed,[size*(.9+rand()*.25),size*(.72+rand()*.38),size*(.82+rand()*.3)],[0,-.35,0],['natural','sharp','rounded'][Math.floor(rand()*3)]);
+ }else if(style===1){
+  const count=2+Math.floor(rand()*3);
+  for(let i=0;i<count;i++){const s=.48+rand()*.48;createRock(group,rand,pal,seed+i*173,[s*(.8+rand()*.5),s*(.7+rand()*.4),s],[((i-(count-1)/2)*.55),-.77+rand()*.2,(rand()-.5)*.4],i===0?'sharp':'natural');}
+ }else if(style===2){
+  const count=18+Math.floor(rand()*18);
+  for(let i=0;i<count;i++){const s=.10+rand()*.23;const x=(rand()-.5)*2.25,z=(rand()-.5)*1.75,y=-1.05+rand()*.24;createRock(group,rand,pal,seed+i*31,[s*(.7+rand()),s*(.6+rand()),s],[x,y,z],rand()>.7?'sharp':'natural');}
+ }else if(style===3){
+  const s=1.12+rand()*.35;createRock(group,rand,pal,seed,[s*1.4,s*.48,s],[0,-.72,0],'flat');
+  for(let i=0;i<5;i++){const q=.13+rand()*.22;createRock(group,rand,pal,seed+i*97,[q,q*.7,q],[((rand()-.5)*1.8),-.94,(rand()-.5)*1.2]);}
+ }else{
+  const count=5+Math.floor(rand()*5);
+  for(let i=0;i<count;i++){const s=.22+rand()*.42;const angle=i/count*Math.PI*2;createRock(group,rand,pal,seed+i*59,[s*(.7+rand()*.6),s*(.7+rand()*.6),s],[Math.cos(angle)*.52,-.88+rand()*.22,Math.sin(angle)*.42],rand()>.65?'sharp':'natural');}
+ }
+ document.querySelector('#readout').innerHTML='SPECIMEN '+String(specimenNo).padStart(3,'0')+'<br>'+pal.name+' · '+['MONOLITH','FRACTURE','GRAVEL','SLAB','CLUSTER'][style];
 }
-function plateShape(parent,points,depth,material,pos=[0,0,0]){
- const s=new THREE.Shape();
- s.moveTo(points[0][0],points[0][1]);
- for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);
- s.closePath();
- const geo=new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:4});
- geo.computeVertexNormals();
- return addMesh(parent,geo,material,pos);
-}
-function makeFelix(){
- if(character){
-  scene.remove(character);
-  character.traverse(o=>{
-   if(o.geometry)o.geometry.dispose();
-   if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}
-  });
- }
- const p=palettes[Math.floor(Math.random()*palettes.length)];
- const shell=mat(p.shell,.48,.16);
- const shellLight=mat(p.light,.43,.18);
- const dark=mat(p.dark,.62,.28);
- const edge=mat(p.edge,.34,.38);
- const glow=mat(p.glow,.3,.22,{emissive:p.glow,emissiveIntensity:.12});
- const inset=mat(0x101820,.3,.28);
- const materials={shell,shellLight,dark,edge,glow,inset};
- const root=new THREE.Group();character=root;scene.add(root);
+function next(){specimenNo++;build((Math.random()*0xffffffff)>>>0);}
+next();
+const orbitY=document.createElement('input'); // rotation stays gesture-driven, clean specimen stage
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.1,1.1);});
+canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+document.querySelector('#generate').addEventListener('click',next);
 
- // Main torso: tapered, deliberately separate from the pelvis.
- const torsoPts=[
-  new THREE.Vector2(0,-.66),new THREE.Vector2(.34,-.66),
-  new THREE.Vector2(.48,-.48),new THREE.Vector2(.56,-.12),
-  new THREE.Vector2(.62,.25),new THREE.Vector2(.52,.49),
-  new THREE.Vector2(.36,.63),new THREE.Vector2(0,.66)
- ];
- const torsoGeo=new THREE.LatheGeometry(torsoPts,12);
- torsoGeo.scale(1,1,.76);
- addMesh(root,torsoGeo,shell,[0,.12,0],[1,1,1],[0,0,0]);
-
- // Chest armor gives the body a clear front and layered silhouette.
- plateShape(root,[[-.43,.30],[-.31,.49],[0,.56],[.31,.49],[.43,.30],[.34,-.10],[0,-.34],[-.34,-.10]],.12,shellLight, [0,.21,.405]);
- plateShape(root,[[-.25,.22],[0,.34],[.25,.22],[.19,-.08],[0,-.2],[-.19,-.08]],.035,dark,[0,.21,.53]);
- const emblem=new THREE.Mesh(new THREE.OctahedronGeometry(.115,0),glow);
- emblem.position.set(0,.29,.59);emblem.rotation.z=Math.PI/4;root.add(emblem);
- // Waist and pelvis are their own movable-looking shells.
- link(root,[0,-.43,.02],[0,-.69,.02],.22,.25,dark,12);
- ellipsoid(root,shell,[0,-.78,0],[.52,.31,.39]);
- plateShape(root,[[-.34,.08],[-.24,.23],[.24,.23],[.34,.08],[.25,-.18],[0,-.27],[-.25,-.18]],.07,shellLight,[0,-.75,.31]);
-
- // Neck bearing and head socket.
- link(root,[0,.70,0],[0,.98,0],.14,.16,dark,12);
- joint(root,[0,.91,.04],.19,materials,.38);
-
- // Head is a compact helmet, not a rock or a stack of primitive balls.
- const head=new THREE.Group();head.position.set(0,1.34,.015);root.add(head);
- ellipsoid(head,shellLight,[0,0,0],[.46,.51,.39]);
- ellipsoid(head,shell,[0,-.18,.17],[.39,.30,.32]);
- // Face plate and inset visor.
- plateShape(head,[[-.31,.16],[-.25,.35],[0,.41],[.25,.35],[.31,.16],[.22,-.12],[0,-.23],[-.22,-.12]],.055,dark,[0,.02,.33]);
- const visor=ellipsoid(head,inset,[0,.105,.39],[.285,.13,.045]);
- // Eyes are narrow luminous slits with angled outer corners.
- for(const side of [-1,1]){
-  const eye=addMesh(head,new THREE.BoxGeometry(.145,.035,.025),glow,[side*.135,.105,.438],[1,1,1],[0,0,side*-.12]);
-  ellipsoid(head,dark,[side*.29,-.01,.22],[.07,.16,.17],[0,0,side*-.28]);
- }
- // Twin swept ear-fins and a variable crown detail.
- for(const side of [-1,1]){
-  const ear=addMesh(head,new THREE.ConeGeometry(.145,.40,5,1),shellLight,[side*.39,.35,-.015],[1,1,.72],[0,0,side*-0.72]);
-  ellipsoid(head,dark,[side*.38,.22,.02],[.09,.13,.08]);
- }
- const crestCount=1+Math.floor(Math.random()*3);
- for(let i=0;i<crestCount;i++){
-  const x=(i-(crestCount-1)/2)*.16;
-  addMesh(head,new THREE.ConeGeometry(.085,.25+Math.random()*.12,5),shellLight,[x,.49,-.02],[1,1,.9],[0,0,(i-(crestCount-1)/2)*-.12]);
- }
- // Back-of-head panel seam.
- ellipsoid(head,dark,[0,-.25,-.29],[.27,.17,.10]);
-
- // Shoulder blocks and articulated arms. All joints sit at the front/outside edge.
- for(const side of [-1,1]){
-  const s=side;
-  ellipsoid(root,shellLight,[s*.72,.48,.015],[.34,.34,.39],[0,0,s*-.18]);
-  joint(root,[s*.88,.42,.12],.235,materials,.42);
-  link(root,[s*.90,.36,.02],[s*1.10,-.17,.015],.205,.235,shell,10);
-  // Upper-arm outer armor plate.
-  ellipsoid(root,shellLight,[s*1.015,.10,.19],[.20,.34,.20],[0,0,s*-.30]);
-  joint(root,[s*1.12,-.20,.11],.205,materials,.42);
-  link(root,[s*1.12,-.28,.02],[s*1.22,-.78,.02],.205,.27,shell,10);
-  // Forearm shield, tapered toward the wrist.
-  ellipsoid(root,shellLight,[s*1.18,-.52,.18],[.235,.31,.22],[0,0,s*-.12]);
-  joint(root,[s*1.23,-.80,.10],.16,materials,.38);
-  link(root,[s*1.23,-.82,.02],[s*1.25,-.98,.05],.14,.16,dark,10);
-  // Three-pronged hand: one palm and three clearly separated blunt talons.
-  ellipsoid(root,shell,[s*1.25,-1.10,.11],[.23,.22,.19],[0,0,s*-.10]);
-  for(let k=-1;k<=1;k++){
-   const x=s*1.25+k*.145;
-   const start=[x,-1.19,.17];
-   const end=[x+s*k*.045,-1.43-(k===0?.05:0),.19];
-   link(root,start,end,.065,.09,shellLight,7);
-   addMesh(root,new THREE.ConeGeometry(.067,.13,6),shellLight,end,[1,1,1],[Math.PI,0,s*k*.16]);
-  }
- }
-
- // Short, broad legs with open knee bearings and sculpted boots.
- for(const side of [-1,1]){
-  const s=side;
-  joint(root,[s*.37,-.78,.20],.19,materials,.42);
-  link(root,[s*.38,-.82,.02],[s*.45,-1.30,.015],.245,.22,shell,10);
-  ellipsoid(root,shellLight,[s*.40,-1.07,.15],[.22,.31,.19],[0,0,s*.08]);
-  joint(root,[s*.45,-1.31,.18],.205,materials,.43);
-  link(root,[s*.45,-1.36,.02],[s*.49,-1.88,.02],.205,.26,shell,10);
-  // Shin armor is a separate forward-facing plate.
-  plateShape(root,[[-.14,.22],[.14,.22],[.18,-.17],[0,-.34],[-.18,-.17]],.055,shellLight,[s*.49-.0,-1.56,.235]);
-  joint(root,[s*.49,-1.89,.10],.155,materials,.38);
-  // Wide feet are angled slightly forward so the stance reads clearly.
-  ellipsoid(root,dark,[s*.50,-2.03,.18],[.29,.16,.43],[0,0,s*-.06]);
-  ellipsoid(root,shellLight,[s*.50,-2.00,.29],[.25,.09,.30],[0,0,s*-.06]);
-  // Toe marker.
-  addMesh(root,new THREE.BoxGeometry(.11,.025,.025),glow,[s*.50,-1.98,.56],[1,1,1]);
- }
-
- // Subtle back pack gives a recognizable side/back profile.
- ellipsoid(root,dark,[0,.18,-.43],[.35,.42,.18]);
- for(const side of [-1,1]){
-  link(root,[side*.18,.38,-.48],[side*.22,-.12,-.51],.065,.065,edge,8);
- }
- root.rotation.y=0;
- return root;
-}
-
-function generate(){makeFelix();}
-generate();
-
-const orbitY=document.querySelector('#orbitY');
-const orbitX=document.querySelector('#orbitX');
-orbitY.addEventListener('input',e=>yaw=Number(e.target.value)*Math.PI/180);
-orbitX.addEventListener('input',e=>pitch=Number(e.target.value)*Math.PI/180);
-document.querySelector('#generate').addEventListener('click',generate);
-
-canvas.addEventListener('pointerdown',e=>{
- drag={x:e.clientX,y:e.clientY,id:e.pointerId};
- canvas.setPointerCapture(e.pointerId);
+const storeKey='stone-study-favorites-v1';
+function readSaved(){try{return JSON.parse(localStorage.getItem(storeKey)||'[]');}catch{return[];}}
+function writeSaved(a){localStorage.setItem(storeKey,JSON.stringify(a));}
+function snapshot(){return renderer.domElement.toDataURL('image/jpeg',.72);}
+document.querySelector('#save').addEventListener('click',()=>{
+ const saved=readSaved();if(saved.some(x=>x.seed===currentSeed)){document.querySelector('#save').textContent='ALREADY SAVED ✓';return;}
+ saved.unshift({seed:currentSeed,name:currentName,no:specimenNo,thumb:snapshot(),date:new Date().toLocaleDateString()});
+ writeSaved(saved.slice(0,60));document.querySelector('#save').textContent='SAVED ✓';setTimeout(()=>document.querySelector('#save').textContent='SAVE SPECIMEN +',1200);
 });
-canvas.addEventListener('pointermove',e=>{
- if(!drag)return;
- const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
- drag.x=e.clientX;drag.y=e.clientY;
- yaw+=dx*.008;
- pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.12,1.12);
- orbitY.value=THREE.MathUtils.clamp(Math.round(yaw*180/Math.PI),-180,180);
- orbitX.value=Math.round(pitch*180/Math.PI);
-});
-canvas.addEventListener('pointerup',()=>drag=null);
-canvas.addEventListener('pointercancel',()=>drag=null);
-
-function resize(){
- const r=canvas.getBoundingClientRect();
- if(!r.width||!r.height)return;
- renderer.setSize(r.width,r.height,false);
- camera.aspect=r.width/r.height;
- camera.updateProjectionMatrix();
+const gallery=document.querySelector('#gallery'),items=document.querySelector('#items');
+function showGallery(){
+ const saved=readSaved();items.innerHTML='';
+ if(!saved.length){items.innerHTML='<div class="empty">NO SAVED SPECIMENS YET.<br>Generate stones and save the ones you like.</div>';}
+ saved.forEach((item,index)=>{
+  const card=document.createElement('div');card.className='card';
+  const img=document.createElement('img');img.className='thumb';img.src=item.thumb;img.alt=item.name;
+  const info=document.createElement('div');info.className='cardInfo';
+  const label=document.createElement('span');label.textContent=item.name+' · '+String(item.no).padStart(3,'0');
+  const load=document.createElement('button');load.textContent='VIEW';load.addEventListener('click',()=>{specimenNo=item.no;build(item.seed);gallery.style.display='none';});
+  const del=document.createElement('button');del.textContent='×';del.setAttribute('aria-label','Удалить из коллекции');del.addEventListener('click',()=>{const all=readSaved();all.splice(index,1);writeSaved(all);showGallery();});
+  info.append(label,load,del);card.append(img,info);items.append(card);
+ });
+ gallery.style.display='flex';
 }
-new ResizeObserver(resize).observe(canvas);
-window.addEventListener('resize',resize);
-resize();
+document.querySelector('#collection').addEventListener('click',showGallery);
+document.querySelector('#closeGallery').addEventListener('click',()=>gallery.style.display='none');
 
-function frame(){
- requestAnimationFrame(frame);
- const distance=8.15;
- camera.position.set(Math.sin(yaw)*Math.cos(pitch)*distance,
-  .02+Math.sin(pitch)*distance,
-  Math.cos(yaw)*Math.cos(pitch)*distance);
- camera.lookAt(0,-.02,0);
- renderer.render(scene,camera);
-}
+function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(canvas);window.addEventListener('resize',resize);resize();
+function frame(){requestAnimationFrame(frame);const d=5.9;camera.position.set(Math.sin(yaw)*Math.cos(pitch)*d,.15+Math.sin(pitch)*d,Math.cos(yaw)*Math.cos(pitch)*d);camera.lookAt(0,-.45,0);renderer.render(scene,camera);}
 frame();
-</script>
-</body>
-</html>
+</script></body></html>
