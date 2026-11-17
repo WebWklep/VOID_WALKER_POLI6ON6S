@@ -3,14 +3,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>STONE STUDY</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101417;color:#dce1e3;font-family:Arial,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#dce1e3;font-family:Arial,sans-serif}
 #app{height:100dvh;display:flex;flex-direction:column;background:#000}
 .view{position:relative;flex:0 0 60%;min-height:0;overflow:hidden;background:#000}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 .brand{position:absolute;top:16px;left:18px;font:10px monospace;letter-spacing:.24em;color:#aeb8bd;pointer-events:none}
 .subtitle{position:absolute;top:31px;left:18px;font:8px monospace;letter-spacing:.17em;color:#657178;pointer-events:none}
 .readout{position:absolute;right:17px;top:15px;text-align:right;font:8px monospace;letter-spacing:.12em;color:#879399;line-height:1.8;pointer-events:none}
-.controls{flex:1;min-height:0;padding:15px 13px max(13px,env(safe-area-inset-bottom));background:#050607;display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:11px;align-content:start;align-items:center}
+.controls{flex:1;min-height:0;padding:15px 13px max(13px,env(safe-area-inset-bottom));background:#000;display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-content:start;align-items:center}
 button{height:43px;border:0;border-radius:15px;background:rgba(210,225,235,.085);color:#dce5e9;font:9px monospace;letter-spacing:.1em;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.19),inset 0 -1px 0 rgba(255,255,255,.035),0 5px 18px rgba(0,0,0,.28);transition:background .2s,transform .2s}
 button:active{background:rgba(225,240,248,.19);transform:scale(.97)}button.primary{background:rgba(190,220,235,.16);color:#f2f7fa;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 5px 20px rgba(0,0,0,.3)}
 #generate{font:9px monospace;letter-spacing:.13em}
@@ -20,12 +20,12 @@ input[type=range]{width:100%;height:17px;accent-color:#c0ccd2}
 .hint{grid-column:1/-1;text-align:center;font:7px monospace;letter-spacing:.13em;color:#58646a}
 .view.earthquake{animation:quake .38s ease-out}
 @keyframes quake{0%,100%{transform:translate(0,0)}15%{transform:translate(-3px,1px)}30%{transform:translate(3px,-1px)}45%{transform:translate(-2px,2px)}60%{transform:translate(2px,0)}75%{transform:translate(-1px,-1px)}}
-#gallery{position:absolute;inset:0;background:rgba(7,10,12,.97);z-index:5;display:none;flex-direction:column;padding:18px 14px max(14px,env(safe-area-inset-bottom))}
+#gallery{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;padding:28px 22px max(22px,env(safe-area-inset-bottom))}
 .galleryHead{display:flex;justify-content:space-between;align-items:center;font:10px monospace;letter-spacing:.16em;padding-bottom:14px}
 #closeGallery{height:30px;padding:0 12px}#items{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start}
 .card{border:1px solid #343d42;background:#111619;min-width:0}.thumb{width:100%;aspect-ratio:1.25;object-fit:cover;display:block}.cardInfo{display:flex;align-items:center;justify-content:space-between;padding:7px;font:8px monospace;color:#b4bec3;gap:4px}.cardInfo button{height:26px;padding:0 7px;font-size:8px}
 .empty{grid-column:1/-1;color:#899399;font:10px monospace;line-height:1.8;padding:20px 2px}
-@media(min-width:700px){.controls{padding-left:calc((100% - 560px)/2);padding-right:calc((100% - 560px)/2)}#items{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:700px){.controls{padding-left:calc((100% - 560px)/2);padding-right:calc((100% - 560px)/2)}#items{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:42px;row-gap:54px}.thumb{aspect-ratio:1/1}}
 </style></head>
 <body><main id="app"><section class="view">
 <canvas id="scene"></canvas><div class="brand">STONE STUDY</div><div class="subtitle">ONE SPECIMEN · NATURAL MATERIALS</div><div class="readout" id="readout">SPECIMEN 001<br>PEBBLE</div>
@@ -128,7 +128,7 @@ function next(){specimenNo++;build((Math.random()*0xffffffff)>>>0);}next();
 const orbitY=document.querySelector('#orbitY'),orbitX=document.querySelector('#orbitX');
 orbitY.addEventListener('input',e=>yaw=Number(e.target.value)*Math.PI/180);orbitX.addEventListener('input',e=>pitch=Number(e.target.value)*Math.PI/180);
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.15,1.15);orbitY.value=THREE.MathUtils.clamp(Math.round(yaw*180/Math.PI),-180,180);orbitX.value=Math.round(pitch*180/Math.PI);});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.15,1.15);});
 canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
 document.querySelector('#generate').addEventListener('click',()=>{const view=document.querySelector('.view');view.classList.remove('earthquake');void view.offsetWidth;view.classList.add('earthquake');next();});
 const storeKey='stone-study-favorites-v1';const readSaved=()=>{try{return JSON.parse(localStorage.getItem(storeKey)||'[]');}catch{return[];}};
