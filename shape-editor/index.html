@@ -55,14 +55,14 @@ const camera=new THREE.PerspectiveCamera(34,1,.1,100);
 let yaw=28*Math.PI/180,pitch=12*Math.PI/180,drag=null,currentSeed=1,currentName='PEBBLE',specimenNo=0,rock=null,center=new THREE.Vector3(),distance=4.4;
 const clock=new THREE.Clock();
 const palettes=[
- {name:'RIVER PEBBLE',base:[111,119,119],rough:.31},
- {name:'MOSS BOULDER',base:[91,96,79],rough:.78},
- {name:'SANDSTONE',base:[166,139,105],rough:.88},
- {name:'GRANITE',base:[111,113,111],rough:.62},
- {name:'LIMESTONE',base:[171,166,148],rough:.76},
- {name:'DARK BASALT',base:[63,70,73],rough:.48},
- {name:'QUARTZITE',base:[157,163,161],rough:.38},
- {name:'IRONSTONE',base:[117,91,75],rough:.7}
+ {name:'RIVER PEBBLE',base:[111,119,119],rough:.82},
+ {name:'MOSS BOULDER',base:[91,96,79],rough:.94},
+ {name:'SANDSTONE',base:[166,139,105],rough:.93},
+ {name:'GRANITE',base:[111,113,111],rough:.86},
+ {name:'LIMESTONE',base:[171,166,148],rough:.9},
+ {name:'DARK BASALT',base:[63,70,73],rough:.88},
+ {name:'QUARTZITE',base:[157,163,161],rough:.78},
+ {name:'IRONSTONE',base:[117,91,75],rough:.91}
 ];
 function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
 function hash(x,y,z){const n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return n-Math.floor(n);}
@@ -72,11 +72,18 @@ function makeMaps(seed,pal){
  const size=512,rand=rng(seed^0x3a71),color=document.createElement('canvas'),bump=document.createElement('canvas');color.width=color.height=bump.width=bump.height=size;
  const c=color.getContext('2d'),b=bump.getContext('2d'),im=c.createImageData(size,size),bi=b.createImageData(size,size);
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-  const u=x/size,v=y/size,n=fbm(u*12+seed*.0001,v*12,seed*.0002),fine=(rand()-.5)*20;
-  const stratum=Math.sin(v*42+Math.sin(u*11+seed)*1.4)*3.5;
-  const val=(n-.5)*26+fine+stratum,i=(y*size+x)*4;
-  im.data[i]=THREE.MathUtils.clamp(pal.base[0]+val,0,255);im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+val,0,255);im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+val,0,255);im.data[i+3]=255;
-  const h=fbm(u*45+3,v*45+8,seed*.001);const g=THREE.MathUtils.clamp(128+(h-.5)*150+(rand()-.5)*45,0,255);
+  const u=x/size,v=y/size;
+  const macro=fbm(u*8+seed*.0001,v*8+3,seed*.0002);
+  const grain=fbm(u*38+7,v*38+11,seed*.001);
+  const fine=(rand()-.5)*12;
+  const strata=Math.sin(v*31+Math.sin(u*9+seed*.00001)*1.7)*2.2;
+  const mineral=Math.pow(Math.max(0,hash(Math.floor(x/3),Math.floor(y/3),seed%997)-.91),2)*105;
+  const val=(macro-.5)*29+(grain-.5)*17+fine+strata+mineral,i=(y*size+x)*4;
+  im.data[i]=THREE.MathUtils.clamp(pal.base[0]+val*1.02,0,255);
+  im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+val,0,255);
+  im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+val*.94,0,255);im.data[i+3]=255;
+  const h=fbm(u*54+3,v*54+8,seed*.001);
+  const g=THREE.MathUtils.clamp(128+(h-.5)*125+(rand()-.5)*34,0,255);
   bi.data[i]=bi.data[i+1]=bi.data[i+2]=g;bi.data[i+3]=255;
  }
  c.putImageData(im,0,0);b.putImageData(bi,0,0);
@@ -86,27 +93,51 @@ function makeMaps(seed,pal){
  return {map,bumpMap};
 }
 function makeGeometry(seed,type){
- const rand=rng(seed),geo=new THREE.SphereGeometry(1,48,32),p=geo.attributes.position;
- const phase=[rand()*30,rand()*30,rand()*30];
+ const rand=rng(seed),geo=new THREE.SphereGeometry(1,96,64),p=geo.attributes.position;
+ const phase=[rand()*30,rand()*30,rand()*30],stretch=[.94+rand()*.22,.9+rand()*.2,.92+rand()*.2];
  for(let i=0;i<p.count;i++){
   const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
-  const n=fbm(v.x*3.1+phase[0],v.y*3.1+phase[1],v.z*3.1+phase[2]);
-  let r=1+(n-.5)*.22+(rand()-.5)*.018;
-  if(type==='pebble')r=1+(n-.5)*.11+(rand()-.5)*.008;
-  if(type==='sandstone')r+=Math.sin(v.y*15+noise(v.x*4,v.z*4,v.y*3)*3)*.035;
-  if(type==='granite')r+=Math.sin(v.x*9+v.z*7)*.035;
-  if(type==='shard')r+=Math.max(0,v.y)*.16;
-  v.multiplyScalar(r);
-  if(type==='pebble'){v.x*=1.18;v.y*=.78;v.z*=.95;}
-  if(type==='boulder'){v.x*=1.13;v.y*=.91;v.z*=1.02;}
-  if(type==='sandstone'){v.x*=1.12;v.y*=.88;v.z*=.91;}
-  if(type==='shard'){v.x*=.88;v.y*=1.18;v.z*=.82;}
+  const n=fbm(v.x*3.2+phase[0],v.y*3.2+phase[1],v.z*3.2+phase[2]);
+  const detail=fbm(v.x*10+phase[1],v.y*10+phase[2],v.z*10+phase[0]);
+  let radius=1+(n-.5)*.2+(detail-.5)*.035;
+  if(type==='pebble') radius=1+(n-.5)*.105+(detail-.5)*.018;
+  if(type==='sandstone'){
+   const bands=Math.sin(v.y*17+noise(v.x*3+phase[0],v.z*3,v.y*2)*2.4);
+   radius+=bands*.025;
+  }
+  if(type==='granite') radius+=(Math.sin(v.x*8+v.z*6+phase[0])*.018);
+  if(type==='shard') radius+=Math.max(0,v.y)*.13-Math.max(0,-v.y)*.035;
+  v.multiplyScalar(radius);
+  if(type==='pebble'){
+   v.x*=1.28;v.y*=.72;v.z*=.98;
+   v.y+=.12*Math.max(0,-v.y);
+  }else if(type==='boulder'||type==='moss'){
+   v.x*=1.16;v.y*=.91;v.z*=1.04;
+   v.x+=.07*Math.sin(v.y*3+phase[0]);v.z+=.05*Math.cos(v.x*3+phase[1]);
+  }else if(type==='sandstone'){
+   v.x*=1.2;v.y*=.58;v.z*=1.06;
+   v.y+=.035*Math.sin(v.x*5+phase[0]);
+  }else if(type==='granite'){
+   v.set(Math.sign(v.x)*Math.pow(Math.abs(v.x),.88)*1.12,v.y*.92,Math.sign(v.z)*Math.pow(Math.abs(v.z),.88)*1.04);
+  }else if(type==='shard'){
+   const taper=1-.22*Math.max(0,v.y);
+   v.x*=.9*taper;v.y*=1.22;v.z*=.86*taper;
+  }else{
+   v.x*=stretch[0];v.y*=stretch[1];v.z*=stretch[2];
+   v.x+=.08*Math.sin(v.z*2.7+phase[0]);v.z+=.06*Math.cos(v.y*3.1+phase[2]);
+  }
   p.setXYZ(i,v.x,v.y,v.z);
  }
  geo.computeVertexNormals();
  if(type==='moss'){
-  const colors=[];const p=geo.attributes.position;
-  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);const patch=noise(x*5+2,y*5+7,z*5+4);const mask=THREE.MathUtils.smoothstep(y+patch*.16,.16,.58)*THREE.MathUtils.smoothstep(patch,.38,.72);const stone=new THREE.Color(0xffffff),moss=new THREE.Color(0x526342);stone.lerp(moss,mask*.9);colors.push(stone.r,stone.g,stone.b);}
+  const colors=[];
+  for(let i=0;i<p.count;i++){
+   const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+   const patch=noise(x*5+2,y*5+7,z*5+4);
+   const mask=THREE.MathUtils.smoothstep(y+patch*.2,.12,.58)*THREE.MathUtils.smoothstep(patch,.37,.7);
+   const stone=new THREE.Color(0xffffff),moss=new THREE.Color(0x526342);
+   stone.lerp(moss,mask*.82);colors.push(stone.r,stone.g,stone.b);
+  }
   geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  }
  return geo;
@@ -114,13 +145,18 @@ function makeGeometry(seed,type){
 function build(seed){
  if(rock){scene.remove(rock);rock.geometry.dispose();rock.material.map?.dispose();rock.material.bumpMap?.dispose();rock.material.dispose();}
  currentSeed=seed;const rand=rng(seed),pal=palettes[Math.floor(rand()*palettes.length)];
- const types=['pebble','boulder','sandstone','granite','shard','moss','natural'];
- const type=pal.name==='RIVER PEBBLE'?'pebble':pal.name==='MOSS BOULDER'?'moss':pal.name==='SANDSTONE'?'sandstone':pal.name==='GRANITE'?'granite':pal.name==='DARK BASALT'?'shard':types[Math.floor(rand()*types.length)];
+ const type=pal.name==='RIVER PEBBLE'?'pebble':
+  pal.name==='MOSS BOULDER'?'moss':
+  pal.name==='SANDSTONE'?'sandstone':
+  pal.name==='GRANITE'?'granite':
+  pal.name==='DARK BASALT'?'shard':
+  pal.name==='QUARTZITE'?(rand()>.5?'pebble':'granite'):
+  pal.name==='IRONSTONE'?'boulder':'natural';
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.027,roughness:pal.rough,metalness:.015,envMapIntensity:1.05,vertexColors:type==='moss'});
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.038,roughness:pal.rough,metalness:0,envMapIntensity:.62,vertexColors:type==='moss'});
  rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
- rock.scale.setScalar(type==='pebble'?1.02:.94);rock.position.y=0;scene.add(rock);
+ rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
  distance=sphere.radius/Math.sin(THREE.MathUtils.degToRad(camera.fov/2))*1.48;
  document.querySelector('#readout').innerHTML='SPECIMEN '+String(specimenNo).padStart(3,'0')+'<br>'+pal.name;
