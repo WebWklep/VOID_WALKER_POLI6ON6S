@@ -69,31 +69,58 @@ function hash(x,y,z){const n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return 
 function noise(x,y,z){const X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),u=x-X,v=y-Y,w=z-Z;const s=t=>t*t*(3-2*t);const U=s(u),V=s(v),W=s(w);const a=hash(X,Y,Z),b=hash(X+1,Y,Z),c=hash(X,Y+1,Z),d=hash(X+1,Y+1,Z),e=hash(X,Y,Z+1),f=hash(X+1,Y,Z+1),g=hash(X,Y+1,Z+1),h=hash(X+1,Y+1,Z+1);return THREE.MathUtils.lerp(THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,U),THREE.MathUtils.lerp(c,d,U),V),THREE.MathUtils.lerp(THREE.MathUtils.lerp(e,f,U),THREE.MathUtils.lerp(g,h,U),V),W);}
 function fbm(x,y,z){return noise(x,y,z)*.55+noise(x*2.1+7,y*2.1,z*2.1)*.27+noise(x*4.2,y*4.2,z*4.2)*.13+noise(x*8.4,y*8.4,z*8.4)*.05;}
 function makeMaps(seed,pal){
- const size=512,rand=rng(seed^0x3a71),color=document.createElement('canvas'),bump=document.createElement('canvas');color.width=color.height=bump.width=bump.height=size;
- const c=color.getContext('2d'),b=bump.getContext('2d'),im=c.createImageData(size,size),bi=b.createImageData(size,size);
+ const size=512,rand=rng(seed^0x3a71);
+ const color=document.createElement('canvas'),bump=document.createElement('canvas'),rough=document.createElement('canvas');
+ color.width=color.height=bump.width=bump.height=rough.width=rough.height=size;
+ const c=color.getContext('2d'),b=bump.getContext('2d'),r=rough.getContext('2d');
+ const im=c.createImageData(size,size),bi=b.createImageData(size,size),ri=r.createImageData(size,size);
+ const warmth=pal.name==='SANDSTONE'||pal.name==='IRONSTONE';
+ const layered=pal.name==='SANDSTONE'||pal.name==='LIMESTONE';
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
   const u=x/size,v=y/size;
-  const macro=fbm(u*8+seed*.0001,v*8+3,seed*.0002);
-  const grain=fbm(u*38+7,v*38+11,seed*.001);
-  const fine=(rand()-.5)*12;
-  const strata=Math.sin(v*31+Math.sin(u*9+seed*.00001)*1.7)*2.2;
-  const mineral=Math.pow(Math.max(0,hash(Math.floor(x/3),Math.floor(y/3),seed%997)-.91),2)*105;
-  const val=(macro-.5)*29+(grain-.5)*17+fine+strata+mineral,i=(y*size+x)*4;
-  im.data[i]=THREE.MathUtils.clamp(pal.base[0]+val*1.02,0,255);
-  im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+val,0,255);
-  im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+val*.94,0,255);im.data[i+3]=255;
-  const h=fbm(u*54+3,v*54+8,seed*.001);
-  const g=THREE.MathUtils.clamp(128+(h-.5)*125+(rand()-.5)*34,0,255);
-  bi.data[i]=bi.data[i+1]=bi.data[i+2]=g;bi.data[i+3]=255;
+  const broad=fbm(u*7+seed*.0001,v*7+3,seed*.0002);
+  const mid=fbm(u*27+13,v*27+5,seed*.001);
+  const grain=fbm(u*92+4,v*92+19,seed*.002);
+  const fleck=hash(Math.floor(x/2),Math.floor(y/2),seed%997);
+  const band=layered?Math.sin(v*27+Math.sin(u*8+seed*.00001)*1.5)*3.8:Math.sin(v*11+u*4)*.9;
+  const mineral=Math.pow(Math.max(0,fleck-.88),2)*170;
+  const pore=(hash(Math.floor(x/3),Math.floor(y/3),seed%431)>.982)?-19:0;
+  const micro=(rand()-.5)*8;
+  const value=(broad-.5)*30+(mid-.5)*21+(grain-.5)*12+band+mineral+pore+micro;
+  const i=(y*size+x)*4;
+  const tint=warmth?1:0;
+  im.data[i]=THREE.MathUtils.clamp(pal.base[0]+value+mineral*.16,0,255);
+  im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+value+(fleck>.94?2:0),0,255);
+  im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+value+(tint? -mineral*.08:0),0,255);im.data[i+3]=255;
+  const relief=fbm(u*66+3,v*66+8,seed*.001);
+  const pit=hash(Math.floor(x/2),Math.floor(y/2),seed%173)>.986?-.17:0;
+  const height=THREE.MathUtils.clamp(128+(relief-.5)*118+(grain-.5)*40+pit*255+(rand()-.5)*18,0,255);
+  bi.data[i]=bi.data[i+1]=bi.data[i+2]=height;bi.data[i+3]=255;
+  const roughness=THREE.MathUtils.clamp((pal.rough*255)+(mid-.5)*45+(fleck>.94?18:0)+(pit<0?-22:0),0,255);
+  ri.data[i]=ri.data[i+1]=ri.data[i+2]=roughness;ri.data[i+3]=255;
  }
- c.putImageData(im,0,0);b.putImageData(bi,0,0);
- const map=new THREE.CanvasTexture(color),bumpMap=new THREE.CanvasTexture(bump);
- map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.RepeatWrapping;map.anisotropy=8;
- bumpMap.wrapS=bumpMap.wrapT=THREE.RepeatWrapping;bumpMap.anisotropy=8;
- return {map,bumpMap};
+ c.putImageData(im,0,0);b.putImageData(bi,0,0);r.putImageData(ri,0,0);
+ // Fine mineral seams: subtle, broken and irregular rather than decorative stripes.
+ const seamRand=rng(seed^0x51a7);
+ for(let k=0;k<(layered?15:9);k++){
+  const x=seamRand()*size,y=seamRand()*size;
+  const length=18+seamRand()*(layered?150:72);
+  const bend=(seamRand()-.5)*22;
+  c.beginPath();b.beginPath();
+  c.moveTo(x,y);b.moveTo(x,y);
+  c.quadraticCurveTo(x+length*.48,y+bend,x+length,y+(seamRand()-.5)*9);
+  b.quadraticCurveTo(x+length*.48,y+bend,x+length,y);
+  c.strokeStyle=layered?'rgba(42,37,30,.10)':'rgba(28,34,37,.075)';
+  c.lineWidth=layered?1.5:.8;c.stroke();
+  b.strokeStyle='rgba(35,35,35,.12)';b.lineWidth=1.2;b.stroke();
+ }
+ const map=new THREE.CanvasTexture(color),bumpMap=new THREE.CanvasTexture(bump),roughnessMap=new THREE.CanvasTexture(rough);
+ map.colorSpace=THREE.SRGBColorSpace;
+ for(const tex of [map,bumpMap,roughnessMap]){tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=8;}
+ return {map,bumpMap,roughnessMap};
 }
 function makeGeometry(seed,type){
- const rand=rng(seed),geo=new THREE.SphereGeometry(1,96,64),p=geo.attributes.position;
+ const rand=rng(seed),geo=new THREE.SphereGeometry(1,128,96),p=geo.attributes.position;
  const phase=[rand()*30,rand()*30,rand()*30],stretch=[.94+rand()*.22,.9+rand()*.2,.92+rand()*.2];
  for(let i=0;i<p.count;i++){
   const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
@@ -143,7 +170,7 @@ function makeGeometry(seed,type){
  return geo;
 }
 function build(seed){
- if(rock){scene.remove(rock);rock.geometry.dispose();rock.material.map?.dispose();rock.material.bumpMap?.dispose();rock.material.dispose();}
+ if(rock){scene.remove(rock);rock.geometry.dispose();rock.material.map?.dispose();rock.material.bumpMap?.dispose();rock.material.roughnessMap?.dispose();rock.material.dispose();}
  currentSeed=seed;const rand=rng(seed),pal=palettes[Math.floor(rand()*palettes.length)];
  const type=pal.name==='RIVER PEBBLE'?'pebble':
   pal.name==='MOSS BOULDER'?'moss':
@@ -154,7 +181,7 @@ function build(seed){
   pal.name==='IRONSTONE'?'boulder':'natural';
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.038,roughness:pal.rough,metalness:0,envMapIntensity:.62,vertexColors:type==='moss'});
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.052,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.48,vertexColors:type==='moss'});
  rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
  rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
