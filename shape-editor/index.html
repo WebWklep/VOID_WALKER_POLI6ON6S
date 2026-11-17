@@ -1,563 +1,95 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>FORM / CREATURE LAB</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>CREATURE LAB — REBUILD</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505;color:#ddd;font-family:Arial,Helvetica,sans-serif}
-#app{height:100dvh;display:flex;flex-direction:column}.view{flex:0 0 48%;height:48%;min-height:180px;position:relative;background:#050505;border-bottom:1px solid #292929}
+#app{height:100dvh;display:flex;flex-direction:column;background:#050505}
+.view{height:76%;flex:1;min-height:0;position:relative;background:#050505}
 canvas{display:block;width:100%;height:100%;touch-action:none}
-.brand{position:absolute;top:15px;left:17px;font:10px monospace;letter-spacing:.22em;color:#777}.count{position:absolute;right:17px;top:15px;font:10px monospace;color:#666}
-#orbitY{position:absolute;bottom:12px;left:15%;width:70%;accent-color:#ddd;height:18px}#orbitX{position:absolute;right:8px;top:22%;height:55%;writing-mode:vertical-lr;direction:rtl;accent-color:#ddd;width:18px}
-.tools{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:12px 18px max(18px,env(safe-area-inset-bottom));gap:12px}.tools>.row{flex:0 0 auto}.tools::-webkit-scrollbar{width:3px}.tools::-webkit-scrollbar-thumb{background:#444}
-.row{display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,22px)}button{background:none;color:#aaa;border:1px solid #393939;border-radius:0;min-width:46px;height:42px;font-size:20px;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
-button:active,button.active{border-color:#eee;color:#fff;background:#171717}.shape{font-size:23px}.library-head{justify-content:flex-start}.categories{gap:5px}.category{height:30px;min-width:0;flex:1;padding:0 7px;font:10px monospace;letter-spacing:.08em}.variation-row{justify-content:space-between;gap:10px}.variation-select{flex:1;min-width:0;height:38px;padding:0 12px;background:#111;color:#ddd;border:1px solid #484848;border-radius:0;font:11px monospace;letter-spacing:.08em;appearance:none}.sizes{display:flex;gap:4px}.sizes button{min-width:34px;width:34px;height:34px;font:11px monospace}.library-actions{gap:10px}.library-actions button{font:10px monospace;height:32px;min-width:90px}.label{font:9px monospace;letter-spacing:.12em;color:#686868;text-align:center;margin-top:4px}.joint-tools{gap:10px;min-height:30px}.joint-tools[hidden]{display:none}.joint-tools input{flex:1;max-width:230px;accent-color:#ddd;height:18px}.joint-tools output{font:10px monospace;color:#aaa;min-width:38px;text-align:right}
-.tool{display:flex;flex-direction:column;align-items:center}.tool button{width:48px}
-.die-button{width:38px!important;height:36px!important;min-width:38px!important;border:0!important;padding:0!important;background:transparent!important}.die-icon{position:relative;display:block;width:22px;height:22px;border-radius:4px;background:linear-gradient(145deg,#f0f0f0,#777);transform:rotate(-12deg);box-shadow:2px 3px 0 #444,3px 4px 0 #222,inset 1px 1px 2px #fff}.die-icon:before{content:'•  •';position:absolute;left:3px;top:1px;color:#222;font:bold 9px/10px Arial;letter-spacing:1px;text-shadow:0 5px 0 #222}.die-icon:after{content:'•';position:absolute;left:8px;top:8px;color:#222;font:bold 9px Arial;text-shadow:0 5px 0 #222}#pad{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:0;width:102px;height:102px;touch-action:manipulation}#pad:before,#pad:after{content:'';position:absolute;inset:0;clip-path:polygon(40% 34%,40% 20%,22% 0,78% 0,60% 20%,60% 34%,66% 40%,80% 40%,100% 22%,100% 78%,80% 60%,66% 60%,60% 66%,60% 80%,78% 100%,22% 100%,40% 80%,40% 66%,34% 60%,20% 60%,0 78%,0 22%,20% 40%,34% 40%)}#pad:before{z-index:-2;background:linear-gradient(145deg,#777 0%,#333 35%,#090909 75%,#555 100%);filter:drop-shadow(0 3px 4px #000)}#pad:after{z-index:-1;inset:2px;background:linear-gradient(145deg,#292929,#090909 70%)}#pad button{position:relative;z-index:1;min-width:0;width:34px;height:34px;padding:0;border:0;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(0,0,0,.12));color:#aaa;font-size:17px;text-shadow:0 1px 2px #000}#pad button:active{background:#555;color:#fff;box-shadow:inset 0 2px 5px #000}#pad [data-move='0,0,-1']{grid-column:2;grid-row:1}#pad [data-move='-1,0,0']{grid-column:1;grid-row:2}#pad [data-move='1,0,0']{grid-column:3;grid-row:2}#pad [data-move='0,0,1']{grid-column:2;grid-row:3}#pad .empty{display:none}#pad .vertical{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center}#pad .vertical button{height:17px;font-size:13px;line-height:1}.tools > .row:nth-of-type(6){justify-content:space-between}.tools > .row:nth-of-type(6) #pad{margin-left:auto}.tools > .row:nth-of-type(6) .tool:first-child{margin-left:auto;order:10}
-.small{font-size:15px}
-#rasterPanel{display:flex;align-items:center;gap:8px}#rasterLevel{width:76px;accent-color:#ddd;height:18px}#rasterOverlay{position:absolute;inset:0;pointer-events:none;opacity:0;mix-blend-mode:screen;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(220,220,220,.12) 3px 4px),repeating-linear-gradient(90deg,transparent 0 3px,rgba(220,220,220,.08) 3px 4px)}.view.raster #rasterOverlay{opacity:var(--raster-opacity,.18)}#status{font:9px monospace;letter-spacing:.12em;color:#666;text-align:center;min-height:12px}
-@media(max-height:650px){.view{flex-basis:43%;height:43%}.tools{padding:8px 12px 14px}.row{gap:8px}button{height:36px;min-width:40px}.tool button{width:42px}}@media(max-width:600px){.view{flex-basis:48%;height:48%}.tools{justify-content:flex-start}.categories{justify-content:space-between}.category{padding:0 7px;font-size:9px}.parts{min-height:44px}.part{min-width:58px;height:40px}.library-actions{justify-content:flex-start}.view{height:58%;height:58dvh}.tools{padding:7px 12px max(12px,env(safe-area-inset-bottom));gap:7px}.row{gap:clamp(5px,2vw,12px)}.tools > .row:nth-of-type(6){justify-content:space-between}.tools > .row:nth-of-type(6) .tool:first-child{order:10;margin-left:0}.tools > .row:nth-of-type(6) #pad{grid-template-columns:repeat(3,32px);grid-template-rows:repeat(3,32px);width:96px;height:96px}#pad button{width:32px;height:32px}#pad .vertical button{height:16px}.tools > .row:nth-of-type(6) .tool button{width:42px}.brand{top:max(12px,env(safe-area-inset-top));left:12px}.count{right:12px}}
-</style></head>
-<body><div id="app">
-<section class="view"><canvas id="scene"></canvas><div class="brand">FORM / CREATURE LAB · BUILD STRANGE THINGS</div><div class="count" id="count">01 OBJECT</div><div id="rasterOverlay"></div><input id="orbitY" type="range" min="-180" max="180" value="35" aria-label="Вращение по вертикальной оси"><input id="orbitX" type="range" min="-75" max="75" value="18" aria-label="Вращение по горизонтальной оси"></section>
-<section class="tools">
-<div class="row library-head"><div class="label">CREATURE PARTS / LIBRARY</div></div>
-<div class="row categories" id="categories">
-<button class="category active" data-category="HEAD">HEAD</button><button class="category" data-category="BODY">BODY</button><button class="category" data-category="ARMS">ARMS</button><button class="category" data-category="LEGS">LEGS</button><button class="category" data-category="EXTRAS">EXTRAS</button>
-</div>
-<div class="row variation-row"><select id="variation" class="variation-select" aria-label="Вариант детали"></select><div class="sizes" id="sizes" aria-label="Размер детали"><button data-size="S">S</button><button data-size="M" class="active">M</button><button data-size="L">L</button></div></div>
-<div class="row library-actions">
-
-<button id="skin" class="small">◈ MATERIAL: STONE</button><button id="naked" class="small">NAKED: OFF</button>
-</div>
-<div class="row joint-tools" id="jointTools" hidden><span class="label">ELBOW</span><input id="elbowAngle" type="range" min="-130" max="130" value="0" aria-label="Сгиб локтя"><output id="elbowValue">0°</output></div>
-<div class="row">
-<div class="tool"><button id="magnet" aria-label="Магнит">⌁</button><div class="label">MAGNET</div></div>
-<div class="tool"><button id="snap" aria-label="Постоянный магнит">⊛</button><div class="label">AUTO</div></div>
-<div class="tool"><button id="rotate" aria-label="Поворот">⟳</button><div class="label">ROTATE</div></div>
-<div class="tool"><button id="scale" aria-label="Размер">↗</button><div class="label">SIZE</div></div>
-</div>
-<div class="row">
-<div class="tool"><button id="random" class="die-button" aria-label="Случайное существо"><span class="die-icon"></span></button><div class="label">RANDOM</div><div id="pad" aria-label="Перемещение объекта по осям">
-<button data-move="0,0,-1" aria-label="Назад по глубине">↑</button>
-<button data-move="-1,0,0" aria-label="Влево">←</button>
-<div class="vertical"><button data-move="0,1,0" aria-label="Поднять">+</button><button data-move="0,-1,0" aria-label="Опустить">−</button></div>
-<button data-move="1,0,0" aria-label="Вправо">→</button>
-<button data-move="0,0,1" aria-label="Вперёд по глубине">↓</button>
-</div><div class="label">XYZ / MOVE</div></div>
-<div class="tool"><button id="undo" class="small" aria-label="Назад">↶</button><div class="label">UNDO</div></div><div class="tool"><button id="delete" class="small" aria-label="Удалить">×</button><div class="label">DELETE</div></div>
-<div class="tool"><button id="reset" class="small" aria-label="Сброс камеры">◎</button><div class="label">CENTER</div></div>
-</div><div id="status">SELECT SHAPE · CREATE IN CENTER</div>
-</section></div>
+.brand{position:absolute;top:15px;left:17px;font:10px monospace;letter-spacing:.22em;color:#777;pointer-events:none}
+#orbitY{position:absolute;bottom:13px;left:15%;width:70%;accent-color:#ddd;height:18px}
+#orbitX{position:absolute;right:8px;top:22%;height:55%;writing-mode:vertical-lr;direction:rtl;accent-color:#ddd;width:18px}
+.controls{height:24%;min-height:112px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;padding:12px 18px max(16px,env(safe-area-inset-bottom));border-top:1px solid #242424}
+button{height:46px;min-width:170px;padding:0 24px;border:1px solid #555;background:#101010;color:#ddd;font:11px monospace;letter-spacing:.16em}
+button:active{background:#252525;border-color:#aaa}
+.hint{font:9px monospace;letter-spacing:.13em;color:#555;text-align:center}
+@media(max-height:600px){.view{height:70%}.controls{height:30%;gap:8px}button{height:40px}}
+</style>
+</head>
+<body><main id="app">
+<section class="view"><canvas id="scene"></canvas><div class="brand">CREATURE LAB · REBUILT</div><input id="orbitY" type="range" min="-180" max="180" value="35" aria-label="Вращение по горизонтальной оси"><input id="orbitX" type="range" min="-70" max="70" value="12" aria-label="Вращение по вертикальной оси"></section>
+<section class="controls"><button id="generate">GENERATE CREATURE ↻</button><div class="hint">DRAG OR USE AXIS CONTROLS · BLACK STAGE</div></section>
+</main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x050505);
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050505);
-// Airless industrial moonlight: one hard, cold key and very restrained ambient fill.
-scene.add(new THREE.HemisphereLight(0xb8c5dc,0x080d18,.68));
-const keyLight=new THREE.DirectionalLight(0xe1e8f5,3.0);keyLight.position.set(-4,7,5);keyLight.castShadow=true;keyLight.shadow.mapSize.set(1024,1024);keyLight.shadow.camera.near=.5;keyLight.shadow.camera.far=24;keyLight.shadow.camera.left=-5;keyLight.shadow.camera.right=5;keyLight.shadow.camera.top=6;keyLight.shadow.camera.bottom=-6;keyLight.shadow.bias=-.00035;keyLight.shadow.normalBias=.04;keyLight.shadow.radius=3;scene.add(keyLight);
-const fillLight=new THREE.DirectionalLight(0x8298bb,.42);fillLight.position.set(5,1,-4);scene.add(fillLight);
-const rimLight=new THREE.DirectionalLight(0xaabbd8,.38);rimLight.position.set(1,4,-6);scene.add(rimLight);
-const camera=new THREE.PerspectiveCamera(42,1,.1,100);
-let yaw=35*Math.PI/180,pitch=18*Math.PI/180,target=new THREE.Vector3();
-const objects=[];const history=[];let currentCategory='HEAD',mirrorMode=false,skinMode=0,currentSize='M';const sizeFactor={S:.78,M:1,L:1.25};let restoring=false;function checkpoint(){if(restoring)return;history.push({items:objects.map(o=>({type:o.userData.type,part:o.userData.part,category:o.userData.category,side:o.userData.side,baseScale:o.userData.baseScale,socketRole:o.userData.socketRole,socketSide:o.userData.socketSide,pos:o.position.toArray(),rot:o.rotation.toArray(),scale:o.scale.toArray(),elbowRot:o.userData.joints?.elbow?.rotation.toArray()||null})),selected:objects.indexOf(selected)});if(history.length>60)history.shift();}function undo(){const h=history.pop();if(!h)return;restoring=true;for(const o of [...objects])scene.remove(o);objects.length=0;for(const d of h.items){const o=createPart(d.type,d.side||1);o.userData.part=d.part;o.userData.category=d.category;o.userData.side=d.side;o.userData.baseScale=d.baseScale;o.userData.socketRole=d.socketRole;o.userData.socketSide=d.socketSide;o.position.fromArray(d.pos);o.rotation.fromArray(d.rot);o.scale.fromArray(d.scale);if(d.elbowRot&&o.userData.joints?.elbow)o.userData.joints.elbow.rotation.fromArray(d.elbowRot);scene.add(o);objects.push(o);}selected=null;select(objects[h.selected]||objects.at(-1)||null);updateCount();restoring=false;}let selected=null,lastSelected=null,magnetArmed=false,autoMagnet=false,rotateMode=false,scaleMode=false,nakedMode=false;
-const lineMat=new THREE.LineBasicMaterial({color:0xbdbdbd,transparent:true,opacity:.82});const contactMat=new THREE.LineBasicMaterial({color:0xbfd9c4,transparent:true,opacity:.9});
-const selectedMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:1});
-const textureCanvases={graphite:null,grain:null,raster:null,stone:null,stoneBump:null};
-function makeTexture(kind){
-const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
-ctx.fillStyle='#171717';ctx.fillRect(0,0,128,128);
-if(kind==='stone'){
-c.width=c.height=512;
-const size=512,seedBase=81731;
-const hash=(x,y)=>{let n=(x*374761393+y*668265263+seedBase)|0;n=(n^(n>>>13))*1274126177;return ((n^(n>>>16))>>>0)/4294967295;};
-const smooth=t=>t*t*(3-2*t);
-const noise=(x,y,scale)=>{
- const fx=x/scale,fy=y/scale,ix=Math.floor(fx),iy=Math.floor(fy),tx=smooth(fx-ix),ty=smooth(fy-iy);
- const a=hash(ix,iy),b=hash(ix+1,iy),d=hash(ix,iy+1),e=hash(ix+1,iy+1);
- const top=a+(b-a)*tx,bot=d+(e-d)*tx;return top+(bot-top)*ty;
-};
-const data=ctx.createImageData(size,size);
-for(let y=0;y<size;y++)for(let x=0;x<size;x++){
- const warp=(noise(x,y,118)-.5)*34+(noise(x,y,34)-.5)*15;
- const broad=noise(x+warp*.4,y+warp,148),mid=noise(x,y,62),grain=noise(x,y,17),micro=hash(x,y);
- const strata=Math.sin((y+warp+noise(x,y,25)*13)*.105);
- const crest=Math.pow(Math.max(0,strata),5);
- const seam=Math.pow(Math.max(0,Math.cos((y+warp+noise(x,y,19)*9)*.105)),18);
- const pores=noise(x+noise(x,y,31)*9,y,13);
- const pits=pores<.29?(.29-pores)*62:0;
- const relief=(broad-.5)*25+(mid-.5)*18+(grain-.5)*10+(micro-.5)*5+crest*19-seam*9-pits*.7;
- const cool=noise(x+51,y-23,73)-.5,i=(y*size+x)*4;
- data.data[i]=Math.max(0,Math.min(255,143+relief+cool*4-pits*.22));
- data.data[i+1]=Math.max(0,Math.min(255,153+relief+cool*2-pits*.2));
- data.data[i+2]=Math.max(0,Math.min(255,169+relief-cool*3-pits*.15));
- data.data[i+3]=255;
-}
-ctx.putImageData(data,0,0);
-let seed=9217;const rand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-for(let i=0;i<900;i++){
- const x=rand()*size,y=rand()*size,rx=.7+rand()*3.5,ry=.4+rand()*1.9;
- ctx.fillStyle=rand()>.48?'rgba(35,45,61,.19)':'rgba(225,231,239,.17)';
- ctx.beginPath();ctx.ellipse(x,y,rx,ry,(rand()-.5)*.7,0,Math.PI*2);ctx.fill();
-}
-}else if(kind==='stone-bump'){
-c.width=c.height=512;
-const size=512,seedBase=81731;
-const hash=(x,y)=>{let n=(x*374761393+y*668265263+seedBase)|0;n=(n^(n>>>13))*1274126177;return ((n^(n>>>16))>>>0)/4294967295;};
-const smooth=t=>t*t*(3-2*t);
-const noise=(x,y,scale)=>{
- const fx=x/scale,fy=y/scale,ix=Math.floor(fx),iy=Math.floor(fy),tx=smooth(fx-ix),ty=smooth(fy-iy);
- const a=hash(ix,iy),b=hash(ix+1,iy),d=hash(ix,iy+1),e=hash(ix+1,iy+1);
- const top=a+(b-a)*tx,bot=d+(e-d)*tx;return top+(bot-top)*ty;
-};
-const data=ctx.createImageData(size,size);
-for(let y=0;y<size;y++)for(let x=0;x<size;x++){
- const warp=(noise(x,y,118)-.5)*34+(noise(x,y,34)-.5)*15;
- const broad=noise(x+warp*.4,y+warp,148),mid=noise(x,y,62),fine=noise(x,y,17),micro=hash(x,y);
- const strata=Math.sin((y+warp+noise(x,y,25)*13)*.105);
- const crest=Math.pow(Math.max(0,strata),5),seam=Math.pow(Math.max(0,Math.cos((y+warp+noise(x,y,19)*9)*.105)),18);
- const pores=noise(x+noise(x,y,31)*9,y,13),pits=pores<.29?(.29-pores)*62:0;
- const height=128+(broad-.5)*54+(mid-.5)*38+(fine-.5)*24+(micro-.5)*9+crest*48-seam*25-pits*1.7;
- const v=Math.max(0,Math.min(255,height)),i=(y*size+x)*4;
- data.data[i]=data.data[i+1]=data.data[i+2]=v;data.data[i+3]=255;
-}
-ctx.putImageData(data,0,0);
-}else if(kind==='clay'){
-ctx.fillStyle='#75665a';ctx.fillRect(0,0,128,128);
-let seed=4219;
-for(let i=0;i<3600;i++){seed=(seed*16807)%2147483647;const x=seed%128;seed=(seed*16807)%2147483647;const y=seed%128;seed=(seed*16807)%2147483647;const v=75+(seed%65);ctx.fillStyle='rgba('+v+','+(v-9)+','+(v-17)+','+(.08+(seed%25)/100)+')';ctx.beginPath();ctx.ellipse(x,y,1+(seed%5),1+(seed%3),seed%6,0,Math.PI*2);ctx.fill();}
-for(let i=0;i<24;i++){const y=(i*23)%128;ctx.strokeStyle='rgba(220,190,160,.10)';ctx.lineWidth=1+(i%3);ctx.beginPath();ctx.moveTo(-5,y);ctx.bezierCurveTo(35,y-8,85,y+9,134,y-3);ctx.stroke();}
-}else if(kind==='raster'){
-const step=Math.max(3,Math.round(Number(document.querySelector('#rasterLevel')?.value||18)/2));
-for(let y=0;y<128;y+=step)for(let x=0;x<128;x+=step){
-const v=35+Math.floor(((x*13+y*7)%37));ctx.fillStyle='rgba('+v+','+v+','+v+',.9)';ctx.fillRect(x,y,Math.max(1,step*.45),Math.max(1,step*.45));
-}
-for(let y=0;y<128;y+=step*4){ctx.fillStyle='rgba(210,210,210,.16)';ctx.fillRect(0,y,128,1);}
-}else if(kind==='grain'){
-let seed=17;for(let i=0;i<2800;i++){seed=(seed*16807)%2147483647;const px=seed%128;seed=(seed*16807)%2147483647;const py=seed%128;const v=70+(seed%100);ctx.fillStyle='rgba('+v+','+v+','+v+',.22)';ctx.fillRect(px,py,1,1);}
-}else{ctx.fillStyle='#292929';ctx.fillRect(0,0,128,128);ctx.strokeStyle='rgba(255,255,255,.035)';for(let i=0;i<128;i+=16){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,128);ctx.moveTo(0,i);ctx.lineTo(128,i);ctx.stroke();}}
-const t=new THREE.CanvasTexture(c);t.colorSpace=kind==='stone-bump'?THREE.NoColorSpace:THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t;
-}
-function activeTexture(){return textureCanvases[['stone','clay'][skinMode]];}
-function combineArmJoint(base,side){
-const pieces=[base];
-const ball=new THREE.SphereGeometry(.205,8,6);ball.translate(-.73,0,0);pieces.push(ball);
-const collar=new THREE.TorusGeometry(.19,.052,5,9);collar.rotateY(Math.PI/2);collar.translate(-.69,0,0);pieces.push(collar);
-const pos=[],uv=[],idx=[];let offset=0;
-for(const g of pieces){const a=g.getAttribute('position'),u=g.getAttribute('uv');for(let i=0;i<a.count;i++){pos.push(a.getX(i),a.getY(i),a.getZ(i));uv.push(u?u.getX(i):.5,u?u.getY(i):.5);}if(g.index){for(let i=0;i<g.index.count;i++)idx.push(g.index.getX(i)+offset);}else for(let i=0;i<a.count;i++)idx.push(i+offset);offset+=a.count;}
-const merged=new THREE.BufferGeometry();merged.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));merged.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));merged.setIndex(idx);
-if(side<0)merged.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
-merged.computeVertexNormals();merged.computeBoundingBox();return merged;
-}
-function clipGeometryY(source,keepPositive){
- const p=source.getAttribute('position'),uv=source.getAttribute('uv'),idx=source.index?source.index.array:Array.from({length:p.count},(_,i)=>i),outP=[],outUv=[];
- const vertex=i=>({p:[p.getX(i),p.getY(i),p.getZ(i)],uv:uv?[uv.getX(i),uv.getY(i)]:[.5,.5]});
- const inside=v=>keepPositive?v.p[1]>=-1e-6:v.p[1]<=1e-6;
- const cut=(a,b)=>{const t=(0-a.p[1])/(b.p[1]-a.p[1]);return {p:[a.p[0]+(b.p[0]-a.p[0])*t,0,a.p[2]+(b.p[2]-a.p[2])*t],uv:[a.uv[0]+(b.uv[0]-a.uv[0])*t,a.uv[1]+(b.uv[1]-a.uv[1])*t]};};
- const emit=v=>{outP.push(...v.p);outUv.push(...v.uv);};
- for(let i=0;i<idx.length;i+=3){let poly=[vertex(idx[i]),vertex(idx[i+1]),vertex(idx[i+2])],clipped=[];for(let j=0;j<poly.length;j++){const a=poly[j],b=poly[(j+1)%poly.length],ia=inside(a),ib=inside(b);if(ia&&ib)clipped.push(b);else if(ia&&!ib)clipped.push(cut(a,b));else if(!ia&&ib)clipped.push(cut(a,b),b);}for(let j=1;j<clipped.length-1;j++){emit(clipped[0]);emit(clipped[j]);emit(clipped[j+1]);}}
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(outP,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(outUv,2));g.computeVertexNormals();g.computeBoundingBox();return g;
-}
-function makeRigMesh(g,material){const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);return {mesh,edge};}
-function createArmRig(type){
- const source=geometry(type),upperGeometry=clipGeometryY(source,true),lowerGeometry=clipGeometryY(source,false);source.dispose();
- // Shoulder is the root. The upper arm reaches down to the elbow; the forearm hangs from its own pivot.
- upperGeometry.translate(0,-.8,0);
- const material=new THREE.MeshStandardMaterial({map:activeTexture(),bumpMap:textureCanvases.stoneBump,roughnessMap:null,bumpScale:.12,color:0xf4f5f2,side:THREE.DoubleSide,roughness:1,metalness:0});
- const rig=new THREE.Group(),upper=makeRigMesh(upperGeometry,material),elbow=new THREE.Group(),forearm=makeRigMesh(lowerGeometry,material);
- rig.add(upper.mesh);elbow.position.set(0,-.8,0);elbow.name='ELBOW_PIVOT';elbow.add(forearm.mesh);
- const jointMaterial=material;
- const shoulderCap=new THREE.Mesh(new THREE.SphereGeometry(.19,12,10),jointMaterial);shoulderCap.position.set(0,0,0);shoulderCap.castShadow=true;rig.add(shoulderCap);
- const elbowCap=new THREE.Mesh(new THREE.SphereGeometry(.205,12,10),jointMaterial);elbowCap.position.set(0,0,0);elbowCap.castShadow=true;elbow.add(elbowCap);
- const collar=new THREE.Mesh(new THREE.TorusGeometry(.19,.045,6,12),jointMaterial);collar.rotation.y=Math.PI/2;collar.castShadow=true;elbow.add(collar);
- rig.add(elbow);rig.userData.joints={elbow};rig.userData.edges=[upper.edge,forearm.edge];rig.userData.edge=upper.edge;rig.userData.type=type;rig.userData.rigType='ARM_2_SEGMENT';rig.userData.side=1;
- return rig;
-}
-function limbMaterial(type){
-const isStone=type.startsWith('stone_');
-return new THREE.MeshStandardMaterial({map:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:null,bumpScale:isStone?.12:.035,color:0xf4f5f2,side:THREE.DoubleSide,roughness:isStone?1:.88,metalness:0});
-}
-function limbMesh(g,material){
-const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;
-const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);mesh.userData.edge=edge;return mesh;
-}
-function splitArmGeometry(source,splitY,keepUpper=false){
- const p=source.getAttribute('position'),uv=source.getAttribute('uv');
- const idx=source.index?source.index.array:Array.from({length:p.count},(_,i)=>i),positions=[],uvs=[];
- const vertex=id=>({x:p.getX(id),y:p.getY(id),z:p.getZ(id),u:uv?uv.getX(id):.5,v:uv?uv.getY(id):.5});
- const clip=poly=>{
-  const out=[];
-  for(let i=0;i<poly.length;i++){
-   const a=poly[i],b=poly[(i+1)%poly.length],da=a.y-splitY,db=b.y-splitY;
-   const ina=keepUpper?da>=-1e-7:da<=1e-7,inb=keepUpper?db>=-1e-7:db<=1e-7;
-   if(ina)out.push(a);
-   if(ina!==inb){const t=da/(da-db);out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,u:a.u+(b.u-a.u)*t,v:a.v+(b.v-a.v)*t});}
-  }
-  return out;
- };
- for(let i=0;i<idx.length;i+=3){
-  const poly=clip([vertex(idx[i]),vertex(idx[i+1]),vertex(idx[i+2])]);
-  if(poly.length<3)continue;
-  for(let j=1;j<poly.length-1;j++)for(const v of [poly[0],poly[j],poly[j+1]]){positions.push(v.x,v.y,v.z);uvs.push(v.u,v.v);}
- }
- const g=new THREE.BufferGeometry();
- g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
- g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
- g.computeVertexNormals();g.computeBoundingBox();return g;
-}
-function clubArmGeometry(type){
- const profiles=[
- [-.82,.13,.15,0,0],[-.68,.17,.18,-.015,0],[-.48,.19,.19,.015,0],
- [-.26,.22,.21,.025,0],[-.04,.255,.24,0,0],[.16,.29,.27,-.015,0],
- [.36,.33,.30,-.025,0],[.55,.37,.34,0,0],[.72,.405,.37,.015,0],[.82,.35,.33,.015,0]
- ];
- const base=ringForm(profiles,10,'armor');
- base.computeVertexNormals();base.computeBoundingBox();
- return stoneDetail(base,type);
-}
-function createArticulatedArm(type,side=1){
- const source=clubArmGeometry(type);
- if(side<0)source.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));
- const material=limbMaterial(type),root=new THREE.Group();
- root.userData.type=type;root.userData.isCreatureRoot=true;root.userData.pivot='SHOULDER';root.userData.joint='ELBOW';root.userData.rigVersion=4;
- // Both sides use the same vertical coordinate system: upper arm above Y=0, club below it.
- const upperGeometry=splitArmGeometry(source,0,true);
- const forearmGeometry=splitArmGeometry(source,0,false);
- upperGeometry.translate(0,-.82,0);
- const upper=limbMesh(upperGeometry,material);upper.userData.segment='UPPER_ARM';root.add(upper);
- const elbow=new THREE.Group();elbow.position.set(0,-.82,0);elbow.userData.pivot='ELBOW';elbow.userData.isJoint=true;
- const forearm=limbMesh(forearmGeometry,material);forearm.userData.segment='STONE_CLUB';elbow.add(forearm);
- const spikeEdges=[];
- for(let n=0;n<3;n++){
-  const spikeGeometry=stoneDetail(new THREE.ConeGeometry(.125,.38,5,1),type);
-  const spike=limbMesh(spikeGeometry,material);
-  spike.position.set((n-1)*.17,-.70,n===1?0:.015);
-  spike.rotation.z=Math.PI+(n-1)*.24;
-  spike.userData.segment='CLUB_SPIKE_'+(n+1);
-  elbow.add(spike);spikeEdges.push(spike.userData.edge);
- }
- root.add(elbow);
- const jointCore=new THREE.Mesh(new THREE.SphereGeometry(.125,10,8),material);
- jointCore.position.set(0,-.82,0);jointCore.castShadow=true;jointCore.receiveShadow=true;root.add(jointCore);
- root.userData.joints={elbow};root.userData.edges=[upper.userData.edge,forearm.userData.edge,...spikeEdges];root.userData.edge=upper.userData.edge;root.userData.material=material;root.userData.side=side;root.userData.rigType='ARM_2_SEGMENT';
- source.dispose();return root;
-}
-function createPart(type,side=1){
-if(type.startsWith('stone_arm_'))return createArticulatedArm(type,side);
-let g=geometry(type);
-if(type.startsWith('stone_leg_')&&side<0){g.applyMatrix4(new THREE.Matrix4().makeScale(-1,1,1));g.computeVertexNormals();g.computeBoundingBox();}
-if(type.startsWith('stone_leg_'))g.translate(0,-.88,0);
-const isStone=type.startsWith('stone_'),eye=type==='eye';
-const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
-const material=new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:null,bumpScale:isStone?.12:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?1:.88),metalness:0,flatShading:isStone&&keepStarterFacets});
-const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;
-const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
-if(type==='stone_head_crag'){
- // Distinctive mask-like crown: jagged stone crest and narrow recessed-looking eye slits.
- const crown=new THREE.Group();
- const crestSpecs=[[-.34,.43,.02,-.20,.20],[-.17,.51,.01,-.10,.25],[0,.53,0,0,.29],[.18,.50,.01,.12,.24],[.35,.42,.015,.22,.19]];
- for(const [x,y,z,tilt,h] of crestSpecs){
-  const spike=new THREE.Mesh(new THREE.ConeGeometry(.145,h,5,1),material);
-  spike.position.set(x,y+h*.34,z);spike.rotation.z=tilt;spike.castShadow=true;spike.receiveShadow=true;crown.add(spike);
-  const spikeEdge=new THREE.LineSegments(new THREE.EdgesGeometry(spike.geometry,18),lineMat);spikeEdge.visible=nakedMode;spike.add(spikeEdge);
- }
- const eyeMat=new THREE.MeshStandardMaterial({color:0x101316,roughness:1,metalness:0});
+scene.add(new THREE.HemisphereLight(0xb8c5dc,0x080d18,.72));
+const key=new THREE.DirectionalLight(0xe1e8f5,3.1);key.position.set(-4,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.near=.5;key.shadow.camera.far=24;key.shadow.camera.left=-5;key.shadow.camera.right=5;key.shadow.camera.top=6;key.shadow.camera.bottom=-6;key.shadow.bias=-.00035;key.shadow.normalBias=.04;scene.add(key);
+const fill=new THREE.DirectionalLight(0x8298bb,.38);fill.position.set(5,1,-4);scene.add(fill);
+const camera=new THREE.PerspectiveCamera(38,1,.1,100);
+let yaw=35*Math.PI/180,pitch=12*Math.PI/180,drag=null;
+const root=new THREE.Group();scene.add(root);
+const stone=new THREE.MeshStandardMaterial({color:0x8997a4,roughness:1,metalness:0,flatShading:true});
+const jointMat=new THREE.MeshStandardMaterial({color:0x9aa7b2,roughness:1,metalness:0,flatShading:true});
+function rock(parent,geo,mat,pos,scale,rot=[0,0,0]){const m=new THREE.Mesh(geo,mat);m.position.set(...pos);m.scale.set(...scale);m.rotation.set(...rot);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+function poly(radius,detail=1){return new THREE.IcosahedronGeometry(radius,detail);}
+function limb(parent,a,b,r1,r2,mat){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),dir=end.clone().sub(start);const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,dir.length(),7,1),mat);mesh.position.copy(start).add(end).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
+function makeCreature(){
+ root.clear();
+ const torso=rock(root,poly(1,1),stone,[0,0,0],[.83,.94,.58],[0,.08,0]);
+ // Shoulder mantle: broad upper mass, compact lower torso.
+ rock(root,poly(.72,1),stone,[0,.43,0],[1.13,.62,.72],[0,0,.03]);
+ rock(root,poly(.55,1),stone,[0,-.52,.015],[.86,.68,.66],[0,0,0]);
+ // Head: tall, angular mask-like crag with a strong brow and crown silhouette.
+ const head=new THREE.Group();head.position.set(0,1.18,.015);root.add(head);
+ rock(head,poly(.53,1),stone,[0,.08,0],[.83,1.08,.76],[0,0,0]);
+ rock(head,poly(.34,1),stone,[0,-.28,.34],[.9,.55,.46],[0,0,0]);
+ // Five irregular crown horns, deliberately part of the head silhouette.
+ const hornGeo=new THREE.ConeGeometry(.16,.53,5,1);
+ for(let i=0;i<5;i++){const x=(i-2)*.19;const h=.38+(1-Math.abs(i-2)/2)*.2;rock(head,new THREE.ConeGeometry(.14,h,5,1),stone,[x,.86+(i===2?.06:0),-.015],[1,1,1],[0,0,(2-i)*-.12]);}
+ const dark=new THREE.MeshStandardMaterial({color:0x10151b,roughness:1});
+ for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.BoxGeometry(.22,.045,.035),dark);eye.position.set(side*.19,.02,.405);eye.rotation.z=side*.12;head.add(eye);}
+ // Neck socket is intentionally visible, like a vintage articulated figure.
+ rock(root,poly(.22,1),jointMat,[0,.82,.02],[1,1,.9]);
+ // Arms: upper stone masses, exposed half-sphere elbows, heavy forearms and three blunt talons.
  for(const side of [-1,1]){
-  const eye=new THREE.Mesh(new THREE.BoxGeometry(.22,.045,.035),eyeMat);
-  eye.position.set(side*.19,.055,.365);eye.rotation.z=side*.16;eye.rotation.y=side*-.12;
-  crown.add(eye);
+  const shoulder=[side*.78,.48,0],elbow=[side*1.02,-.12,.025],wrist=[side*1.10,-.78,.08];
+  rock(root,poly(.34,1),jointMat,[...shoulder],[1,1,1]);
+  limb(root,shoulder,[side*.96,.05,.015],.27,.23,stone);
+  rock(root,poly(.205,1),jointMat,[...elbow],[1,1,1]);
+  limb(root,elbow,wrist,.27,.34,stone);
+  rock(root,poly(.30,1),stone,[side*1.10,-.79,.08],[1.02,1.12,.95]);
+  for(let k=-1;k<=1;k++){const claw=rock(root,new THREE.ConeGeometry(.105,.30,5,1),stone,[side*1.10+k*.17,-1.08,.22],[1,1,1],[0,0,Math.PI+(k*.22)]);}
  }
- mesh.add(crown);mesh.userData.crown=crown;
+ // Short, sturdy legs with visible hip and knee joints.
+ for(const side of [-1,1]){
+  const hip=[side*.39,-.72,0],knee=[side*.44,-1.25,.025],ankle=[side*.48,-1.78,.08];
+  rock(root,poly(.22,1),jointMat,hip,[1,1,1]);
+  limb(root,hip,knee,.28,.24,stone);
+  rock(root,poly(.17,1),jointMat,knee,[1,1,1]);
+  limb(root,knee,ankle,.23,.31,stone);
+  rock(root,poly(.34,1),stone,[side*.49,-1.84,.22],[1.12,.58,1.35]);
+ }
 }
-if(type.startsWith('stone_leg_')){
- const joint=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),material);joint.position.set(0,-.88,0);joint.scale.set(.205,.205,.205);mesh.userData.pivot='HIP';mesh.userData.joint='KNEE';
- if(type==='stone_leg_bigboot'){const boot=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),material);boot.position.set(0,-1.69,.16);boot.scale.set(.39,.25,.53);boot.castShadow=true;boot.receiveShadow=true;mesh.add(boot);mesh.userData.footStyle='BIG STONE BOOT';}
- joint.castShadow=true;joint.receiveShadow=true;mesh.add(joint);
-}
-mesh.userData.type=type;mesh.userData.edge=edge;mesh.userData.isCreatureRoot=true;return mesh;
-}
-function setPartLine(o,mat){if(!o)return;o.traverse(n=>{if(n.userData?.edge)n.userData.edge.material=mat;});}
-function applySkin(){for(const o of objects)o.traverse(n=>{if(n.isMesh&&n.material){n.material.map=o.userData.type==='eye'?null:activeTexture();n.material.bumpMap=o.userData.type?.startsWith('stone_')?textureCanvases.stoneBump:activeTexture();n.material.bumpScale=skinMode===0?.12:.035;n.material.roughness=skinMode===0?1:.88;n.material.roughnessMap=null;n.material.needsUpdate=true;}});}
-document.querySelector('#naked').onclick=()=>{nakedMode=!nakedMode;for(const o of objects){const edges=o.userData.edges||[o.userData.edge];for(const e of edges)if(e)e.visible=nakedMode;}document.querySelector('#naked').textContent='NAKED: '+(nakedMode?'ON':'OFF');document.querySelector('#naked').classList.toggle('active',nakedMode);};
-
-function ringForm(profiles,segments=7,style='organic'){
-  const vertices=[],indices=[],uv=[];
-  profiles.forEach((p,j)=>{
-    const [y,rx,rz,ox=0,oz=0,twist=0]=p;
-    for(let i=0;i<segments;i++){
-      const a=(i/segments)*Math.PI*2+twist;
-      const ripple=style==='insect'?(i%2===0?1.06:.94):style==='armor'?(i%2===0?1.035:.965):1;
-      vertices.push(ox+Math.cos(a)*rx*ripple,y,oz+Math.sin(a)*rz*ripple);uv.push(i/segments,j/(profiles.length-1));
-    }
-  });
-  for(let j=0;j<profiles.length-1;j++)for(let i=0;i<segments;i++){
-    const a=j*segments+i,b=j*segments+(i+1)%segments,c=(j+1)*segments+i,d=(j+1)*segments+(i+1)%segments;
-    indices.push(a,b,c,b,d,c);
-  }
-  const bottom=vertices.length/3;vertices.push(profiles[0][3]||0,profiles[0][0],profiles[0][4]||0);uv.push(.5,0);
-  const top=vertices.length/3;vertices.push(profiles.at(-1)[3]||0,profiles.at(-1)[0],profiles.at(-1)[4]||0);uv.push(.5,1);
-  for(let i=0;i<segments;i++){indices.push(bottom,(i+1)%segments,i);const k=(profiles.length-1)*segments;indices.push(top,k+i,k+(i+1)%segments);}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingBox();return g;
-}
-function geometry(type){
-const sculpted={
-stone_head_block:[[-.58,.30,.30,0,0],[-.48,.48,.38,0,0],[-.12,.52,.43,.02,0],[.24,.48,.40,-.02,.02],[.52,.34,.31,-.04,0]],
-stone_head_crag:[[-.48,.22,.25,0,0],[-.34,.42,.36,-.06,0],[-.12,.52,.42,.02,.02],[.12,.48,.39,.05,0],[.34,.34,.30,.02,-.02],[.46,.22,.22,0,0]],
-clay_head_roll:[[-.62,.18,.22,0,0],[-.48,.34,.30,-.04,0],[-.22,.46,.38,.02,0],[.08,.49,.40,.08,.02],[.38,.38,.34,.02,.02],[.58,.20,.23,-.06,0]],
-stone_body_slab:[[-.78,.28,.28,0,0],[-.58,.52,.40,-.06,0],[-.22,.62,.43,.04,0],[.18,.55,.39,-.03,.02],[.58,.40,.31,.04,0]],
-stone_body_boulder:[[-.66,.24,.27,0,0],[-.48,.46,.39,-.06,0],[-.22,.62,.48,.02,-.03],[.08,.72,.52,.05,0],[.36,.64,.47,-.04,.02],[.58,.30,.30,.01,0]],
-clay_body_roll:[[-.78,.18,.23,0,0],[-.58,.38,.33,-.08,0],[-.30,.54,.42,-.02,-.03],[.02,.60,.46,.08,0],[.34,.53,.41,.10,.03],[.62,.34,.31,0,0]],
-clay_body_taper:[[-.78,.18,.22,0,0],[-.52,.32,.29,.05,0],[-.18,.42,.34,.12,0],[.16,.52,.39,.04,0],[.48,.43,.34,-.08,0],[.72,.20,.22,-.10,0]],
-stone_arm_slab:[[-.78,.14,.17,0,0],[-.58,.26,.24,-.04,0],[-.36,.22,.22,.10,0],[-.12,.30,.27,.18,0],[.14,.22,.21,.10,0],[.42,.31,.27,-.02,0],[.68,.23,.22,-.12,0],[.80,.12,.15,-.16,0]],
-stone_arm_hammer:[[-.78,.12,.14,0,0],[-.55,.19,.19,-.04,0],[-.30,.16,.17,.10,0],[-.06,.22,.20,.20,0],[.16,.34,.30,.24,0],[.42,.38,.33,.20,0],[.62,.30,.27,.12,0],[.78,.16,.17,.08,0]],
-stone_arm_exo:[[-.82,.13,.16,0,0],[-.66,.23,.22,-.03,0],[-.48,.17,.18,.04,0],[-.30,.28,.26,.08,0],[-.12,.19,.20,.12,0],[.08,.24,.23,.10,0],[.28,.32,.29,.04,0],[.48,.26,.24,-.02,0],[.68,.18,.18,-.08,0],[.82,.10,.13,-.12,0]],
-stone_arm_piston:[[-.82,.11,.13,0,0],[-.62,.18,.18,-.02,0],[-.42,.13,.14,.04,0],[-.20,.22,.21,.08,0],[.02,.17,.17,.12,0],[.22,.25,.23,.08,0],[.42,.19,.18,.02,0],[.62,.14,.15,-.04,0],[.82,.09,.11,-.08,0]],
-clay_arm_bent:[[-.78,.10,.13,0,0],[-.56,.17,.18,-.10,0],[-.34,.14,.16,-.22,0],[-.12,.19,.18,-.26,0],[.10,.16,.16,-.12,0],[.32,.20,.18,.02,0],[.56,.25,.22,.12,0],[.76,.13,.15,.16,0]],
-clay_arm_long:[[-.82,.09,.12,0,0],[-.58,.15,.16,.02,0],[-.30,.13,.15,.14,0],[-.02,.18,.17,.20,0],[.24,.15,.14,.12,0],[.50,.20,.18,-.02,0],[.76,.12,.14,-.08,0]],
-stone_leg_pillar:[[-.88,.18,.20,0,0],[-.62,.30,.27,-.04,0],[-.32,.27,.25,.02,0],[-.04,.34,.30,.10,0],[.24,.29,.27,.12,0],[.56,.36,.31,.06,0],[.82,.28,.26,-.04,-.08]],
-stone_leg_bigboot:[[-.88,.18,.20,0,0],[-.62,.30,.27,-.04,0],[-.32,.27,.25,.02,0],[-.04,.34,.30,.10,0],[.24,.29,.27,.12,0],[.56,.36,.31,.06,0],[.82,.28,.26,-.04,-.08]],
-stone_leg_broken:[[-.88,.12,.16,0,0],[-.64,.22,.22,.08,0],[-.38,.16,.18,.18,0],[-.12,.28,.25,.10,0],[.12,.20,.20,-.04,0],[.38,.30,.26,-.16,0],[.66,.20,.20,-.22,-.04],[.84,.12,.15,-.16,-.16]],
-stone_leg_exo:[[-.90,.16,.19,0,0],[-.68,.27,.25,-.03,0],[-.48,.20,.19,.03,0],[-.24,.29,.26,.08,0],[.02,.19,.18,.12,0],[.26,.25,.23,.08,0],[.50,.34,.30,.02,0],[.72,.25,.23,-.04,-.04],[.88,.13,.16,-.08,-.12]],
-clay_leg_bent:[[-.88,.10,.13,0,0],[-.62,.17,.18,.12,0],[-.36,.13,.15,.24,0],[-.12,.20,.19,.18,0],[.12,.14,.16,.02,0],[.36,.18,.18,-.12,0],[.62,.25,.22,-.16,-.02],[.84,.14,.16,-.08,-.18]],
-clay_leg_digit:[[-.88,.08,.12,0,-.10],[-.62,.14,.16,-.10,-.04],[-.36,.12,.14,-.18,0],[-.08,.18,.17,-.08,0],[.18,.13,.14,.08,0],[.42,.18,.17,.18,0],[.66,.25,.22,.12,-.02],[.84,.15,.17,.02,-.20]]
-};
-function stoneDetail(source,type){
-let g=source;
-for(let pass=0;pass<2;pass++){
-const p=g.getAttribute('position'),uv=g.getAttribute('uv'),idx=g.index?g.index.array:Array.from({length:p.count},(_,i)=>i),verts=Array.from(p.array),uvs=uv?Array.from(uv.array):Array.from({length:p.count*2},(_,i)=>i%2?.5:.5),faces=[],cache=new Map();
-const mid=(a,b)=>{const key=a<b?a+':'+b:b+':'+a;if(cache.has(key))return cache.get(key);const n=verts.length/3;verts.push((verts[a*3]+verts[b*3])*.5,(verts[a*3+1]+verts[b*3+1])*.5,(verts[a*3+2]+verts[b*3+2])*.5);uvs.push((uvs[a*2]+uvs[b*2])*.5,(uvs[a*2+1]+uvs[b*2+1])*.5);cache.set(key,n);return n;};
-for(let i=0;i<idx.length;i+=3){const a=idx[i],b=idx[i+1],c=idx[i+2],ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);faces.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);}
-const next=new THREE.BufferGeometry();next.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));next.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));next.setIndex(faces);g.dispose();g=next;
-}
-g.computeVertexNormals();
-const p=g.getAttribute('position'),n=g.getAttribute('normal');
-const noise=(x,y,z,k)=>Math.sin(x*12.9898*k+y*78.233*k+z*37.719*k)*.5+Math.sin(x*5.13*k-z*8.71*k+y*3.7*k)*.25;
-for(let i=0;i<p.count;i++){
-const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
-const broad=noise(x+.13,y,z-.07,.72),medium=noise(x,y,z,1.9),fine=noise(x,y,z,6.8);
-const strata=Math.sin((y+noise(x,y,z,2.1)*.08)*31+Math.sin(x*5+z*4)*.8);
-const shelf=Math.pow(Math.max(0,strata),18)*.014;
-const crackA=Math.abs(Math.sin((x*1.7+z*.9+noise(x,y,z,1.3)*.12)*19));
-const crackB=Math.abs(Math.sin((y*1.3-z*.8+noise(x,y,z,1.7)*.1)*16));
-const fissure=(crackA<.045&&crackB<.22)?.018:0;
-const d=broad*.027+medium*.011+fine*.0035+shelf-fissure;
-p.setXYZ(i,x+n.getX(i)*d,y+n.getY(i)*d,z+n.getZ(i)*d);
-}
-p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingBox();return g;
-}
-if(sculpted[type]){
-const isStone=type.startsWith('stone_'),keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab',segments=keepStarterFacets?(type==='stone_head_block'?4:7):(isStone?12:14),base=ringForm(sculpted[type],segments,isStone?'armor':'organic');
-const g=isStone?stoneDetail(base,type):base;
-if(type.includes('_arm_'))g.rotateZ(-Math.PI/2);
-return g;
-}
-const forms={
-head_skull:[[-.62,.18,.25,0,0],[-.48,.32,.34,0,0],[-.22,.48,.39,0,-.015],[.12,.52,.43,0,0],[.42,.43,.38,0,.015],[.62,.22,.25,0,.02]],
-head_insect:[[-.58,.2,.27,0,-.02],[-.38,.36,.34,0,0],[-.12,.48,.42,0,.03],[.16,.43,.48,0,.07],[.4,.31,.42,0,.09],[.56,.12,.2,0,.1]],
-head_beak:[[-.58,.24,.27,0,-.04],[-.34,.4,.36,0,-.02],[.02,.46,.39,0,0],[.28,.37,.34,0,.02],[.48,.22,.24,0,.05],[.28,.12,.62,0,-.43]],
-head_mask:[[-.58,.18,.23,0,0],[-.4,.4,.3,0,0],[-.08,.48,.34,0,0],[.2,.46,.3,0,0],[.48,.38,.25,0,0],[.58,.2,.2,0,0]],
-head_crown:[[-.58,.22,.25,0,0],[-.36,.39,.34,0,0],[-.04,.45,.37,0,0],[.26,.39,.34,0,0],[.5,.28,.28,0,0],[.78,.12,.18,0,0]],
-head_parasite:[[-.58,.16,.22,0,-.08],[-.38,.31,.32,0,-.05],[-.08,.43,.39,0,0],[.22,.4,.42,0,.04],[.48,.29,.36,0,.08],[.65,.13,.22,0,.1]],
-body_torso:[[-.82,.22,.3,0,0],[-.64,.42,.38,0,0],[-.3,.53,.34,0,0],[.12,.48,.32,0,0],[.48,.58,.36,0,0],[.7,.34,.29,0,0]],
-body_shell:[[-.78,.24,.28,0,0],[-.58,.48,.42,0,0],[-.2,.64,.5,0,0],[.22,.62,.48,0,0],[.54,.48,.4,0,0],[.72,.2,.24,0,0]],
-body_ribcage:[[-.82,.18,.22,0,0],[-.62,.34,.28,0,0],[-.3,.48,.3,0,0],[.08,.53,.32,0,0],[.4,.45,.3,0,0],[.68,.26,.24,0,0]],
-body_hunch:[[-.78,.22,.27,0,0],[-.56,.46,.38,0,-.02],[-.22,.58,.43,0,-.05],[.12,.52,.4,0,-.1],[.42,.4,.36,0,-.13],[.68,.24,.26,0,-.12]],
-body_bell:[[-.78,.18,.23,0,0],[-.56,.35,.3,0,0],[-.24,.5,.39,0,0],[.08,.62,.48,0,0],[.38,.6,.45,0,0],[.62,.38,.32,0,0]],
-body_crawler:[[-.58,.2,.22,0,0],[-.4,.43,.3,0,0],[-.08,.58,.34,0,0],[.18,.52,.32,0,0],[.38,.38,.27,0,0],[.52,.2,.2,0,0]]
-};
-if(forms[type])return ringForm(forms[type],type==='head_insect'||type==='body_shell'?8:7,type.includes('insect')?'insect':type.includes('shell')?'armor':'organic');
-// Limbs are sculpted as tapered, articulated silhouettes rather than primitive rods.
-const limbProfiles={
-arm_brawler:[[-.78,.13,.17,0,0],[-.62,.22,.23,0,0],[-.43,.19,.2,0,0],[-.28,.27,.24,.02,0],[-.08,.18,.18,.015,0],[.12,.2,.2,0,0],[.34,.29,.27,-.04,0],[.55,.24,.23,-.04,0],[.72,.12,.14,-.04,0]],
-arm_blade:[[-.82,.09,.12,0,0],[-.62,.16,.18,0,0],[-.38,.2,.2,.02,0],[-.12,.12,.15,.03,0],[.12,.18,.18,0,0],[.38,.24,.22,-.04,0],[.62,.14,.16,-.07,0],[.82,.025,.04,-.12,0]],
-arm_crustacean:[[-.78,.12,.15,0,0],[-.58,.25,.24,0,0],[-.38,.18,.2,0,0],[-.2,.3,.28,.02,0],[.02,.18,.18,.02,0],[.22,.23,.21,0,0],[.44,.32,.27,-.03,0],[.64,.2,.19,-.04,0],[.78,.08,.1,-.04,0]],
-arm_spindle:[[-.8,.07,.1,0,0],[-.52,.13,.15,0,0],[-.25,.19,.18,.02,0],[0,.12,.13,.04,0],[.24,.2,.18,0,0],[.48,.14,.14,-.03,0],[.76,.035,.05,-.08,0]],
-arm_grabber:[[-.72,.14,.16,0,0],[-.5,.23,.22,0,0],[-.28,.2,.18,0,0],[-.05,.26,.22,.02,0],[.2,.2,.19,0,0],[.42,.29,.25,-.02,0],[.6,.2,.18,-.03,0],[.72,.1,.12,-.03,0]],
-leg_stalker:[[-.88,.12,.15,0,0],[-.68,.2,.22,0,0],[-.42,.16,.18,.02,0],[-.2,.24,.22,.04,0],[.04,.14,.16,.02,0],[.28,.18,.18,0,0],[.52,.24,.22,-.02,0],[.76,.16,.17,-.02,0],[.88,.08,.12,-.04,-.1]],
-leg_digitigrade:[[-.86,.09,.13,0,-.08],[-.64,.16,.18,0,-.04],[-.38,.12,.15,.03,0],[-.12,.2,.2,.05,0],[.14,.13,.15,.03,0],[.36,.17,.17,0,0],[.62,.24,.22,-.02,0],[.8,.18,.2,-.02,-.12],[.88,.08,.12,-.02,-.3]],
-leg_brute:[[-.88,.18,.2,0,0],[-.66,.29,.28,0,0],[-.42,.25,.24,0,0],[-.18,.32,.29,.02,0],[.12,.23,.22,.02,0],[.34,.28,.25,0,0],[.58,.34,.3,-.02,0],[.78,.25,.24,-.02,-.05],[.9,.12,.16,-.02,-.2]],
-leg_insect:[[-.88,.06,.09,0,0],[-.62,.12,.13,.02,0],[-.38,.08,.1,.04,0],[-.12,.18,.17,.06,0],[.1,.1,.12,.04,0],[.34,.15,.14,0,0],[.58,.2,.18,-.02,0],[.78,.11,.13,-.04,-.12],[.9,.025,.04,-.05,-.32]],
-leg_hoof:[[-.88,.14,.16,0,0],[-.62,.2,.2,0,0],[-.36,.16,.17,0,0],[-.12,.22,.2,.02,0],[.16,.15,.15,0,0],[.42,.21,.2,-.02,0],[.64,.28,.26,-.02,-.02],[.8,.3,.28,-.02,-.18],[.88,.18,.2,-.02,-.36]]
-};
-if(type==='arm_stone_hand'){
-const pieces=[];
-const add=(g,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>{const m=new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz)),new THREE.Vector3(sx,sy,sz));g.applyMatrix4(m);pieces.push(g);};
-const alongX=(profiles,segments=8)=>{const g=ringForm(profiles,segments,'armor');g.rotateZ(-Math.PI/2);return g;};
-add(alongX([[-.72,.13,.15],[-.48,.22,.23],[-.2,.18,.2],[.05,.25,.24],[.34,.2,.2],[.62,.29,.27],[.78,.2,.2]]),-.02,0,0);
-add(new THREE.IcosahedronGeometry(.235,1),-.05,0,0,.2,.1,.25,1.05,.92,1.1);
-add(new THREE.IcosahedronGeometry(.205,1),.48,.015,.015,.1,.25,-.18,1.35,.82,1.12);
-add(new THREE.BoxGeometry(.36,.16,.38),.42,.19,.015,.08,.18,-.12);
-add(new THREE.IcosahedronGeometry(.17,1),.79,0,0,.2,.1,.1,1.15,1,.9);
-add(new THREE.BoxGeometry(.43,.34,.34),1.02,0,0,.08,.12,-.08);
-const finger=(len,thick)=>ringForm([[-len*.5,thick*.72,thick*.78],[-len*.28,thick,thick*.9],[0,thick*.76,thick*.72],[len*.34,thick*.48,thick*.55],[len*.5,.012,.018]],6,'armor');
-for(let i=0;i<4;i++){const y=(i-1.5)*.105;const g=finger(.48+((i===1||i===2)?.08:0),.075);g.rotateZ(-Math.PI/2);add(g,1.28,y,(i%2)*.045-.02,0,0,(i-1.5)*-.08);}
-const thumb=finger(.42,.09);thumb.rotateZ(-Math.PI/2);add(thumb,1.04,-.22,.015,0,0,-.55);
-for(let i=0;i<7;i++){const x=.05+i*.105,y=(i%2?1:-1)*(.19+(i%3)*.018),z=(i%3-1)*.045;add(new THREE.TetrahedronGeometry(.075+(i%2)*.025),x,y,z,.2*i,.4*i,-.3*i,1.2,.8,1);}
-const pos=[],idx=[],uv=[];let offset=0;
-for(const g of pieces){const a=g.getAttribute('position'),u=g.getAttribute('uv');for(let i=0;i<a.count;i++){pos.push(a.getX(i),a.getY(i),a.getZ(i));uv.push(u?u.getX(i):(a.getX(i)+1.5)/3,u?u.getY(i):(a.getY(i)+1)/2);}const ix=g.index;if(ix){for(let i=0;i<ix.count;i++)idx.push(ix.getX(i)+offset);}else{for(let i=0;i<a.count;i++)idx.push(i+offset);}offset+=a.count;}
-const merged=new THREE.BufferGeometry();merged.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));merged.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));merged.setIndex(idx);merged.computeVertexNormals();merged.computeBoundingBox();return merged;
-}
-if(limbProfiles[type]){const g=ringForm(limbProfiles[type],type.includes('insect')?7:8,type.includes('insect')?'insect':'armor');if(type.startsWith('arm_'))g.rotateZ(-Math.PI/2);return g;}
-if(type==='box'||type==='head_cube'||type==='body_block'||type==='hand_block'||type==='foot_block'||type==='armor')return new THREE.BoxGeometry(1,1,1);
-if(type==='sphere'||type==='head_orb'||type==='eye')return new THREE.SphereGeometry(.58,10,8);
-if(type==='body_core')return new THREE.CylinderGeometry(.42,.62,1.35,6,1);
-if(type==='limb')return ringForm([[-.7,.12,.14],[-.48,.2,.19],[-.25,.13,.14],[0,.19,.18],[.22,.12,.14],[.48,.22,.2],[.7,.1,.12]],7);
-if(type==='claw')return ringForm([[-.7,.2,.2],[-.4,.28,.24],[-.12,.18,.17],[.18,.24,.2],[.48,.12,.13],[.78,.015,.025]],7);
-if(type==='leg_heavy')return ringForm([[-.85,.2,.23],[-.58,.29,.27],[-.3,.23,.22],[0,.31,.28],[.28,.22,.2],[.58,.28,.25],[.82,.15,.18]],8);
-if(type==='antenna')return new THREE.CylinderGeometry(.045,.07,.9,5);
-if(type==='horn')return ringForm([[-.62,.012,.016,0,0],[-.48,.055,.06,-.015,0],[-.25,.105,.11,.015,0],[-.02,.16,.16,0,0],[.18,.19,.18,-.015,0],[.28,.16,.15,0,0]],7,'armor');
-if(type==='cylinder')return new THREE.CylinderGeometry(.48,.48,1.15,8,1);
-return new THREE.PlaneGeometry(1.35,1.35,1,1);
-}
-textureCanvases.stone=makeTexture('stone');textureCanvases.stoneBump=makeTexture('stone-bump');textureCanvases.clay=makeTexture('clay');
-function dims(o){const b=new THREE.Box3().setFromObject(o);const v=new THREE.Vector3();b.getSize(v);return v;}
-function make(type){checkpoint();const mesh=createPart(type);mesh.position.set(0,0,0);scene.add(mesh);objects.push(mesh);select(mesh);document.querySelector('#status').textContent=type.toUpperCase()+' CREATED';updateCount();}
-function select(o){if(selected)setPartLine(selected,lineMat);lastSelected=selected;selected=o;if(selected)setPartLine(selected,selectedMat);const rig=!!selected?.userData?.joints?.elbow;document.querySelector('#jointTools').hidden=!rig;if(rig){const angle=Math.round(THREE.MathUtils.radToDeg(selected.userData.joints.elbow.rotation.z));document.querySelector('#elbowAngle').value=angle;document.querySelector('#elbowValue').textContent=angle+'°';}document.querySelector('#status').textContent=o?'SELECTED · '+o.userData.type.toUpperCase():'NO SELECTION';}
-function updateContacts(){for(const o of objects){let touching=false;const a=new THREE.Box3().setFromObject(o);for(const p of objects){if(p===o)continue;const b=new THREE.Box3().setFromObject(p),e=.025;const overlapX=Math.min(a.max.x,b.max.x)-Math.max(a.min.x,b.min.x),overlapY=Math.min(a.max.y,b.max.y)-Math.max(a.min.y,b.min.y),overlapZ=Math.min(a.max.z,b.max.z)-Math.max(a.min.z,b.min.z);const face=(Math.abs(a.max.x-b.min.x)<e||Math.abs(b.max.x-a.min.x)<e)&&overlapY>0&&overlapZ>0||(Math.abs(a.max.y-b.min.y)<e||Math.abs(b.max.y-a.min.y)<e)&&overlapX>0&&overlapZ>0||(Math.abs(a.max.z-b.min.z)<e||Math.abs(b.max.z-a.min.z)<e)&&overlapX>0&&overlapY>0;if(face){touching=true;break;}}setPartLine(o,o===selected?selectedMat:touching?contactMat:lineMat);}}function updateCount(){document.querySelector('#count').textContent=String(objects.length).padStart(2,'0')+' OBJECT'+(objects.length===1?'':'S');}
-function intersects(a,b){const A=new THREE.Box3().setFromObject(a),B=new THREE.Box3().setFromObject(b);return A.intersectsBox(B);}
-function attachTo(targetObj,moving){if(!targetObj||!moving||targetObj===moving)return;checkpoint();const a=new THREE.Box3().setFromObject(targetObj),b=new THREE.Box3().setFromObject(moving);const ac=a.getCenter(new THREE.Vector3()),bc=b.getCenter(new THREE.Vector3());const delta=bc.sub(ac);let axis='x';if(Math.abs(delta.y)>Math.abs(delta.x)&&Math.abs(delta.y)>Math.abs(delta.z))axis='y';else if(Math.abs(delta.z)>Math.abs(delta.x))axis='z';const gap=.015;const pos=targetObj.position.clone();const da=dims(targetObj),db=dims(moving);const sign=delta[axis]>=0?1:-1;pos[axis]+=sign*(da[axis]+db[axis])/2+sign*gap;moving.position.copy(pos);document.querySelector('#status').textContent='MAGNETICALLY ALIGNED';}
-
-const catalog={
-HEAD:[['STONE BLOCK','stone_head_block',[1,1,1]],['STONE CRAG','stone_head_crag',[1,1,1]]],
-BODY:[['STONE SLAB','stone_body_slab',[1,1,1]],['BOULDER','stone_body_boulder',[1,1,1]]],
-ARMS:[['STONE SLAB','stone_arm_slab',[1,1,1]],['STONE HAMMER','stone_arm_hammer',[1,1,1]],['EXO ARMOR','stone_arm_exo',[1,1,1]],['PISTON LIMB','stone_arm_piston',[1,1,1]]],
-LEGS:[['STONE PILLAR','stone_leg_pillar',[1,1,1]],['BROKEN ROCK','stone_leg_broken',[1,1,1]],['EXO LEG','stone_leg_exo',[1,1,1]],['BIG STONE BOOTS','stone_leg_bigboot',[1,1,1]]],
-EXTRAS:[['EYE','eye',[.28,.28,.28]],['ANTENNA','antenna',[1,1,1]],['HORN','horn',[1,1,1]]]
-};
-function renderParts(){const select=document.querySelector('#variation');select.innerHTML='';const prompt=document.createElement('option');prompt.value='';prompt.textContent='— SELECT PART —';prompt.disabled=true;prompt.selected=true;select.appendChild(prompt);catalog[currentCategory].forEach(([name,type,sc])=>{const option=document.createElement('option');option.value=type;option.textContent=name;option.dataset.scale=sc.join(',');select.appendChild(option);});}
-function localBounds(o){
-const g=geometry(o.userData.type);g.computeBoundingBox();const b=g.boundingBox;
-return {min:new THREE.Vector3(b.min.x*o.scale.x,b.min.y*o.scale.y,b.min.z*o.scale.z),max:new THREE.Vector3(b.max.x*o.scale.x,b.max.y*o.scale.y,b.max.z*o.scale.z)};
-}
-function socketPlace(part,target,role,side=1){
-if(!part||!target)return;
-const p=localBounds(part),t=localBounds(target);
-const center=target.position.clone();
-let socket=new THREE.Vector3(),connector=new THREE.Vector3();
-if(role==='HEAD'){
-socket.set(0,t.max.y,0);connector.set(0,p.min.y,0);
-}else if(role==='ARM'){
-socket.set(side*(t.max.x+.025),t.min.y+(t.max.y-t.min.y)*.66,0);
-connector.set(-side*p.max.x,0,0);
-}else if(role==='LEG'){
-socket.set(side*(t.max.x*.42),t.min.y-.025,0);
-connector.set(0,0,0);
-}else if(role==='TOP'){
-socket.set(0,t.max.y+.015,0);connector.set(0,p.min.y,0);
-}else if(role==='EYE'){
-// The eye sits mostly inside the head, leaving only its dark center visible.
-socket.set(side*(t.max.x*.23),.08,t.max.z*.76);
-connector.set(0,0,0);
-}else if(role==='BOTTOM'){
-socket.set(side*.12,t.min.y+.025,0);connector.set(0,p.max.y,0);
-}
-part.position.copy(center.add(socket).sub(connector));
-part.userData.socketRole=role;part.userData.socketSide=side;
-if(role==='LEG')part.userData.pivot='HIP';
-}
-function socketPlaceArm(part,target,side=1){
-const t=localBounds(target);
-const height=t.max.y-t.min.y;
-// Keep shoulders on the upper-middle torso, clearly below the head socket.
-const socket=new THREE.Vector3(side*(t.max.x*.88),t.min.y+height*.48,0);
-part.position.copy(target.position).add(socket);
-part.rotation.set(0,0,0);
-part.userData.socketRole='ARM';part.userData.socketSide=side;part.userData.pivot='SHOULDER';
-}
-function getMainBody(){return objects.find(x=>x.userData.category==='BODY'||x.userData.part==='CORE'||x.userData.type.startsWith('body_'))||null;}
-function reflowParts(){
-const body=getMainBody();if(!body)return;
-const head=objects.find(x=>x.userData.category==='HEAD');
-for(const o of objects){if(o===body)continue;
-if(o.userData.category==='HEAD')socketPlace(o,body,'HEAD');
-else if(o.userData.category==='ARMS')socketPlaceArm(o,body,o.userData.side||1);
-else if(o.userData.category==='LEGS')socketPlace(o,body,'LEG',o.userData.side||1);
-else if(o.userData.category==='EXTRAS'){const target=head||body;socketPlace(o,target,o.userData.socketRole||'TOP',o.userData.socketSide||1);}
-}
-}
-function removeCategory(category){
-for(const old of objects.filter(o=>o.userData.category===category)){scene.remove(old);objects.splice(objects.indexOf(old),1);}
-}
-function addPart(type,sc,name){
-checkpoint();
-if(currentCategory!=='EXTRAS')removeCategory(currentCategory);
-let body=getMainBody();
-if(currentCategory!=='BODY'&&!body){
-body=createPart('stone_body_boulder');body.userData.part='STONE BODY';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
-}
-const factor=sizeFactor[currentSize];
-const addOne=(side=1)=>{
-const o=createPart(type,side);o.userData.part=name;o.userData.category=currentCategory;o.userData.baseScale=sc.slice();
-o.scale.set(sc[0]*factor,sc[1]*factor,sc[2]*factor);
-if(currentCategory==='BODY'){o.position.set(0,0,0);o.userData.category='BODY';}
-else if(currentCategory==='HEAD'){socketPlace(o,body,'HEAD');}
-else if(currentCategory==='ARMS'){
-o.userData.side=side;
-o.rotation.z=0;
-socketPlaceArm(o,body,side);
-}
-else if(currentCategory==='LEGS'){
-o.userData.side=side;socketPlace(o,body,'LEG',side);
-}
-else{
-const head=objects.find(p=>p.userData.category==='HEAD');const target=head||body;
-const role=type==='eye'?'EYE':type==='horn'?'BOTTOM':'TOP';
-const extraSide=side;
-socketPlace(o,target,role,extraSide);
-}
-scene.add(o);objects.push(o);return o;
-};
-let first;
-if(currentCategory==='ARMS'||currentCategory==='LEGS'||(currentCategory==='EXTRAS'&&type==='eye')){
-first=addOne(-1);addOne(1);
-}else first=addOne(1);
-if(currentCategory==='BODY'){body=first;reflowParts();}
-if(currentCategory==='BODY'||currentCategory==='HEAD')reflowParts();
-select(first);updateCount();
-document.querySelector('#status').textContent=currentCategory==='ARMS'||currentCategory==='LEGS'?name+' · MIRRORED PAIR':name+' · SOCKET CONNECTED';
-}
-document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{currentCategory=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.classList.toggle('active',x===b));renderParts();});
-document.querySelector('#variation').onchange=e=>{const option=e.target.selectedOptions[0];if(!e.target.value||!option)return;addPart(e.target.value,option.dataset.scale.split(',').map(Number),option.textContent);e.target.selectedIndex=0;};
-document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{currentSize=b.dataset.size;document.querySelectorAll('[data-size]').forEach(x=>x.classList.toggle('active',x===b));if(selected&&selected.userData.baseScale){const f=sizeFactor[currentSize],v=selected.userData.baseScale;checkpoint();selected.scale.set(v[0]*f,v[1]*f,v[2]*f);reflowParts();document.querySelector('#status').textContent='PROPORTION · '+currentSize;}});
-
-skinMode=0;document.querySelector('#skin').textContent='◈ MATERIAL: STONE';document.querySelector('#skin').onclick=()=>{skinMode=0;applySkin();document.querySelector('#status').textContent='STONE MATERIAL ACTIVE';};
-document.querySelector('#random').onclick=()=>{
-try{
-checkpoint();for(const o of [...objects])scene.remove(o);objects.length=0;selected=null;
-const body=createPart('stone_body_boulder');body.userData.part='STONE BOULDER';body.userData.category='BODY';body.userData.baseScale=[1,1,1];scene.add(body);objects.push(body);
-const pick=a=>a[Math.floor(Math.random()*a.length)];
-const add=(type,category,side=1,sc=[1,1,1])=>{const o=createPart(type,side);o.userData.category=category;o.userData.part=type;o.userData.side=side;o.userData.baseScale=sc.slice();o.scale.set(...sc);if(category==='HEAD')socketPlace(o,body,'HEAD');else if(category==='ARMS')socketPlaceArm(o,body,side);else if(category==='LEGS')socketPlace(o,body,'LEG',side);scene.add(o);objects.push(o);return o;};
-add(pick(['stone_head_crag','stone_head_block']),'HEAD');
-const armType=pick(['stone_arm_slab','stone_arm_hammer','stone_arm_exo','stone_arm_piston']);
-const armScale=.9+Math.random()*.2;
-for(const side of [-1,1])add(armType,'ARMS',side,[armScale,armScale,armScale]);
-const legType=pick(['stone_leg_broken','stone_leg_pillar','stone_leg_exo']);
-add(legType,'LEGS',-1);
-add(legType,'LEGS',1);
-select(body);updateCount();document.querySelector('#status').textContent='CREATURE GENERATED · RANDOM';
-}catch(err){console.error('CREATURE LAB random:',err);document.querySelector('#status').textContent='RANDOM ERROR · '+(err?.message||'CHECK CONSOLE');}
-};
-renderParts();
-document.querySelector('#magnet').onclick=()=>{magnetArmed=!magnetArmed;document.querySelector('#magnet').classList.toggle('active',magnetArmed);document.querySelector('#status').textContent=magnetArmed?'MAGNET: SELECT TARGET':'MAGNET OFF';};
-document.querySelector('#snap').onclick=()=>{autoMagnet=!autoMagnet;document.querySelector('#snap').classList.toggle('active',autoMagnet);document.querySelector('#status').textContent=autoMagnet?'AUTO MAGNET ON':'AUTO MAGNET OFF';};
-document.querySelector('#rotate').onclick=()=>{rotateMode=!rotateMode;scaleMode=false;document.querySelector('#rotate').classList.toggle('active',rotateMode);document.querySelector('#scale').classList.remove('active');};
-document.querySelector('#scale').onclick=()=>{scaleMode=!scaleMode;rotateMode=false;document.querySelector('#scale').classList.toggle('active',scaleMode);document.querySelector('#rotate').classList.remove('active');};
-document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>{if(!selected)return;checkpoint();const v=b.dataset.move.split(',').map(Number);const step=.1;selected.position.add(new THREE.Vector3(...v).multiplyScalar(step));if(autoMagnet)keepClear(selected);});
-function keepClear(o){for(const other of objects){if(other===o)continue;if(intersects(o,other)){const d=dims(other),e=dims(o);const diff=o.position.clone().sub(other.position);let ax='x';if(Math.abs(diff.y)>Math.abs(diff.x)&&Math.abs(diff.y)>Math.abs(diff.z))ax='y';else if(Math.abs(diff.z)>Math.abs(diff.x))ax='z';o.position[ax]=other.position[ax]+(diff[ax]>=0?1:-1)*(d[ax]+e[ax])/2+.02;}}}
-document.querySelector('#delete').onclick=()=>{if(!selected)return;checkpoint();scene.remove(selected);objects.splice(objects.indexOf(selected),1);selected=null;updateCount();select(objects.at(-1)||null);};
-document.querySelector('#reset').onclick=()=>{yaw=35*Math.PI/180;pitch=18*Math.PI/180;target.set(0,0,0);document.querySelector('#orbitY').value=35;document.querySelector('#orbitX').value=18;};
-document.querySelector('#orbitY').oninput=e=>yaw=Number(e.target.value)*Math.PI/180;
-document.querySelector('#orbitX').oninput=e=>pitch=Number(e.target.value)*Math.PI/180;
-const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
-canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(objects,true);if(!hits.length)return;let hit=hits[0].object;while(hit.parent&&hit.parent!==scene)hit=hit.parent;if(magnetArmed){attachTo(hit,selected);magnetArmed=false;document.querySelector('#magnet').classList.remove('active');}else if(hit===selected&&rotateMode){checkpoint();selected.rotation.y+=Math.PI/8;}else if(hit===selected&&scaleMode){checkpoint();selected.scale.multiplyScalar(1.12);}else select(hit);});
-function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas);resize();
-const elbowInput=document.querySelector('#elbowAngle');let elbowEditStarted=false;elbowInput.addEventListener('pointerdown',()=>{if(selected?.userData?.joints?.elbow){checkpoint();elbowEditStarted=true;}});elbowInput.addEventListener('input',()=>{if(!selected?.userData?.joints?.elbow)return;const angle=Number(elbowInput.value);selected.userData.joints.elbow.rotation.z=THREE.MathUtils.degToRad(angle);document.querySelector('#elbowValue').textContent=angle+'°';});elbowInput.addEventListener('change',()=>{elbowEditStarted=false;});
-document.querySelector('#undo').onclick=undo;
-function frame(){requestAnimationFrame(frame);updateContacts();const radius=7;camera.position.set(target.x+Math.sin(yaw)*Math.cos(pitch)*radius,target.y+Math.sin(pitch)*radius,target.z+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(target);renderer.render(scene,camera);}frame();
-// Start with an empty creature stage.
+function generate(){makeCreature();root.rotation.set(0,0,0);}
+makeCreature();
+const orbitY=document.querySelector('#orbitY'),orbitX=document.querySelector('#orbitX');
+orbitY.addEventListener('input',e=>yaw=Number(e.target.value)*Math.PI/180);
+orbitX.addEventListener('input',e=>pitch=Number(e.target.value)*Math.PI/180);
+document.querySelector('#generate').addEventListener('click',generate);
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,id:e.pointerId};canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.2,1.2);orbitY.value=Math.round(yaw*180/Math.PI);orbitX.value=Math.round(pitch*180/Math.PI);});
+canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(canvas);resize();
+function frame(){requestAnimationFrame(frame);camera.position.set(Math.sin(yaw)*Math.cos(pitch)*7,Math.sin(pitch)*7+0.1,Math.cos(yaw)*Math.cos(pitch)*7);camera.lookAt(0,0,0);renderer.render(scene,camera);}frame();
 </script></body></html>
