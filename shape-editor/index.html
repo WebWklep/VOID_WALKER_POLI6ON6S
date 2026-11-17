@@ -11,29 +11,29 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .subtitle{position:absolute;top:31px;left:18px;font:8px monospace;letter-spacing:.17em;color:#657178;pointer-events:none}
 .readout{position:absolute;right:17px;top:15px;text-align:right;font:8px monospace;letter-spacing:.12em;color:#879399;line-height:1.8;pointer-events:none}
 .controls{flex:1;min-height:0;padding:15px 13px max(13px,env(safe-area-inset-bottom));background:#000;display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-content:start;align-items:center}
-button{height:43px;border:0;border-radius:15px;background:rgba(210,225,235,.085);color:#dce5e9;font:9px monospace;letter-spacing:.1em;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.19),inset 0 -1px 0 rgba(255,255,255,.035),0 5px 18px rgba(0,0,0,.28);transition:background .2s,transform .2s}
-button:active{background:rgba(225,240,248,.19);transform:scale(.97)}button.primary{background:rgba(190,220,235,.16);color:#f2f7fa;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 5px 20px rgba(0,0,0,.3)}
+button{height:43px;border:0;border-radius:0;background:transparent;color:#c4cdd1;font:9px monospace;letter-spacing:.12em;transition:opacity .2s}
+button:active{opacity:.55}button.primary{background:transparent;color:#fff;font-weight:bold}
 #generate{font:9px monospace;letter-spacing:.13em}
-.axisrow{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px 5px 0}
-.axisbox{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:7px;color:#89969d;font:8px monospace;letter-spacing:.12em}
-input[type=range]{width:100%;height:17px;accent-color:#c0ccd2}
-.hint{grid-column:1/-1;text-align:center;font:7px monospace;letter-spacing:.13em;color:#58646a}
+.hint{grid-column:1/-1;text-align:center;font:7px monospace;letter-spacing:.13em;color:#58646a;padding-top:12px}
 .view.earthquake{animation:quake .38s ease-out}
 @keyframes quake{0%,100%{transform:translate(0,0)}15%{transform:translate(-3px,1px)}30%{transform:translate(3px,-1px)}45%{transform:translate(-2px,2px)}60%{transform:translate(2px,0)}75%{transform:translate(-1px,-1px)}}
 #gallery{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;padding:28px 22px max(22px,env(safe-area-inset-bottom))}
-.galleryHead{display:flex;justify-content:space-between;align-items:center;font:10px monospace;letter-spacing:.16em;padding-bottom:14px}
-#closeGallery{height:30px;padding:0 12px}#items{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start}
-.card{border:1px solid #343d42;background:#111619;min-width:0}.thumb{width:100%;aspect-ratio:1.25;object-fit:cover;display:block}.cardInfo{display:flex;align-items:center;justify-content:space-between;padding:7px;font:8px monospace;color:#b4bec3;gap:4px}.cardInfo button{height:26px;padding:0 7px;font-size:8px}
+.galleryHead{display:flex;justify-content:space-between;align-items:center;font:10px monospace;letter-spacing:.2em;padding-bottom:30px;color:#d5dcdf}
+#closeGallery{height:34px;padding:0 8px}
+#items{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:30px;row-gap:44px;align-content:start;padding:4px 2px 30px}
+.card{background:transparent;min-width:0;text-align:center;cursor:pointer}
+.thumb{width:100%;aspect-ratio:1/1;object-fit:contain;display:block;background:#000}
+.cardInfo{display:block;padding:10px 0 0;font:9px monospace;letter-spacing:.16em;color:#929da2}
+.cardInfo button{display:none}
 .empty{grid-column:1/-1;color:#899399;font:10px monospace;line-height:1.8;padding:20px 2px}
-@media(min-width:700px){.controls{padding-left:calc((100% - 560px)/2);padding-right:calc((100% - 560px)/2)}#items{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:42px;row-gap:54px}.thumb{aspect-ratio:1/1}}
+@media(min-width:700px){.controls{padding-left:calc((100% - 560px)/2);padding-right:calc((100% - 560px)/2)}#items{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:56px;row-gap:64px}.thumb{aspect-ratio:1/1}}
 </style></head>
 <body><main id="app"><section class="view">
 <canvas id="scene"></canvas><div class="brand">STONE STUDY</div><div class="subtitle">ONE SPECIMEN · NATURAL MATERIALS</div><div class="readout" id="readout">SPECIMEN 001<br>PEBBLE</div>
 <div id="gallery"><div class="galleryHead"><span>COLLECTED SPECIMENS</span><button id="closeGallery">CLOSE ×</button></div><div id="items"></div></div>
 </section><section class="controls">
 <button class="primary" id="generate" aria-label="Earthquake — новый образец">EARTHQUAKE</button><button id="save">SAVE SPECIMEN +</button><button id="collection">COLLECTION ◇</button>
-<div class="axisrow"><label class="axisbox">Y <input id="orbitY" type="range" min="-180" max="180" value="28"></label><label class="axisbox">X <input id="orbitX" type="range" min="-70" max="70" value="12"></label></div>
-<div class="hint">DRAG TO ROTATE · AXIS SLIDERS · SAVE YOUR FAVORITES</div>
+<div class="hint">DRAG TO EXPLORE · SLOW FLOATING ROTATION</div>
 </section></main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","RoomEnvironment":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js"}}</script>
 <script type="module">
@@ -53,6 +53,7 @@ const fill=new THREE.DirectionalLight(0xa9c9e2,1.5);fill.position.set(5,1,-4);sc
 const rim=new THREE.DirectionalLight(0xffffff,1.0);rim.position.set(1,4,4);scene.add(rim);
 const camera=new THREE.PerspectiveCamera(34,1,.1,100);
 let yaw=28*Math.PI/180,pitch=12*Math.PI/180,drag=null,currentSeed=1,currentName='PEBBLE',specimenNo=0,rock=null,center=new THREE.Vector3(),distance=4.4;
+const clock=new THREE.Clock();
 const palettes=[
  {name:'RIVER PEBBLE',base:[111,119,119],rough:.31},
  {name:'MOSS BOULDER',base:[91,96,79],rough:.78},
@@ -125,8 +126,6 @@ function build(seed){
  document.querySelector('#readout').innerHTML='SPECIMEN '+String(specimenNo).padStart(3,'0')+'<br>'+pal.name;
 }
 function next(){specimenNo++;build((Math.random()*0xffffffff)>>>0);}next();
-const orbitY=document.querySelector('#orbitY'),orbitX=document.querySelector('#orbitX');
-orbitY.addEventListener('input',e=>yaw=Number(e.target.value)*Math.PI/180);orbitX.addEventListener('input',e=>pitch=Number(e.target.value)*Math.PI/180);
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.15,1.15);});
 canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
@@ -134,9 +133,9 @@ document.querySelector('#generate').addEventListener('click',()=>{const view=doc
 const storeKey='stone-study-favorites-v1';const readSaved=()=>{try{return JSON.parse(localStorage.getItem(storeKey)||'[]');}catch{return[];}};
 document.querySelector('#save').addEventListener('click',()=>{const a=readSaved();if(a.some(x=>x.seed===currentSeed))return; a.unshift({seed:currentSeed,name:currentName,no:specimenNo,thumb:renderer.domElement.toDataURL('image/jpeg',.78)});localStorage.setItem(storeKey,JSON.stringify(a.slice(0,60)));document.querySelector('#save').textContent='SAVED ✓';setTimeout(()=>document.querySelector('#save').textContent='SAVE SPECIMEN +',1100);});
 const gallery=document.querySelector('#gallery'),items=document.querySelector('#items');
-function showGallery(){const a=readSaved();items.innerHTML='';if(!a.length)items.innerHTML='<div class="empty">NO SAVED SPECIMENS YET.<br>Generate stones and save the ones you like.</div>';a.forEach((item,index)=>{const card=document.createElement('div');card.className='card';const img=document.createElement('img');img.className='thumb';img.src=item.thumb;const info=document.createElement('div');info.className='cardInfo';const label=document.createElement('span');label.textContent=item.name+' · '+String(item.no).padStart(3,'0');const load=document.createElement('button');load.textContent='VIEW';load.onclick=()=>{specimenNo=item.no;build(item.seed);gallery.style.display='none';};const del=document.createElement('button');del.textContent='×';del.onclick=()=>{const all=readSaved();all.splice(index,1);localStorage.setItem(storeKey,JSON.stringify(all));showGallery();};info.append(label,load,del);card.append(img,info);items.append(card);});gallery.style.display='flex';}
+function showGallery(){const a=readSaved();items.innerHTML='';if(!a.length)items.innerHTML='<div class="empty">NO SAVED SPECIMENS YET.</div>';a.forEach(item=>{const card=document.createElement('div');card.className='card';const img=document.createElement('img');img.className='thumb';img.src=item.thumb;const info=document.createElement('div');info.className='cardInfo';info.textContent=String(item.no).padStart(3,'0');card.append(img,info);card.onclick=()=>{specimenNo=item.no;build(item.seed);gallery.style.display='none';};items.append(card);});gallery.style.display='flex';}
 document.querySelector('#collection').onclick=showGallery;document.querySelector('#closeGallery').onclick=()=>gallery.style.display='none';
 function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();if(rock){const box=new THREE.Box3().setFromObject(rock),s=box.getBoundingSphere(new THREE.Sphere());distance=s.radius/Math.sin(THREE.MathUtils.degToRad(camera.fov/2))*1.48;}}
 new ResizeObserver(resize).observe(canvas);window.addEventListener('resize',resize);resize();
-function frame(){requestAnimationFrame(frame);camera.position.set(center.x+Math.sin(yaw)*Math.cos(pitch)*distance,center.y+Math.sin(pitch)*distance,center.z+Math.cos(yaw)*Math.cos(pitch)*distance);camera.lookAt(center);renderer.render(scene,camera);}frame();
+function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);if(rock){rock.rotation.y+=dt*.105;rock.rotation.x+=dt*.027+Math.sin(clock.elapsedTime*.22)*dt*.012;rock.rotation.z+=dt*.018+Math.cos(clock.elapsedTime*.17)*dt*.009;}camera.position.set(center.x+Math.sin(yaw)*Math.cos(pitch)*distance,center.y+Math.sin(pitch)*distance,center.z+Math.cos(yaw)*Math.cos(pitch)*distance);camera.lookAt(center);renderer.render(scene,camera);}frame();
 </script></body></html>
