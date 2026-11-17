@@ -257,6 +257,23 @@ const keepStarterFacets=type==='stone_head_block'||type==='stone_body_slab';
 const material=new THREE.MeshStandardMaterial({map:eye?null:activeTexture(),bumpMap:isStone?textureCanvases.stoneBump:activeTexture(),roughnessMap:null,bumpScale:isStone?.12:.035,color:eye?0x101316:0xf4f5f2,side:THREE.DoubleSide,roughness:eye?.72:(isStone?1:.88),metalness:0,flatShading:isStone&&keepStarterFacets});
 const mesh=new THREE.Mesh(g,material);mesh.castShadow=true;mesh.receiveShadow=true;
 const edge=new THREE.LineSegments(new THREE.EdgesGeometry(g,28),lineMat);edge.visible=nakedMode;mesh.add(edge);
+if(type==='stone_head_crag'){
+ // Distinctive mask-like crown: jagged stone crest and narrow recessed-looking eye slits.
+ const crown=new THREE.Group();
+ const crestSpecs=[[-.34,.43,.02,-.20,.20],[-.17,.51,.01,-.10,.25],[0,.53,0,0,.29],[.18,.50,.01,.12,.24],[.35,.42,.015,.22,.19]];
+ for(const [x,y,z,tilt,h] of crestSpecs){
+  const spike=new THREE.Mesh(new THREE.ConeGeometry(.145,h,5,1),material);
+  spike.position.set(x,y+h*.34,z);spike.rotation.z=tilt;spike.castShadow=true;spike.receiveShadow=true;crown.add(spike);
+  const spikeEdge=new THREE.LineSegments(new THREE.EdgesGeometry(spike.geometry,18),lineMat);spikeEdge.visible=nakedMode;spike.add(spikeEdge);
+ }
+ const eyeMat=new THREE.MeshStandardMaterial({color:0x101316,roughness:1,metalness:0});
+ for(const side of [-1,1]){
+  const eye=new THREE.Mesh(new THREE.BoxGeometry(.22,.045,.035),eyeMat);
+  eye.position.set(side*.19,.055,.365);eye.rotation.z=side*.16;eye.rotation.y=side*-.12;
+  crown.add(eye);
+ }
+ mesh.add(crown);mesh.userData.crown=crown;
+}
 if(type.startsWith('stone_leg_')){
  const joint=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),material);joint.position.set(0,-.88,0);joint.scale.set(.205,.205,.205);mesh.userData.pivot='HIP';mesh.userData.joint='KNEE';
  if(type==='stone_leg_bigboot'){const boot=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),material);boot.position.set(0,-1.69,.16);boot.scale.set(.39,.25,.53);boot.castShadow=true;boot.receiveShadow=true;mesh.add(boot);mesh.userData.footStyle='BIG STONE BOOT';}
@@ -290,10 +307,10 @@ function ringForm(profiles,segments=7,style='organic'){
 function geometry(type){
 const sculpted={
 stone_head_block:[[-.58,.30,.30,0,0],[-.48,.48,.38,0,0],[-.12,.52,.43,.02,0],[.24,.48,.40,-.02,.02],[.52,.34,.31,-.04,0]],
-stone_head_crag:[[-.58,.18,.22,0,0],[-.42,.38,.34,-.08,0],[-.18,.50,.42,.02,.02],[.12,.40,.38,.12,0],[.42,.30,.28,.04,-.02],[.62,.12,.16,-.08,0]],
+stone_head_crag:[[-.48,.22,.25,0,0],[-.34,.42,.36,-.06,0],[-.12,.52,.42,.02,.02],[.12,.48,.39,.05,0],[.34,.34,.30,.02,-.02],[.46,.22,.22,0,0]],
 clay_head_roll:[[-.62,.18,.22,0,0],[-.48,.34,.30,-.04,0],[-.22,.46,.38,.02,0],[.08,.49,.40,.08,.02],[.38,.38,.34,.02,.02],[.58,.20,.23,-.06,0]],
 stone_body_slab:[[-.78,.28,.28,0,0],[-.58,.52,.40,-.06,0],[-.22,.62,.43,.04,0],[.18,.55,.39,-.03,.02],[.58,.40,.31,.04,0]],
-stone_body_boulder:[[-.78,.20,.24,0,0],[-.56,.43,.38,-.08,0],[-.26,.58,.47,.04,-.04],[.08,.66,.50,.08,0],[.42,.52,.43,-.05,.02],[.68,.25,.28,.02,0]],
+stone_body_boulder:[[-.66,.24,.27,0,0],[-.48,.46,.39,-.06,0],[-.22,.62,.48,.02,-.03],[.08,.72,.52,.05,0],[.36,.64,.47,-.04,.02],[.58,.30,.30,.01,0]],
 clay_body_roll:[[-.78,.18,.23,0,0],[-.58,.38,.33,-.08,0],[-.30,.54,.42,-.02,-.03],[.02,.60,.46,.08,0],[.34,.53,.41,.10,.03],[.62,.34,.31,0,0]],
 clay_body_taper:[[-.78,.18,.22,0,0],[-.52,.32,.29,.05,0],[-.18,.42,.34,.12,0],[.16,.52,.39,.04,0],[.48,.43,.34,-.08,0],[.72,.20,.22,-.10,0]],
 stone_arm_slab:[[-.78,.14,.17,0,0],[-.58,.26,.24,-.04,0],[-.36,.22,.22,.10,0],[-.12,.30,.27,.18,0],[.14,.22,.21,.10,0],[.42,.31,.27,-.02,0],[.68,.23,.22,-.12,0],[.80,.12,.15,-.16,0]],
