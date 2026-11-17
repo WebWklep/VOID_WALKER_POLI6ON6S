@@ -2,21 +2,27 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>STONE STUDY — Random Rock Generator</title>
+<title>STONE STUDY</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08090a;color:#d8dadd;font-family:Arial,sans-serif}
-#app{height:100dvh;display:flex;flex-direction:column;background:#08090a}.view{position:relative;flex:1;min-height:0;background:radial-gradient(ellipse at 50% 46%,#20252a 0%,#101316 48%,#08090a 82%)}canvas{width:100%;height:100%;display:block;touch-action:none}
-.brand{position:absolute;top:17px;left:18px;font:10px monospace;letter-spacing:.24em;color:#aab0b5}.subtitle{position:absolute;top:32px;left:18px;font:8px monospace;letter-spacing:.18em;color:#626a70}
-.readout{position:absolute;right:17px;top:17px;text-align:right;font:8px monospace;letter-spacing:.12em;color:#626a70;line-height:1.7}
-.controls{padding:12px 14px max(13px,env(safe-area-inset-bottom));border-top:1px solid #24282b;background:#0b0d0f;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-button{height:43px;border:1px solid #41494f;background:#15191c;color:#dce0e2;font:9px monospace;letter-spacing:.12em}
-button:active{background:#30383d;border-color:#89949b}button.primary{background:#d6dadd;color:#111619;border-color:#d6dadd}
-.hint{grid-column:1/-1;text-align:center;font:8px monospace;letter-spacing:.14em;color:#626a70;padding-top:2px}
-#gallery{position:absolute;inset:0;background:rgba(5,7,8,.96);z-index:5;display:none;flex-direction:column;padding:20px 16px max(16px,env(safe-area-inset-bottom));}
-.galleryHead{display:flex;justify-content:space-between;align-items:center;font:10px monospace;letter-spacing:.18em;padding:2px 0 18px}
-#items{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start}
-.card{border:1px solid #343b40;background:#111518;min-width:0}.thumb{width:100%;aspect-ratio:1.25;background:#090b0d;display:block}.cardInfo{display:flex;align-items:center;justify-content:space-between;padding:8px;font:8px monospace;color:#aeb7bd}.cardInfo button{height:27px;padding:0 8px;font-size:8px}
-.empty{grid-column:1/-1;color:#727b81;font:10px monospace;line-height:1.8;padding:20px 2px}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b0d;color:#d8dadd;font-family:Arial,sans-serif}
+#app{height:100dvh;display:flex;flex-direction:column}.view{position:relative;flex:1;min-height:0;background:radial-gradient(ellipse at 50% 45%,#343b40 0%,#1c2226 48%,#0b0e10 100%)}
+canvas{width:100%;height:100%;display:block;touch-action:none}
+.brand{position:absolute;top:15px;left:17px;font:10px monospace;letter-spacing:.24em;color:#b8c0c5;pointer-events:none}.subtitle{position:absolute;top:30px;left:17px;font:8px monospace;letter-spacing:.17em;color:#7e898f;pointer-events:none}
+.readout{position:absolute;right:17px;top:15px;text-align:right;font:8px monospace;letter-spacing:.12em;color:#929da3;line-height:1.7;pointer-events:none}
+.controls{padding:9px 13px max(12px,env(safe-area-inset-bottom));border-top:1px solid #30373c;background:#0b0e10;display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:center}
+button{height:40px;border:1px solid #485158;background:#171d21;color:#dce1e4;font:9px monospace;letter-spacing:.1em}
+button:active{background:#303a40;border-color:#a2afb6}button.primary{background:#d5dadd;color:#101518;border-color:#d5dadd}
+#generate{font:25px Arial,sans-serif;letter-spacing:0}
+.axisrow{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:2px 5px 0}
+.axisbox{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:7px;color:#77838a;font:8px monospace;letter-spacing:.12em}
+input[type=range]{width:100%;height:17px;accent-color:#aebbc2}
+.hint{grid-column:1/-1;text-align:center;font:7px monospace;letter-spacing:.13em;color:#606c73;padding-top:1px}
+#gallery{position:absolute;inset:0;background:rgba(5,7,8,.97);z-index:5;display:none;flex-direction:column;padding:18px 14px max(14px,env(safe-area-inset-bottom))}
+.galleryHead{display:flex;justify-content:space-between;align-items:center;font:10px monospace;letter-spacing:.16em;padding-bottom:14px}
+#closeGallery{height:30px;padding:0 12px}
+#items{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start}
+.card{border:1px solid #343d42;background:#111619;min-width:0}.thumb{width:100%;aspect-ratio:1.25;object-fit:cover;display:block}.cardInfo{display:flex;align-items:center;justify-content:space-between;padding:7px;font:8px monospace;color:#b4bec3;gap:4px}.cardInfo button{height:26px;padding:0 7px;font-size:8px}
+.empty{grid-column:1/-1;color:#899399;font:10px monospace;line-height:1.8;padding:20px 2px}
 @media(min-width:700px){.controls{padding-left:calc((100% - 560px)/2);padding-right:calc((100% - 560px)/2)}#items{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
@@ -25,146 +31,149 @@ button:active{background:#30383d;border-color:#89949b}button.primary{background:
 <div id="gallery"><div class="galleryHead"><span>COLLECTED SPECIMENS</span><button id="closeGallery">CLOSE ×</button></div><div id="items"></div></div>
 </section>
 <section class="controls">
-<button class="primary" id="generate">NEW STONE ↻</button><button id="save">SAVE SPECIMEN +</button><button id="collection">COLLECTION ◇</button>
-<div class="hint">DRAG TO ROTATE · GENERATE · KEEP THE ONES YOU LOVE</div>
+<button class="primary" id="generate" aria-label="Сгенерировать новый камень" title="Новый камень">⚄</button>
+<button id="save">SAVE SPECIMEN +</button><button id="collection">COLLECTION ◇</button>
+<div class="axisrow">
+ <label class="axisbox">Y <input id="orbitY" type="range" min="-180" max="180" value="32"></label>
+ <label class="axisbox">X <input id="orbitX" type="range" min="-70" max="70" value="13"></label>
+</div>
+<div class="hint">DRAG TO ROTATE · AXIS SLIDERS · SAVE YOUR FAVORITES</div>
 </section></main>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x090b0d);scene.fog=new THREE.Fog(0x090b0d,9,20);
-scene.add(new THREE.HemisphereLight(0xcbd5df,0x24272a,.78));
-const key=new THREE.DirectionalLight(0xfff4e5,3.1);key.position.set(-4.5,7,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-7;key.shadow.camera.right=7;key.shadow.camera.top=7;key.shadow.camera.bottom=-7;key.shadow.bias=-.00025;key.shadow.normalBias=.025;scene.add(key);
-const fill=new THREE.DirectionalLight(0x9eb6cf,1.05);fill.position.set(5,2,-4);scene.add(fill);
-const soft=new THREE.DirectionalLight(0xffffff,.55);soft.position.set(1,5,4);scene.add(soft);
-const camera=new THREE.PerspectiveCamera(34,1,.1,80);
-let yaw=.55,pitch=.22,drag=null,currentSeed=1,currentName='UNCLASSIFIED',specimenNo=1,rockGroup=null;
-const groundMat=new THREE.MeshStandardMaterial({color:0x171a1c,roughness:.94});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),groundMat);ground.rotation.x=-Math.PI/2;ground.position.y=-1.36;ground.receiveShadow=true;scene.add(ground);
-const root=new THREE.Group();scene.add(root);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x151a1e);
+scene.add(new THREE.HemisphereLight(0xdce6ef,0x34302a,1.15));
+const key=new THREE.DirectionalLight(0xfff1dc,3.2);key.position.set(-4,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=6;key.shadow.camera.bottom=-6;key.shadow.bias=-.0003;key.shadow.normalBias=.035;scene.add(key);
+const fill=new THREE.DirectionalLight(0xaac5df,1.3);fill.position.set(5,2,-4);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xffffff,.65);rim.position.set(1,5,4);scene.add(rim);
+const camera=new THREE.PerspectiveCamera(38,1,.1,100);
+let yaw=32*Math.PI/180,pitch=13*Math.PI/180,drag=null,currentSeed=1,currentName='UNCLASSIFIED',specimenNo=0,rockGroup=null,fitTarget=new THREE.Vector3(0,0,0),fitDistance=5;
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:0x292d30,roughness:.96}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-1.45;floor.receiveShadow=true;scene.add(floor);
 const palettes=[
- {name:'SLATE',base:[65,75,82],light:[111,123,130],dark:[34,41,46]},
- {name:'BASALT',base:[52,57,60],light:[94,101,103],dark:[24,28,30]},
- {name:'LIMESTONE',base:[119,123,119],light:[166,166,155],dark:[65,69,67]},
- {name:'GRANITE',base:[104,103,99],light:[151,148,139],dark:[48,49,48]},
- {name:'QUARTZITE',base:[119,126,128],light:[183,190,190],dark:[57,63,66]},
- {name:'OBSIDIAN',base:[37,43,48],light:[85,96,103],dark:[13,17,21]},
- {name:'SANDSTONE',base:[133,119,99],light:[177,160,134],dark:[69,60,49]}
+ {name:'SLATE',base:[83,96,105]},
+ {name:'BASALT',base:[62,68,71]},
+ {name:'LIMESTONE',base:[139,140,132]},
+ {name:'GRANITE',base:[116,113,106]},
+ {name:'QUARTZITE',base:[139,148,151]},
+ {name:'OBSIDIAN',base:[48,57,63]},
+ {name:'SANDSTONE',base:[145,130,108]}
 ];
 function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
-function hash(x,y,z){let n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return n-Math.floor(n);}
-function noise(x,y,z){let X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),u=x-X,v=y-Y,w=z-Z;u=u*u*(3-2*u);v=v*v*(3-2*v);w=w*w*(3-2*w);
- const a=hash(X,Y,Z),b=hash(X+1,Y,Z),c=hash(X,Y+1,Z),d=hash(X+1,Y+1,Z),e=hash(X,Y,Z+1),f=hash(X+1,Y,Z+1),g=hash(X,Y+1,Z+1),h=hash(X+1,Y+1,Z+1);
- return THREE.MathUtils.lerp(THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,u),THREE.MathUtils.lerp(c,d,u),v),THREE.MathUtils.lerp(THREE.MathUtils.lerp(e,f,u),THREE.MathUtils.lerp(g,h,u),v),w);}
-function fbm(x,y,z){return noise(x,y,z)*.52+noise(x*2.03+8,y*2.03,z*2.03)*.27+noise(x*4.1,y*4.1,z*4.1)*.14+noise(x*8.2,y*8.2,z*8.2)*.07;}
-function makeStoneTexture(seed,pal){
- const rand=rng(seed),size=256,data=new Uint8Array(size*size*4);
- const grain=Array.from({length:18},()=>[rand()*2,rand()*2,rand()*2,rand()]);
+function makeTexture(seed,pal){
+ const rand=rng(seed^0x51ed270b),size=128,data=new Uint8Array(size*size*4);
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
   const u=x/size,v=y/size;
-  const n=fbm(u*9+seed*.001,v*9,seed*.002);
-  const strata=Math.sin(v*39+fbm(u*5,v*3,seed)*7+noise(u*15,v*4,seed)*2);
-  const fleck=rand()>.994?(rand()>.5?28:-25):0;
-  const value=(n-.5)*34+strata*5+fleck;
-  const i=(y*size+x)*4;
-  data[i]=THREE.MathUtils.clamp(pal.base[0]+value,0,255);
-  data[i+1]=THREE.MathUtils.clamp(pal.base[1]+value,0,255);
-  data[i+2]=THREE.MathUtils.clamp(pal.base[2]+value,0,255);
-  data[i+3]=255;
+  const broad=Math.sin(v*35+Math.sin(u*9+seed%31)*1.8)*4;
+  const medium=Math.sin((u*17+v*11)*Math.PI*2)*2.5;
+  const grain=(rand()-.5)*19+(rand()>.996?(rand()>.5?32:-28):0);
+  const n=broad+medium+grain,i=(y*size+x)*4;
+  data[i]=THREE.MathUtils.clamp(pal.base[0]+n,0,255);
+  data[i+1]=THREE.MathUtils.clamp(pal.base[1]+n,0,255);
+  data[i+2]=THREE.MathUtils.clamp(pal.base[2]+n,0,255);data[i+3]=255;
  }
- const tex=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(2,2);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;tex.needsUpdate=true;return tex;
+ const tex=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);
+ tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(2,2);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;tex.needsUpdate=true;return tex;
 }
-function makeRockGeometry(rand,shape){
- const geo=new THREE.IcosahedronGeometry(1,4);const pos=geo.attributes.position;
- const phase=[rand()*20,rand()*20,rand()*20];
- for(let i=0;i<pos.count;i++){
-  let x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
-  const n=fbm(x*3+phase[0],y*3+phase[1],z*3+phase[2]);
-  const ridges=Math.sin(y*15+noise(x*5,z*5,y*3)*5)*.025;
-  const irregular=1+(n-.5)*.34+ridges+(rand()-.5)*.025;
+function rockGeometry(rand,shape){
+ const geo=new THREE.IcosahedronGeometry(1,2),p=geo.attributes.position;
+ for(let i=0;i<p.count;i++){
+  let x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+  const wave=Math.sin(x*7+z*4)*.035+Math.sin(y*11+x*3)*.025;
+  const irregular=1+(rand()-.5)*.19+wave;
   x*=irregular;y*=irregular;z*=irregular;
-  if(shape==='flat')y*=.55+rand()*.12;
-  if(shape==='sharp'){const fac=1+Math.max(0,y)*.34;y*=fac;}
-  if(shape==='rounded'){x*=.92;y*=.9;z*=.95;}
-  pos.setXYZ(i,x,y,z);
+  if(shape==='flat')y*=.48;
+  if(shape==='sharp')y*=1+Math.max(0,y)*.25;
+  if(shape==='rounded'){x*=.94;y*=.92;z*=.94;}
+  p.setXYZ(i,x,y,z);
  }
  geo.computeVertexNormals();return geo;
 }
-function createRock(parent,rand,pal,seed,scale,offset,shape='natural'){
- const texture=makeStoneTexture(seed,pal);
- const rough=new THREE.MeshStandardMaterial({map:texture,color:0xffffff,roughness:.68+rand()*.23,metalness:.015, bumpMap:texture,bumpScale:.035, envMapIntensity:.75});
- const geo=makeRockGeometry(rand,shape);
- const mesh=new THREE.Mesh(geo,rough);mesh.scale.set(...scale);mesh.position.set(...offset);mesh.rotation.set(rand()*.3,rand()*Math.PI*2,rand()*.3);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
- // A few naturally broken facets catch the key light.
- return mesh;
+function disposeGroup(g){
+ g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map)m.map.dispose();if(m.bumpMap&&m.bumpMap!==m.map)m.bumpMap.dispose();m.dispose();});}});
 }
-function disposeGroup(g){g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map)m.map.dispose();if(m.bumpMap&&m.bumpMap!==m.map)m.bumpMap.dispose();m.dispose();});}});}
+function addRock(group,rand,geo,material,scale,pos,shape='natural'){
+ const mesh=new THREE.Mesh(geo,material);mesh.scale.set(...scale);mesh.position.set(...pos);mesh.rotation.set((rand()-.5)*.28,rand()*Math.PI*2,(rand()-.5)*.28);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
+}
+function fitCamera(group){
+ const box=new THREE.Box3().setFromObject(group);
+ const sphere=box.getBoundingSphere(new THREE.Sphere());
+ fitTarget.copy(sphere.center);fitTarget.y=Math.max(-.5,sphere.center.y);
+ const vH=THREE.MathUtils.degToRad(camera.fov),vW=2*Math.atan(Math.tan(vH/2)*camera.aspect);
+ const limiting=Math.min(vH,vW);
+ fitDistance=Math.max(3.3,sphere.radius/Math.sin(limiting/2)*1.65);
+}
 function build(seed){
- if(rockGroup){root.remove(rockGroup);disposeGroup(rockGroup);}
- currentSeed=seed;const rand=rng(seed);const pal=palettes[Math.floor(rand()*palettes.length)];currentName=pal.name;
- const group=new THREE.Group();rockGroup=group;root.add(group);
- const style=Math.floor(rand()*5);
+ if(rockGroup){scene.remove(rockGroup);disposeGroup(rockGroup);}
+ currentSeed=seed;const rand=rng(seed),pal=palettes[Math.floor(rand()*palettes.length)];
+ currentName=pal.name;const group=new THREE.Group();rockGroup=group;scene.add(group);
+ const tex=makeTexture(seed,pal);
+ const material=new THREE.MeshStandardMaterial({map:tex,roughness:.79,metalness:.025,bumpMap:tex,bumpScale:.018});
+ const style=Math.floor(rand()*5),shape=['natural','sharp','rounded'][Math.floor(rand()*3)];
+ const add=(s,pos,kind=shape)=>addRock(group,rand,rockGeometry(rand,kind),material,s,pos,kind);
  if(style===0){
-  const size=.88+rand()*.38;
-  createRock(group,rand,pal,seed,[size*(.9+rand()*.25),size*(.72+rand()*.38),size*(.82+rand()*.3)],[0,-.35,0],['natural','sharp','rounded'][Math.floor(rand()*3)]);
+  const s=.85+rand()*.35;add([s*(.9+rand()*.2),s*(.7+rand()*.35),s*(.85+rand()*.25)],[0,-.22,0]);
  }else if(style===1){
-  const count=2+Math.floor(rand()*3);
-  for(let i=0;i<count;i++){const s=.48+rand()*.48;createRock(group,rand,pal,seed+i*173,[s*(.8+rand()*.5),s*(.7+rand()*.4),s],[((i-(count-1)/2)*.55),-.77+rand()*.2,(rand()-.5)*.4],i===0?'sharp':'natural');}
+  const count=2+Math.floor(rand()*2);
+  for(let i=0;i<count;i++){const s=.45+rand()*.32;add([s*(.85+rand()*.3),s*(.7+rand()*.3),s],[ (i-(count-1)/2)*.48,-.82+rand()*.12,(rand()-.5)*.25],i===0?'sharp':'natural');}
  }else if(style===2){
-  const count=18+Math.floor(rand()*18);
-  for(let i=0;i<count;i++){const s=.10+rand()*.23;const x=(rand()-.5)*2.25,z=(rand()-.5)*1.75,y=-1.05+rand()*.24;createRock(group,rand,pal,seed+i*31,[s*(.7+rand()),s*(.6+rand()),s],[x,y,z],rand()>.7?'sharp':'natural');}
+  const count=9+Math.floor(rand()*7);
+  for(let i=0;i<count;i++){const s=.12+rand()*.13;add([s*(.75+rand()*.5),s*(.65+rand()*.4),s],[ (rand()-.5)*1.45,-1.16+rand()*.1,(rand()-.5)*1.1],rand()>.75?'sharp':'natural');}
  }else if(style===3){
-  const s=1.12+rand()*.35;createRock(group,rand,pal,seed,[s*1.4,s*.48,s],[0,-.72,0],'flat');
-  for(let i=0;i<5;i++){const q=.13+rand()*.22;createRock(group,rand,pal,seed+i*97,[q,q*.7,q],[((rand()-.5)*1.8),-.94,(rand()-.5)*1.2]);}
+  const s=1+rand()*.25;add([s*1.35,s*.43,s],[0,-.78,0],'flat');
+  for(let i=0;i<3;i++){const q=.12+rand()*.12;add([q,q*.7,q],[(rand()-.5)*1.5,-1.12,(rand()-.5)*.8]);}
  }else{
-  const count=5+Math.floor(rand()*5);
-  for(let i=0;i<count;i++){const s=.22+rand()*.42;const angle=i/count*Math.PI*2;createRock(group,rand,pal,seed+i*59,[s*(.7+rand()*.6),s*(.7+rand()*.6),s],[Math.cos(angle)*.52,-.88+rand()*.22,Math.sin(angle)*.42],rand()>.65?'sharp':'natural');}
+  const count=4+Math.floor(rand()*4);
+  for(let i=0;i<count;i++){const s=.25+rand()*.25,a=i/count*Math.PI*2;add([s,s*(.7+rand()*.4),s],[Math.cos(a)*.43,-.94+rand()*.13,Math.sin(a)*.34]);}
  }
- document.querySelector('#readout').innerHTML='SPECIMEN '+String(specimenNo).padStart(3,'0')+'<br>'+pal.name+' · '+['MONOLITH','FRACTURE','GRAVEL','SLAB','CLUSTER'][style];
+ fitCamera(group);
+ const labels=['MONOLITH','FRACTURE','GRAVEL','SLAB','CLUSTER'];
+ document.querySelector('#readout').innerHTML='SPECIMEN '+String(specimenNo).padStart(3,'0')+'<br>'+pal.name+' · '+labels[style];
 }
 function next(){specimenNo++;build((Math.random()*0xffffffff)>>>0);}
 next();
-const orbitY=document.createElement('input'); // rotation stays gesture-driven, clean specimen stage
+const orbitY=document.querySelector('#orbitY'),orbitX=document.querySelector('#orbitX');
+orbitY.addEventListener('input',e=>yaw=Number(e.target.value)*Math.PI/180);
+orbitX.addEventListener('input',e=>pitch=Number(e.target.value)*Math.PI/180);
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.1,1.1);});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;yaw+=dx*.008;pitch=THREE.MathUtils.clamp(pitch+dy*.006,-1.15,1.15);orbitY.value=THREE.MathUtils.clamp(Math.round(yaw*180/Math.PI),-180,180);orbitX.value=Math.round(pitch*180/Math.PI);});
 canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
 document.querySelector('#generate').addEventListener('click',next);
-
 const storeKey='stone-study-favorites-v1';
 function readSaved(){try{return JSON.parse(localStorage.getItem(storeKey)||'[]');}catch{return[];}}
 function writeSaved(a){localStorage.setItem(storeKey,JSON.stringify(a));}
-function snapshot(){return renderer.domElement.toDataURL('image/jpeg',.72);}
 document.querySelector('#save').addEventListener('click',()=>{
  const saved=readSaved();if(saved.some(x=>x.seed===currentSeed)){document.querySelector('#save').textContent='ALREADY SAVED ✓';return;}
- saved.unshift({seed:currentSeed,name:currentName,no:specimenNo,thumb:snapshot(),date:new Date().toLocaleDateString()});
- writeSaved(saved.slice(0,60));document.querySelector('#save').textContent='SAVED ✓';setTimeout(()=>document.querySelector('#save').textContent='SAVE SPECIMEN +',1200);
+ saved.unshift({seed:currentSeed,name:currentName,no:specimenNo,thumb:renderer.domElement.toDataURL('image/jpeg',.72)});
+ writeSaved(saved.slice(0,60));document.querySelector('#save').textContent='SAVED ✓';setTimeout(()=>document.querySelector('#save').textContent='SAVE SPECIMEN +',1100);
 });
 const gallery=document.querySelector('#gallery'),items=document.querySelector('#items');
 function showGallery(){
  const saved=readSaved();items.innerHTML='';
- if(!saved.length){items.innerHTML='<div class="empty">NO SAVED SPECIMENS YET.<br>Generate stones and save the ones you like.</div>';}
+ if(!saved.length)items.innerHTML='<div class="empty">NO SAVED SPECIMENS YET.<br>Generate stones and save the ones you like.</div>';
  saved.forEach((item,index)=>{
-  const card=document.createElement('div');card.className='card';
-  const img=document.createElement('img');img.className='thumb';img.src=item.thumb;img.alt=item.name;
-  const info=document.createElement('div');info.className='cardInfo';
-  const label=document.createElement('span');label.textContent=item.name+' · '+String(item.no).padStart(3,'0');
+  const card=document.createElement('div');card.className='card';const img=document.createElement('img');img.className='thumb';img.src=item.thumb;
+  const info=document.createElement('div');info.className='cardInfo';const label=document.createElement('span');label.textContent=item.name+' · '+String(item.no).padStart(3,'0');
   const load=document.createElement('button');load.textContent='VIEW';load.addEventListener('click',()=>{specimenNo=item.no;build(item.seed);gallery.style.display='none';});
-  const del=document.createElement('button');del.textContent='×';del.setAttribute('aria-label','Удалить из коллекции');del.addEventListener('click',()=>{const all=readSaved();all.splice(index,1);writeSaved(all);showGallery();});
+  const del=document.createElement('button');del.textContent='×';del.addEventListener('click',()=>{const a=readSaved();a.splice(index,1);writeSaved(a);showGallery();});
   info.append(label,load,del);card.append(img,info);items.append(card);
  });
  gallery.style.display='flex';
 }
 document.querySelector('#collection').addEventListener('click',showGallery);
 document.querySelector('#closeGallery').addEventListener('click',()=>gallery.style.display='none');
-
-function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}
+function resize(){
+ const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;
+ renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();
+ if(rockGroup)fitCamera(rockGroup);
+}
 new ResizeObserver(resize).observe(canvas);window.addEventListener('resize',resize);resize();
-function frame(){requestAnimationFrame(frame);const d=5.9;camera.position.set(Math.sin(yaw)*Math.cos(pitch)*d,.15+Math.sin(pitch)*d,Math.cos(yaw)*Math.cos(pitch)*d);camera.lookAt(0,-.45,0);renderer.render(scene,camera);}
+function frame(){requestAnimationFrame(frame);const d=fitDistance;camera.position.set(fitTarget.x+Math.sin(yaw)*Math.cos(pitch)*d,fitTarget.y+Math.sin(pitch)*d,fitTarget.z+Math.cos(yaw)*Math.cos(pitch)*d);camera.lookAt(fitTarget);renderer.render(scene,camera);}
 frame();
 </script></body></html>
