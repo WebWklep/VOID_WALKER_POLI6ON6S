@@ -41,7 +41,7 @@ import * as THREE from 'three';
 import {RoomEnvironment} from 'RoomEnvironment';
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 renderer.setClearColor(0x000000,1);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x000000);
@@ -70,7 +70,7 @@ function hash(x,y,z){const n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return 
 function noise(x,y,z){const X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z),u=x-X,v=y-Y,w=z-Z;const s=t=>t*t*(3-2*t);const U=s(u),V=s(v),W=s(w);const a=hash(X,Y,Z),b=hash(X+1,Y,Z),c=hash(X,Y+1,Z),d=hash(X+1,Y+1,Z),e=hash(X,Y,Z+1),f=hash(X+1,Y,Z+1),g=hash(X,Y+1,Z+1),h=hash(X+1,Y+1,Z+1);return THREE.MathUtils.lerp(THREE.MathUtils.lerp(THREE.MathUtils.lerp(a,b,U),THREE.MathUtils.lerp(c,d,U),V),THREE.MathUtils.lerp(THREE.MathUtils.lerp(e,f,U),THREE.MathUtils.lerp(g,h,U),V),W);}
 function fbm(x,y,z){return noise(x,y,z)*.55+noise(x*2.1+7,y*2.1,z*2.1)*.27+noise(x*4.2,y*4.2,z*4.2)*.13+noise(x*8.4,y*8.4,z*8.4)*.05;}
 function makeMaps(seed,pal){
- const size=512,rand=rng(seed^0x3a71);
+ const size=768,rand=rng(seed^0x3a71);
  const color=document.createElement('canvas'),bump=document.createElement('canvas'),rough=document.createElement('canvas');
  color.width=color.height=bump.width=bump.height=rough.width=rough.height=size;
  const c=color.getContext('2d'),b=bump.getContext('2d'),r=rough.getContext('2d');
@@ -120,30 +120,30 @@ function makeMaps(seed,pal){
  }
  const map=new THREE.CanvasTexture(color),bumpMap=new THREE.CanvasTexture(bump),roughnessMap=new THREE.CanvasTexture(rough);
  map.colorSpace=THREE.SRGBColorSpace;
- for(const tex of [map,bumpMap,roughnessMap]){tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=8;}
+ for(const tex of [map,bumpMap,roughnessMap]){tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();}
  return {map,bumpMap,roughnessMap};
 }
 function makeGeometry(seed,type){
- const rand=rng(seed),geo=new THREE.SphereGeometry(1,160,128),p=geo.attributes.position;
+ const rand=rng(seed),geo=new THREE.SphereGeometry(1,192,144),p=geo.attributes.position;
  const phase=[rand()*30,rand()*30,rand()*30];
  const profiles={
   pebble:{scale:[1.28,.82,1.02],rough:.075,cut:0,pits:4,round:1},
   boulder:{scale:[1.16,.94,1.12],rough:.13,cut:2,pits:14,round:.8},
   slab:{scale:[1.18,.67,1.08],rough:.13,cut:3,pits:10,round:.55},
-  shard:{scale:[1.02,1.12,.9],rough:.12,cut:5,pits:5,round:.25},
-  flint:{scale:[1.04,.95,.96],rough:.12,cut:6,pits:5,round:.3},
+  shard:{scale:[1.02,1.12,.9],rough:.105,cut:3,pits:4,round:.25},
+  flint:{scale:[1.04,.95,.96],rough:.095,cut:3,pits:4,round:.3},
   porous:{scale:[1.05,.99,1],rough:.18,cut:1,pits:58,round:.75},
   conglomerate:{scale:[1.1,.97,1.03],rough:.16,cut:2,pits:22,round:.7},
-  fractured:{scale:[1.08,.98,1.02],rough:.14,cut:6,pits:8,round:.2},
+  fractured:{scale:[1.08,.98,1.02],rough:.12,cut:4,pits:6,round:.2},
   elongated:{scale:[.84,1.2,.93],rough:.12,cut:1,pits:8,round:.7},
   egg:{scale:[.96,1.15,.95],rough:.09,cut:0,pits:5,round:1},
   disk:{scale:[1.2,.58,1.1],rough:.11,cut:2,pits:7,round:.8},
-  angular:{scale:[1.05,.98,1.02],rough:.17,cut:6,pits:9,round:.25},
+  angular:{scale:[1.05,.98,1.02],rough:.12,cut:3,pits:6,round:.25},
   weathered:{scale:[1.12,.95,1.04],rough:.17,cut:3,pits:30,round:.8},
   layered:{scale:[1.18,.76,1.06],rough:.11,cut:2,pits:7,round:.65}
  };
  const cfg=profiles[type]||profiles.weathered;
- const planes=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:(type==='shard'||type==='fractured'||type==='angular')?.35+rand()*.35:.58+rand()*.27,depth:(type==='shard'||type==='fractured'||type==='angular')?.11+rand()*.18:.035+rand()*.105,soft:(type==='shard'||type==='fractured'||type==='angular')?.012+rand()*.035:.025+rand()*.075};});
+ const planes=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:(type==='shard'||type==='fractured'||type==='angular'||type==='flint')?.48+rand()*.25:.62+rand()*.24,depth:(type==='shard'||type==='fractured'||type==='angular'||type==='flint')?.065+rand()*.075:.025+rand()*.065,soft:(type==='shard'||type==='fractured'||type==='angular'||type==='flint')?.045+rand()*.045:.045+rand()*.065};});
  const pits=Array.from({length:cfg.pits},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.012+rand()*(type==='porous'?.075:.035),depth:.009+rand()*(type==='porous'?.055:.026)};});
  const lobes=Array.from({length:3+Math.floor(rand()*6)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.18+rand()*.34,amp:.018+rand()*.045};});
  const worn=Array.from({length:1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.77+rand()*.14,depth:.015+rand()*.035,soft:.07+rand()*.14};});
@@ -155,19 +155,21 @@ function makeGeometry(seed,type){
   const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
   const n=fbm(v.x*2.5+phase[0],v.y*2.5+phase[1],v.z*2.5+phase[2]);
   const detail=fbm(v.x*7+phase[1],v.y*7+phase[2],v.z*7+phase[0]);
-  const fine=fbm(v.x*19+phase[2],v.y*19+phase[0],v.z*19+phase[1]);
-  let radius=1+(n-.5)*cfg.rough*3.3+(detail-.5)*.055+(fine-.5)*.022;
+  const fine=fbm(v.x*13+phase[2],v.y*13+phase[0],v.z*13+phase[1]);
+  // Keep displacement coherent across neighboring vertices: this prevents radial starburst spikes.
+  let radius=1+(n-.5)*cfg.rough*2.8+(detail-.5)*.038+(fine-.5)*.009;
   if(type==='porous')radius+=(fbm(v.x*16+4,v.y*16+8,v.z*16+2)-.5)*.085;
   if(type==='conglomerate')radius+=(Math.max(0,Math.sin(v.x*7+phase[0])*Math.sin(v.y*6+phase[1])*Math.sin(v.z*8+phase[2]))-.53)*.065;
   if(type==='layered'||type==='slab'||type==='disk')radius+=Math.sin(v.y*13+noise(v.x*3+phase[0],v.z*3+phase[1],v.y*2)*2.2)*.025;
-  if(type==='flint'||type==='fractured'||type==='angular')radius+=(Math.abs(Math.sin(v.x*4+phase[0])*Math.sin(v.y*5+phase[1])*Math.sin(v.z*4+phase[2]))-.3)*.025;
+  if(type==='flint')radius+=(fbm(v.x*5+phase[0],v.y*5+phase[1],v.z*5+phase[2])-.5)*.025;
+  if(type==='fractured'||type==='angular')radius+=(fbm(v.x*4+phase[1],v.y*4+phase[2],v.z*4+phase[0])-.5)*.018;
   for(const plane of planes){const f=v.dot(plane.d);if(f>plane.limit){const t=THREE.MathUtils.smoothstep(f,plane.limit,Math.min(.999,plane.limit+plane.soft));radius-=plane.depth*t;}}
   for(const pit of pits){const d=v.distanceTo(pit.d);if(d<pit.r){const t=1-d/pit.r;radius-=pit.depth*t*t;}}
   for(const lobe of lobes){const d=v.distanceTo(lobe.d);if(d<lobe.r){const t=1-d/lobe.r;radius+=lobe.amp*t*t*(3-2*t);}}
   for(const face of worn){const f=v.dot(face.d);if(f>face.limit){const t=THREE.MathUtils.smoothstep(f,face.limit,Math.min(.999,face.limit+face.soft));radius-=face.depth*t;}}
   const abrasion=Math.max(0,(Math.abs(v.dot(flow))-.68)/.32);radius-=abrasion*abrasion*.022;
   // Different geological mechanisms create distinct silhouettes, not just different noise seeds.
-  if(type==='shard'||type==='fractured'||type==='angular')radius-=Math.max(0,Math.sin(v.x*3.1+phase[0])*Math.sin(v.y*2.7+phase[1])-.48)*.07;
+  if(type==='shard'||type==='fractured'||type==='angular')radius-=Math.max(0,fbm(v.x*3.2+phase[0],v.y*3.2+phase[1],v.z*3.2+phase[2])-.69)*.045;
   if(type==='boulder')radius+=Math.max(0,fbm(v.x*4+12,v.y*4+3,v.z*4+7)-.58)*.10;
   if(type==='weathered')radius-=Math.max(0,.5-fbm(v.x*8+2,v.y*8+9,v.z*8+5))*.075;
   v.multiplyScalar(radius);
@@ -204,7 +206,7 @@ function build(seed){
  const formNames={pebble:'ROUNDED',boulder:'BATTERED',slab:'FLAT-WORN',shard:'FRAGMENT',flint:'FLINT-LIKE',porous:'PITTED',conglomerate:'CONGLOMERATE',fractured:'FRACTURED',elongated:'ELONGATED',egg:'OVAL',angular:'ANGULAR',weathered:'WEATHERED',layered:'LAYERED'};
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.052,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:true});
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.034,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.52,vertexColors:true});
  rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
  rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:type==='limestone'?.96:type==='ironstone'?.95:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
