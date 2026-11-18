@@ -127,28 +127,28 @@ function makeGeometry(seed,type){
  const rand=rng(seed),geo=new THREE.SphereGeometry(1,160,128),p=geo.attributes.position;
  const phase=[rand()*30,rand()*30,rand()*30];
  const profiles={
-  pebble:{scale:[1.22,.88,1.04],rough:.105,cut:0,pits:7,round:1},
-  boulder:{scale:[1.14,.98,1.08],rough:.15,cut:2,pits:18,round:.8},
+  pebble:{scale:[1.28,.82,1.02],rough:.075,cut:0,pits:4,round:1},
+  boulder:{scale:[1.16,.94,1.12],rough:.13,cut:2,pits:14,round:.8},
   slab:{scale:[1.18,.67,1.08],rough:.13,cut:3,pits:10,round:.55},
-  shard:{scale:[.98,1.12,.91],rough:.17,cut:7,pits:7,round:.25},
+  shard:{scale:[1.02,1.12,.9],rough:.12,cut:5,pits:5,round:.25},
   flint:{scale:[1.04,.95,.96],rough:.12,cut:6,pits:5,round:.3},
   porous:{scale:[1.05,.99,1],rough:.18,cut:1,pits:58,round:.75},
   conglomerate:{scale:[1.1,.97,1.03],rough:.16,cut:2,pits:22,round:.7},
-  fractured:{scale:[1.05,1.02,.98],rough:.16,cut:8,pits:9,round:.2},
+  fractured:{scale:[1.08,.98,1.02],rough:.14,cut:6,pits:8,round:.2},
   elongated:{scale:[.84,1.2,.93],rough:.12,cut:1,pits:8,round:.7},
   egg:{scale:[.96,1.15,.95],rough:.09,cut:0,pits:5,round:1},
   disk:{scale:[1.2,.58,1.1],rough:.11,cut:2,pits:7,round:.8},
   angular:{scale:[1.05,.98,1.02],rough:.17,cut:6,pits:9,round:.25},
   weathered:{scale:[1.12,.95,1.04],rough:.17,cut:3,pits:30,round:.8},
-  layered:{scale:[1.13,.82,1.05],rough:.14,cut:3,pits:9,round:.65}
+  layered:{scale:[1.18,.76,1.06],rough:.11,cut:2,pits:7,round:.65}
  };
  const cfg=profiles[type]||profiles.weathered;
- const planes=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.58+rand()*.27,depth:.035+rand()*.105,soft:.025+rand()*.075};});
+ const planes=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:(type==='shard'||type==='fractured'||type==='angular')?.35+rand()*.35:.58+rand()*.27,depth:(type==='shard'||type==='fractured'||type==='angular')?.11+rand()*.18:.035+rand()*.105,soft:(type==='shard'||type==='fractured'||type==='angular')?.012+rand()*.035:.025+rand()*.075};});
  const pits=Array.from({length:cfg.pits},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.012+rand()*(type==='porous'?.075:.035),depth:.009+rand()*(type==='porous'?.055:.026)};});
  const lobes=Array.from({length:3+Math.floor(rand()*6)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.18+rand()*.34,amp:.018+rand()*.045};});
  const worn=Array.from({length:1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.77+rand()*.14,depth:.015+rand()*.035,soft:.07+rand()*.14};});
  const flow=new THREE.Vector3(rand()*2-1,rand()*4-1,rand()*2-1).normalize();
- const mossCenters=Array.from({length:type==='boulder'||type==='weathered'||type==='layered'?2+Math.floor(rand()*5):Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*.9+.1,rand()*2-1).normalize();return{d,r:.18+rand()*.31};});
+ const mossCenters=Array.from({length:type==='boulder'||type==='weathered'||type==='layered'?3+Math.floor(rand()*5):type==='pebble'?Math.floor(rand()*2):1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*.9+.1,rand()*2-1).normalize();return{d,r:.24+rand()*.38};});
  const colors=[];
  const asym=[(rand()-.5)*.15,(rand()-.5)*.13,(rand()-.5)*.15];
  for(let i=0;i<p.count;i++){
@@ -179,11 +179,12 @@ function makeGeometry(seed,type){
   if(type==='slab'||type==='disk')v.y+=.025*Math.sin(v.x*4+phase[0])*Math.sin(v.z*3+phase[1]);
   p.setXYZ(i,v.x,v.y,v.z);
   let moss=0;
-  for(const m of mossCenters){const d=v.clone().normalize().distanceTo(m.d);if(d<m.r){const edge=1-d/m.r;moss=Math.max(moss,THREE.MathUtils.smoothstep(edge,.05,.62));}}
+  for(const m of mossCenters){const d=v.clone().normalize().distanceTo(m.d);if(d<m.r){const edge=1-d/m.r;moss=Math.max(moss,THREE.MathUtils.smoothstep(edge,.02,.48));}}
   const speck=fbm(v.x*42+phase[0],v.y*42+phase[1],v.z*42+phase[2]);
-  moss*=THREE.MathUtils.clamp(.72+(speck-.5)*.8,0,1);
-  const green=new THREE.Color(0x71805a),base=new THREE.Color(1,1,1);
-  base.lerp(green,moss*.88);
+  moss*=THREE.MathUtils.clamp(.82+(speck-.5)*1.25,0,1);
+  const green=new THREE.Color(0x526b3e),lichen=new THREE.Color(0x9a9b69),base=new THREE.Color(1,1,1);
+  base.lerp(green,moss*.96);
+  if(moss>.25&&speck>.61)base.lerp(lichen,Math.min(.38,(speck-.61)*1.2));
   colors.push(base.r,base.g,base.b);
  }
  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
@@ -194,9 +195,9 @@ function build(seed){
  if(rock){scene.remove(rock);rock.geometry.dispose();rock.material.map?.dispose();rock.material.bumpMap?.dispose();rock.material.roughnessMap?.dispose();rock.material.dispose();}
  currentSeed=seed;const rand=rng(seed),pal=palettes[Math.floor(rand()*palettes.length)];
  const weightedForms=[
-  ['pebble',19],['boulder',17],['weathered',15],['egg',7],['elongated',6],
-  ['slab',8],['layered',7],['porous',5],['conglomerate',4],
-  ['angular',4],['fractured',3],['shard',2],['flint',3]
+  ['pebble',25],['boulder',18],['weathered',14],['egg',9],['elongated',7],
+  ['slab',6],['layered',6],['porous',4],['conglomerate',3],
+  ['angular',3],['fractured',2],['shard',1],['flint',2]
  ];
  const roll=rand()*100;let cursor=0,type='pebble';
  for(const [name,weight] of weightedForms){cursor+=weight;if(roll<cursor){type=name;break;}}
