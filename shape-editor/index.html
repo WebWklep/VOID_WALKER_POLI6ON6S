@@ -247,7 +247,7 @@ function build(seed){
   ['block',6],['oblong',5],['triangular',5],['cobble',5],
   ['kidney',5],['fan',4],['saddle',4],['prism',4]
  ];
- const roll=rand()*110;let cursor=0,type='pebble';
+ const totalWeight=weightedForms.reduce((sum,item)=>sum+item[1],0);const roll=rand()*totalWeight;let cursor=0,type='pebble';
  for(const [name,weight] of weightedForms){cursor+=weight;if(roll<cursor){type=name;break;}}
  const formNames={pebble:'RIVER-ROUNDED',boulder:'MASSIVE BOULDER',slab:'FLAT-WORN',shard:'BROKEN FRAGMENT',flint:'FLINT-LIKE',porous:'PITTED ROCK',conglomerate:'CONGLOMERATE',fractured:'FRACTURED',elongated:'ELONGATED',egg:'OVAL PEBBLE',angular:'ANGULAR',weathered:'WEATHERED',layered:'LAYERED',wedge:'WEDGE-FORM',plate:'THIN PLATE',column:'COLUMNAR',knobby:'KNOBBY ROCK',block:'BLOCKY COBBLE',oblong:'LONG COBBLE',triangular:'ANGULAR FRAGMENT',cobble:'FLAT COBBLE',kidney:'KIDNEY-SHAPED',fan:'FAN-FORM',saddle:'WORN SADDLE',prism:'FACETED PRISM'};
  currentName=pal.name;
