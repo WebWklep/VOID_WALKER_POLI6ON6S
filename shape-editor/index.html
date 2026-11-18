@@ -57,13 +57,15 @@ let yaw=28*Math.PI/180,pitch=12*Math.PI/180,drag=null,currentSeed=1,currentName=
 const clock=new THREE.Clock();
 const palettes=[
  {name:'RIVER PEBBLE',base:[111,119,119],rough:.82},
- {name:'MOSS BOULDER',base:[91,96,79],rough:.94},
+ {name:'GREYWACKE',base:[103,109,108],rough:.94},
  {name:'SANDSTONE',base:[166,139,105],rough:.93},
  {name:'GRANITE',base:[111,113,111],rough:.86},
  {name:'LIMESTONE',base:[171,166,148],rough:.9},
  {name:'DARK BASALT',base:[63,70,73],rough:.88},
  {name:'QUARTZITE',base:[157,163,161],rough:.78},
- {name:'IRONSTONE',base:[117,91,75],rough:.91}
+ {name:'IRONSTONE',base:[117,91,75],rough:.91},
+ {name:'SLATE',base:[82,91,98],rough:.93},
+ {name:'GNEISS',base:[132,130,122],rough:.88}
 ];
 function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
 function hash(x,y,z){const n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return n-Math.floor(n);}
@@ -76,7 +78,7 @@ function makeMaps(seed,pal){
  const c=color.getContext('2d'),b=bump.getContext('2d'),r=rough.getContext('2d');
  const im=c.createImageData(size,size),bi=b.createImageData(size,size),ri=r.createImageData(size,size);
  const warmth=pal.name==='SANDSTONE'||pal.name==='IRONSTONE';
- const layered=pal.name==='SANDSTONE'||pal.name==='LIMESTONE';
+ const layered=pal.name==='SANDSTONE'||pal.name==='LIMESTONE'||pal.name==='SLATE'||pal.name==='GNEISS';
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
   const u=x/size,v=y/size;
   const broad=fbm(u*7+seed*.0001,v*7+3,seed*.0002);
@@ -86,21 +88,24 @@ function makeMaps(seed,pal){
   const mottling=fbm(u*13+seed*.0003,v*13+17,seed*.0007);
   const fleck=hash(Math.floor(x/2),Math.floor(y/2),seed%997);
   const band=layered?Math.sin(v*27+Math.sin(u*8+seed*.00001)*1.5)*3.8:Math.sin(v*11+u*4)*.9;
-  const mineral=Math.pow(Math.max(0,fleck-.88),2)*170;
-  const quartzFleck=fleck>.982?13:(fleck<.018?-8:0);
-  const pore=(hash(Math.floor(x/3),Math.floor(y/3),seed%431)>.982)?-19:0;
-  const micro=(rand()-.5)*7;
+  const mineral=Math.pow(Math.max(0,fleck-.91),2)*225;
+  const quartzFleck=fleck>.987?19:(fleck<.012?-11:0);
+  const pore=(hash(Math.floor(x/2),Math.floor(y/2),seed%431)>.984)?-25:0;
+  const crystal=pal.name==='GRANITE'||pal.name==='GNEISS' ? (fleck>.965 ? 7 : fleck<.035 ? -5 : 0) : 0;
+  const grainDirection=pal.name==='GNEISS'||pal.name==='SLATE' ? Math.sin(v*78+Math.sin(u*13+seed*.00001)*2.4)*2.4 : 0;
+  const micro=(rand()-.5)*5;
   const oxide=pal.name==='IRONSTONE'?Math.max(0,mottling-.48)*25:pal.name==='SANDSTONE'?Math.max(0,mottling-.58)*13:0;
-  const value=(broad-.5)*31+(mid-.5)*23+(grain-.5)*13+(microGrain-.5)*7+band+mineral+pore+micro;
+  const value=(broad-.5)*35+(mid-.5)*27+(grain-.5)*17+(microGrain-.5)*10+band+grainDirection+mineral+pore+micro+crystal;
   const i=(y*size+x)*4;
   im.data[i]=THREE.MathUtils.clamp(pal.base[0]+value+oxide+quartzFleck*.65,0,255);
   im.data[i+1]=THREE.MathUtils.clamp(pal.base[1]+value+oxide*.38+quartzFleck*.8,0,255);
   im.data[i+2]=THREE.MathUtils.clamp(pal.base[2]+value-oxide*.22+quartzFleck,0,255);im.data[i+3]=255;
-  const relief=fbm(u*66+3,v*66+8,seed*.001);
-  const pit=hash(Math.floor(x/2),Math.floor(y/2),seed%173)>.986?-.17:0;
-  const height=THREE.MathUtils.clamp(128+(relief-.5)*118+(grain-.5)*40+pit*255+(rand()-.5)*18,0,255);
+  const relief=fbm(u*88+3,v*88+8,seed*.001);
+  const fineRelief=fbm(u*176+17,v*176+29,seed*.003);
+  const pit=hash(Math.floor(x/2),Math.floor(y/2),seed%173)>.984?-.22:0;
+  const height=THREE.MathUtils.clamp(128+(relief-.5)*142+(fineRelief-.5)*52+(grain-.5)*46+pit*255+(rand()-.5)*12,0,255);
   bi.data[i]=bi.data[i+1]=bi.data[i+2]=height;bi.data[i+3]=255;
-  const roughness=THREE.MathUtils.clamp((pal.rough*255)+(mid-.5)*45+(fleck>.94?18:0)+(pit<0?-22:0),0,255);
+  const roughness=THREE.MathUtils.clamp((pal.rough*255)+(mid-.5)*34+(grain-.5)*22+(fleck>.965?24:0)+(pit<0?-26:0),0,255);
   ri.data[i]=ri.data[i+1]=ri.data[i+2]=roughness;ri.data[i+3]=255;
  }
  c.putImageData(im,0,0);b.putImageData(bi,0,0);r.putImageData(ri,0,0);
@@ -148,8 +153,7 @@ function makeGeometry(seed,type){
  const lobes=Array.from({length:3+Math.floor(rand()*6)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.18+rand()*.34,amp:.018+rand()*.045};});
  const worn=Array.from({length:1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.77+rand()*.14,depth:.015+rand()*.035,soft:.07+rand()*.14};});
  const flow=new THREE.Vector3(rand()*2-1,rand()*4-1,rand()*2-1).normalize();
- const mossCenters=Array.from({length:type==='boulder'||type==='weathered'||type==='layered'?3+Math.floor(rand()*5):type==='pebble'?Math.floor(rand()*2):1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*.9+.1,rand()*2-1).normalize();return{d,r:.24+rand()*.38};});
- const colors=[];
+ 
  const asym=[(rand()-.5)*.15,(rand()-.5)*.13,(rand()-.5)*.15];
  for(let i=0;i<p.count;i++){
   const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
@@ -180,16 +184,7 @@ function makeGeometry(seed,type){
   if(type==='elongated'){v.x+=.06*Math.sin(v.y*2.5+phase[0]);v.z+=.045*Math.cos(v.y*2.7+phase[1]);}
   if(type==='slab'||type==='disk')v.y+=.025*Math.sin(v.x*4+phase[0])*Math.sin(v.z*3+phase[1]);
   p.setXYZ(i,v.x,v.y,v.z);
-  let moss=0;
-  for(const m of mossCenters){const d=v.clone().normalize().distanceTo(m.d);if(d<m.r){const edge=1-d/m.r;moss=Math.max(moss,THREE.MathUtils.smoothstep(edge,.02,.48));}}
-  const speck=fbm(v.x*42+phase[0],v.y*42+phase[1],v.z*42+phase[2]);
-  moss*=THREE.MathUtils.clamp(.82+(speck-.5)*1.25,0,1);
-  const green=new THREE.Color(0x526b3e),lichen=new THREE.Color(0x9a9b69),base=new THREE.Color(1,1,1);
-  base.lerp(green,moss*.96);
-  if(moss>.25&&speck>.61)base.lerp(lichen,Math.min(.38,(speck-.61)*1.2));
-  colors.push(base.r,base.g,base.b);
  }
- geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  geo.computeVertexNormals();
  return geo;
 }
@@ -206,7 +201,7 @@ function build(seed){
  const formNames={pebble:'ROUNDED',boulder:'BATTERED',slab:'FLAT-WORN',shard:'FRAGMENT',flint:'FLINT-LIKE',porous:'PITTED',conglomerate:'CONGLOMERATE',fractured:'FRACTURED',elongated:'ELONGATED',egg:'OVAL',angular:'ANGULAR',weathered:'WEATHERED',layered:'LAYERED'};
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.034,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.52,vertexColors:true});
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.047,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:false});
  rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
  rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:type==='limestone'?.96:type==='ironstone'?.95:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
