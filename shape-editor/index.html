@@ -127,58 +127,66 @@ function makeGeometry(seed,type){
  const rand=rng(seed),geo=new THREE.SphereGeometry(1,160,128),p=geo.attributes.position;
  const phase=[rand()*30,rand()*30,rand()*30];
  const profiles={
-  pebble:{scale:[1.22,.88,1.04],rough:.075,scar:2,pits:5,cut:1},
-  boulder:{scale:[1.12,.98,1.08],rough:.105,scar:7,pits:12,cut:2},
-  slab:{scale:[1.16,.68,1.08],rough:.085,scar:5,pits:8,cut:2},
-  shard:{scale:[.96,1.12,.9],rough:.10,scar:8,pits:8,cut:5},
-  flint:{scale:[1.02,.94,.94],rough:.075,scar:7,pits:5,cut:5},
-  porous:{scale:[1.04,.98,1],rough:.13,scar:6,pits:48,cut:1},
-  conglomerate:{scale:[1.08,.96,1.02],rough:.12,scar:5,pits:18,cut:2},
-  fractured:{scale:[1.04,1.02,.98],rough:.105,scar:8,pits:8,cut:5},
-  elongated:{scale:[.9,1.18,.94],rough:.08,scar:4,pits:7,cut:2},
-  egg:{scale:[.96,1.14,.94],rough:.06,scar:3,pits:5,cut:1},
-  disk:{scale:[1.16,.58,1.08],rough:.07,scar:4,pits:6,cut:1},
-  angular:{scale:[1.04,.98,1.02],rough:.10,scar:7,pits:8,cut:4},
-  weathered:{scale:[1.1,.94,1.02],rough:.12,scar:9,pits:25,cut:2},
-  layered:{scale:[1.12,.82,1.04],rough:.085,scar:5,pits:8,cut:2}
+  pebble:{scale:[1.22,.88,1.04],rough:.105,cut:0,pits:7,round:1},
+  boulder:{scale:[1.14,.98,1.08],rough:.15,cut:2,pits:18,round:.8},
+  slab:{scale:[1.18,.67,1.08],rough:.13,cut:3,pits:10,round:.55},
+  shard:{scale:[.98,1.12,.91],rough:.17,cut:7,pits:7,round:.25},
+  flint:{scale:[1.04,.95,.96],rough:.12,cut:6,pits:5,round:.3},
+  porous:{scale:[1.05,.99,1],rough:.18,cut:1,pits:58,round:.75},
+  conglomerate:{scale:[1.1,.97,1.03],rough:.16,cut:2,pits:22,round:.7},
+  fractured:{scale:[1.05,1.02,.98],rough:.16,cut:8,pits:9,round:.2},
+  elongated:{scale:[.84,1.2,.93],rough:.12,cut:1,pits:8,round:.7},
+  egg:{scale:[.96,1.15,.95],rough:.09,cut:0,pits:5,round:1},
+  disk:{scale:[1.2,.58,1.1],rough:.11,cut:2,pits:7,round:.8},
+  angular:{scale:[1.05,.98,1.02],rough:.17,cut:6,pits:9,round:.25},
+  weathered:{scale:[1.12,.95,1.04],rough:.17,cut:3,pits:30,round:.8},
+  layered:{scale:[1.13,.82,1.05],rough:.14,cut:3,pits:9,round:.65}
  };
  const cfg=profiles[type]||profiles.weathered;
- const scars=Array.from({length:cfg.scar},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.86+rand()*.12,depth:.012+rand()*.035,soft:.055+rand()*.12};});
- const pits=Array.from({length:cfg.pits},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.012+rand()*(type==='porous'?.052:.028),depth:.006+rand()*(type==='porous'?.04:.022)};});
- const chips=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,cut:.91+rand()*.075,depth:.012+rand()*.028};});
- // A few broad, soft mineral swellings keep each silhouette from feeling stamped from one template.
- const lobes=Array.from({length:4+Math.floor(rand()*5)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.20+rand()*.30,amp:.012+rand()*.028};});
- // Rounded abrasion planes and impact-worn areas, never hard polygonal cuts.
- const wornFaces=Array.from({length:1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.84+rand()*.11,depth:.009+rand()*.022,soft:.075+rand()*.12};});
- const flowAxis=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();
- const asym=[(rand()-.5)*.11,(rand()-.5)*.10,(rand()-.5)*.11];
- const drift=[rand()*8,rand()*8,rand()*8];
+ const planes=Array.from({length:cfg.cut},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.58+rand()*.27,depth:.035+rand()*.105,soft:.025+rand()*.075};});
+ const pits=Array.from({length:cfg.pits},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.012+rand()*(type==='porous'?.075:.035),depth:.009+rand()*(type==='porous'?.055:.026)};});
+ const lobes=Array.from({length:3+Math.floor(rand()*6)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,r:.18+rand()*.34,amp:.018+rand()*.045};});
+ const worn=Array.from({length:1+Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.77+rand()*.14,depth:.015+rand()*.035,soft:.07+rand()*.14};});
+ const flow=new THREE.Vector3(rand()*2-1,rand()*4-1,rand()*2-1).normalize();
+ const mossCenters=Array.from({length:type==='boulder'||type==='weathered'||type==='layered'?2+Math.floor(rand()*5):Math.floor(rand()*3)},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*.9+.1,rand()*2-1).normalize();return{d,r:.18+rand()*.31};});
+ const colors=[];
+ const asym=[(rand()-.5)*.15,(rand()-.5)*.13,(rand()-.5)*.15];
  for(let i=0;i<p.count;i++){
   const v=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
-  const n=fbm(v.x*2.7+phase[0],v.y*2.7+phase[1],v.z*2.7+phase[2]);
+  const n=fbm(v.x*2.5+phase[0],v.y*2.5+phase[1],v.z*2.5+phase[2]);
   const detail=fbm(v.x*7+phase[1],v.y*7+phase[2],v.z*7+phase[0]);
-  const fine=fbm(v.x*18+phase[2],v.y*18+phase[0],v.z*18+phase[1]);
-  let radius=1+(n-.5)*cfg.rough*2.8+(detail-.5)*.045+(fine-.5)*.018;
-  if(type==='porous')radius+=(fbm(v.x*15+4,v.y*15+8,v.z*15+2)-.5)*.065;
-  if(type==='conglomerate')radius+=(Math.max(0,Math.sin(v.x*7+phase[0])*Math.sin(v.y*6+phase[1])*Math.sin(v.z*8+phase[2]))-.58)*.04;
-  if(type==='layered'||type==='slab')radius+=Math.sin(v.y*13+noise(v.x*3+phase[0],v.z*3+phase[1],v.y*2)*2.2)*.018;
-  if(type==='flint')radius+=(Math.abs(Math.sin(v.x*4+phase[0])*Math.sin(v.y*5+phase[1])*Math.sin(v.z*4+phase[2]))-.3)*.018;
-  for(const scar of scars){const facing=v.dot(scar.d);if(facing>scar.limit){const t=THREE.MathUtils.smoothstep(facing,scar.limit,Math.min(.999,scar.limit+scar.soft));radius-=scar.depth*t;}}
+  const fine=fbm(v.x*19+phase[2],v.y*19+phase[0],v.z*19+phase[1]);
+  let radius=1+(n-.5)*cfg.rough*3.3+(detail-.5)*.055+(fine-.5)*.022;
+  if(type==='porous')radius+=(fbm(v.x*16+4,v.y*16+8,v.z*16+2)-.5)*.085;
+  if(type==='conglomerate')radius+=(Math.max(0,Math.sin(v.x*7+phase[0])*Math.sin(v.y*6+phase[1])*Math.sin(v.z*8+phase[2]))-.53)*.065;
+  if(type==='layered'||type==='slab'||type==='disk')radius+=Math.sin(v.y*13+noise(v.x*3+phase[0],v.z*3+phase[1],v.y*2)*2.2)*.025;
+  if(type==='flint'||type==='fractured'||type==='angular')radius+=(Math.abs(Math.sin(v.x*4+phase[0])*Math.sin(v.y*5+phase[1])*Math.sin(v.z*4+phase[2]))-.3)*.025;
+  for(const plane of planes){const f=v.dot(plane.d);if(f>plane.limit){const t=THREE.MathUtils.smoothstep(f,plane.limit,Math.min(.999,plane.limit+plane.soft));radius-=plane.depth*t;}}
   for(const pit of pits){const d=v.distanceTo(pit.d);if(d<pit.r){const t=1-d/pit.r;radius-=pit.depth*t*t;}}
-  for(const chip of chips){const facing=v.dot(chip.d);if(facing>chip.cut)radius-=chip.depth*THREE.MathUtils.smoothstep(facing,chip.cut,Math.min(1,chip.cut+.045));}
   for(const lobe of lobes){const d=v.distanceTo(lobe.d);if(d<lobe.r){const t=1-d/lobe.r;radius+=lobe.amp*t*t*(3-2*t);}}
-  for(const face of wornFaces){const facing=v.dot(face.d);if(facing>face.limit){const t=THREE.MathUtils.smoothstep(facing,face.limit,Math.min(.999,face.limit+face.soft));radius-=face.depth*t;}}
-  const abrasion=Math.max(0,(Math.abs(v.dot(flowAxis))-.72)/.28);radius-=abrasion*abrasion*.016;
+  for(const face of worn){const f=v.dot(face.d);if(f>face.limit){const t=THREE.MathUtils.smoothstep(f,face.limit,Math.min(.999,face.limit+face.soft));radius-=face.depth*t;}}
+  const abrasion=Math.max(0,(Math.abs(v.dot(flow))-.68)/.32);radius-=abrasion*abrasion*.022;
+  // Different geological mechanisms create distinct silhouettes, not just different noise seeds.
+  if(type==='shard'||type==='fractured'||type==='angular')radius-=Math.max(0,Math.sin(v.x*3.1+phase[0])*Math.sin(v.y*2.7+phase[1])-.48)*.07;
+  if(type==='boulder')radius+=Math.max(0,fbm(v.x*4+12,v.y*4+3,v.z*4+7)-.58)*.10;
+  if(type==='weathered')radius-=Math.max(0,.5-fbm(v.x*8+2,v.y*8+9,v.z*8+5))*.075;
   v.multiplyScalar(radius);
-  // Keep the underlying silhouette organic: scale and gently bend a sphere, never turn it into a superellipsoid/cube.
   v.x*=cfg.scale[0]*(1+asym[0]);v.y*=cfg.scale[1]*(1+asym[1]);v.z*=cfg.scale[2]*(1+asym[2]);
-  v.x+=.035*Math.sin(v.z*2.8+phase[0])+.018*Math.sin(v.y*5.2+drift[0]);
-  v.y+=.028*Math.sin(v.x*3.1+phase[1])+.014*Math.cos(v.z*5.4+drift[1]);
-  v.z+=.032*Math.cos(v.y*2.9+phase[2])+.016*Math.sin(v.x*4.7+drift[2]);
-  if(type==='elongated'){v.x+=.045*Math.sin(v.y*2.5+phase[0]);v.z+=.035*Math.cos(v.y*2.7+phase[1]);}
-  if(type==='slab'||type==='disk')v.y+=.018*Math.sin(v.x*4+phase[0])*Math.sin(v.z*3+phase[1]);
+  v.x+=.04*Math.sin(v.z*2.8+phase[0])+.02*Math.sin(v.y*5.2+phase[1]);
+  v.y+=.032*Math.sin(v.x*3.1+phase[1])+.015*Math.cos(v.z*5.4+phase[2]);
+  v.z+=.036*Math.cos(v.y*2.9+phase[2])+.018*Math.sin(v.x*4.7+phase[0]);
+  if(type==='elongated'){v.x+=.06*Math.sin(v.y*2.5+phase[0]);v.z+=.045*Math.cos(v.y*2.7+phase[1]);}
+  if(type==='slab'||type==='disk')v.y+=.025*Math.sin(v.x*4+phase[0])*Math.sin(v.z*3+phase[1]);
   p.setXYZ(i,v.x,v.y,v.z);
+  let moss=0;
+  for(const m of mossCenters){const d=v.clone().normalize().distanceTo(m.d);if(d<m.r){const edge=1-d/m.r;moss=Math.max(moss,THREE.MathUtils.smoothstep(edge,.05,.62));}}
+  const speck=fbm(v.x*42+phase[0],v.y*42+phase[1],v.z*42+phase[2]);
+  moss*=THREE.MathUtils.clamp(.72+(speck-.5)*.8,0,1);
+  const green=new THREE.Color(0x71805a),base=new THREE.Color(1,1,1);
+  base.lerp(green,moss*.88);
+  colors.push(base.r,base.g,base.b);
  }
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  geo.computeVertexNormals();
  return geo;
 }
@@ -186,16 +194,16 @@ function build(seed){
  if(rock){scene.remove(rock);rock.geometry.dispose();rock.material.map?.dispose();rock.material.bumpMap?.dispose();rock.material.roughnessMap?.dispose();rock.material.dispose();}
  currentSeed=seed;const rand=rng(seed),pal=palettes[Math.floor(rand()*palettes.length)];
  const weightedForms=[
-  ['pebble',27],['boulder',20],['weathered',15],['egg',10],['elongated',7],
-  ['slab',6],['layered',4],['porous',3],['conglomerate',2.5],
-  ['angular',2],['fractured',1.5],['shard',1],['flint',1]
+  ['pebble',19],['boulder',17],['weathered',15],['egg',7],['elongated',6],
+  ['slab',8],['layered',7],['porous',5],['conglomerate',4],
+  ['angular',4],['fractured',3],['shard',2],['flint',3]
  ];
  const roll=rand()*100;let cursor=0,type='pebble';
  for(const [name,weight] of weightedForms){cursor+=weight;if(roll<cursor){type=name;break;}}
  const formNames={pebble:'ROUNDED',boulder:'BATTERED',slab:'FLAT-WORN',shard:'FRAGMENT',flint:'FLINT-LIKE',porous:'PITTED',conglomerate:'CONGLOMERATE',fractured:'FRACTURED',elongated:'ELONGATED',egg:'OVAL',angular:'ANGULAR',weathered:'WEATHERED',layered:'LAYERED'};
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.052,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.48,vertexColors:false});
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.052,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:true});
  rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
  rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:type==='limestone'?.96:type==='ironstone'?.95:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
