@@ -50,7 +50,8 @@ const env=pmrem.fromScene(new RoomEnvironment(),.04);scene.environment=env.textu
 scene.add(new THREE.HemisphereLight(0xe6eff5,0x3a3530,1.0));
 const key=new THREE.DirectionalLight(0xffe8c9,3.4);key.position.set(-4,6,5);scene.add(key);
 const fill=new THREE.DirectionalLight(0xa9c9e2,1.5);fill.position.set(5,1,-4);scene.add(fill);
-const rim=new THREE.DirectionalLight(0xffffff,1.0);rim.position.set(1,4,4);scene.add(rim);
+const rim=new THREE.DirectionalLight(0xffffff,1.25);rim.position.set(1,4,4);scene.add(rim);
+const softTop=new THREE.DirectionalLight(0xd8e1e8,.72);softTop.position.set(0,7,-1);scene.add(softTop);
 const lowRim=new THREE.DirectionalLight(0x8fa8b8,.48);lowRim.position.set(-3,-2,-2);scene.add(lowRim);
 const camera=new THREE.PerspectiveCamera(34,1,.1,100);
 let yaw=28*Math.PI/180,pitch=12*Math.PI/180,drag=null,currentSeed=1,currentName='PEBBLE',specimenNo=0,rock=null,center=new THREE.Vector3(),distance=4.4;
@@ -162,8 +163,8 @@ function makeGeometry(seed,type){
  const baseCfg=profiles[type]||profiles.weathered;
  // Every specimen gets its own proportions: the named form is a starting point, not a rigid template.
  const cfg={...baseCfg,
-  scale:baseCfg.scale.map(s=>s*(.84+rand()*.32)),
-  ex:baseCfg.ex.map(e=>THREE.MathUtils.clamp(e+(rand()-.5)*.24,.52,1.38)),
+  scale:baseCfg.scale.map(s=>s*(.76+rand()*.48)),
+  ex:baseCfg.ex.map(e=>THREE.MathUtils.clamp(e+(rand()-.5)*.32,.48,1.42)),
   rough:baseCfg.rough*(.72+rand()*.66)
  };
  const shapeMix=.38+rand()*.94;
@@ -177,16 +178,21 @@ function makeGeometry(seed,type){
  const worn=Array.from({length:wornCount},()=>{const d=new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize();return{d,limit:.82+rand()*.12,depth:.006+rand()*.012,soft:.1+rand()*.12};});
  const flow=new THREE.Vector3(rand()*2-1,rand()*4-1,rand()*2-1).normalize();
  // Broad, low-frequency bulges and shallow worn planes break up repeated outlines.
- const broadForms=Array.from({length:2+Math.floor(rand()*3)},()=>({
+ const broadForms=Array.from({length:2+Math.floor(rand()*4)},()=>({
   d:new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize(),
-  r:.34+rand()*.42, amp:(rand()-.5)*.052
+  r:.28+rand()*.48, amp:(rand()-.5)*.072
  }));
  const softPlanes=Array.from({length:1+Math.floor(rand()*3)},()=>({
   d:new THREE.Vector3(rand()*2-1,rand()*2-1,rand()*2-1).normalize(),
   limit:.58+rand()*.3, depth:.006+rand()*.016, soft:.12+rand()*.16
  }));
  const specimenRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler((rand()-.5)*.55,(rand()-.5)*Math.PI,(rand()-.5)*.55));
- const asym=[(rand()-.5)*.15,(rand()-.5)*.13,(rand()-.5)*.15];
+ const asym=[(rand()-.5)*.19,(rand()-.5)*.17,(rand()-.5)*.19];
+ const leanX=(rand()-.5)*.22,leanZ=(rand()-.5)*.20;
+ const twist=(rand()-.5)*.30;
+ const shoulderX=(rand()-.5)*.16,shoulderZ=(rand()-.5)*.15;
+ const waist=(rand()-.5)*.12;
+ const profileDrift=(rand()-.5)*.12;
  for(let i=0;i<p.count;i++){
   const raw=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
   const v=new THREE.Vector3(signPow(raw.x,cfg.ex[0]),signPow(raw.y,cfg.ex[1]),signPow(raw.z,cfg.ex[2]));
@@ -213,6 +219,15 @@ function makeGeometry(seed,type){
   if(type==='weathered')radius-=Math.max(0,.5-fbm(v.x*8+2,v.y*8+9,v.z*8+5))*.028;
   v.multiplyScalar(radius);
   v.x*=cfg.scale[0]*(1+asym[0]);v.y*=cfg.scale[1]*(1+asym[1]);v.z*=cfg.scale[2]*(1+asym[2]);
+  // Per-specimen geological drift: gentle lean, torsion and changing shoulder width.
+  const ny=THREE.MathUtils.clamp(v.y/Math.max(.001,cfg.scale[1]),-1,1);
+  v.x+=leanX*ny;v.z+=leanZ*ny;
+  const twistAngle=twist*ny,tx=v.x*Math.cos(twistAngle)-v.z*Math.sin(twistAngle),tz=v.x*Math.sin(twistAngle)+v.z*Math.cos(twistAngle);
+  v.x=tx;v.z=tz;
+  const shoulder=Math.sin((ny+1)*Math.PI*.5);
+  v.x*=1+shoulderX*shoulder+waist*(1-shoulder);
+  v.z*=1+shoulderZ*shoulder-waist*.45*(1-shoulder);
+  v.x+=profileDrift*ny*ny*.45;
   if(type==='egg'){const taper=1-.16*(v.y/cfg.scale[1]);v.x*=taper;v.z*=taper;}
   if(type==='block'){const y=v.y/cfg.scale[1],taper=1-.055*y*shapeMix;v.x*=taper;v.z*=taper;v.x+=.035*Math.sign(y)*shapeMix;}
   if(type==='oblong'){const end=Math.pow(Math.abs(v.x/cfg.scale[0]),3);v.y*=1-.10*end*shapeMix;v.z*=1-.08*end*shapeMix;}
@@ -220,7 +235,7 @@ function makeGeometry(seed,type){
   if(type==='cobble'||type==='kidney'){const flatten=1-.12*Math.max(0,v.y/cfg.scale[1])*shapeMix;v.x*=flatten;v.z*=flatten;v.x+=.025*Math.sin(v.y*2.4+phase[0])*shapeMix;}
   if(type==='saddle'){v.y-=.045*Math.exp(-Math.pow(v.x*2.1,2))*Math.exp(-Math.pow(v.z*1.7,2))*shapeMix;}
   if(type==='prism'){const t=THREE.MathUtils.clamp((v.y/cfg.scale[1]+1)*.5,0,1);v.x*=1-.18*t*shapeMix;v.z*=1-.12*t*shapeMix;}
-  if(type==='wedge'){const t=THREE.MathUtils.clamp((v.x/cfg.scale[0]+1)*.5,0,1);const taper=.76+.42*t*shapeMix;v.y*=taper;v.z*=.88+.16*t*shapeMix;v.y+=.075*(t-.5)*shapeMix;v.x+=.035*Math.sin(v.z*2.1+phase[0]);}
+  if(type==='wedge'){const t=THREE.MathUtils.clamp((v.x/cfg.scale[0]+1)*.5,0,1);const taper=(.76+randSafe(seed,.31)*.08)+(.34+randSafe(seed,.72)*.12)*t*shapeMix;v.y*=taper;v.z*=.86+.19*t*shapeMix;v.y+=.055*(t-.5)*shapeMix;v.x+=.025*Math.sin(v.z*2.1+phase[0]);}
   if(type==='plate'||type==='disk'){const edge=Math.pow(Math.max(Math.abs(v.x)/cfg.scale[0],Math.abs(v.z)/cfg.scale[2]),3);v.y*=1-.12*edge;}
   if(type==='column'){const taper=1-.2*Math.abs(v.y/cfg.scale[1]);v.x*=taper;v.z*=taper;}
   if(type==='shard'||type==='flint'){const taper=1-.34*Math.max(0,v.x/cfg.scale[0]);v.y*=taper;v.z*=taper;}
@@ -252,7 +267,7 @@ function build(seed){
  const formNames={pebble:'RIVER-ROUNDED',boulder:'MASSIVE BOULDER',slab:'FLAT-WORN',shard:'BROKEN FRAGMENT',flint:'FLINT-LIKE',porous:'PITTED ROCK',conglomerate:'CONGLOMERATE',fractured:'FRACTURED',elongated:'ELONGATED',egg:'OVAL PEBBLE',angular:'ANGULAR',weathered:'WEATHERED',layered:'LAYERED',wedge:'WEDGE-FORM',plate:'THIN PLATE',column:'COLUMNAR',knobby:'KNOBBY ROCK',block:'BLOCKY COBBLE',oblong:'LONG COBBLE',triangular:'ANGULAR FRAGMENT',cobble:'FLAT COBBLE',kidney:'KIDNEY-SHAPED',fan:'FAN-FORM',saddle:'WORN SADDLE',prism:'FACETED PRISM'};
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.026,roughness:pal.rough,roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:false});
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.031,roughness:THREE.MathUtils.clamp(pal.rough+(rand()-.5)*.09,.72,.98),roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:false});
  rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
  rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:type==='limestone'?.96:type==='ironstone'?.95:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
