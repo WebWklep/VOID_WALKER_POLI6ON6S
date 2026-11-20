@@ -55,6 +55,16 @@ const softTop=new THREE.DirectionalLight(0xd8e1e8,.72);softTop.position.set(0,7,
 const lowRim=new THREE.DirectionalLight(0x8fa8b8,.48);lowRim.position.set(-3,-2,-2);scene.add(lowRim);
 const camera=new THREE.PerspectiveCamera(34,1,.1,100);
 let yaw=28*Math.PI/180,pitch=12*Math.PI/180,drag=null,currentSeed=1,currentName='PEBBLE',specimenNo=0,rock=null,center=new THREE.Vector3(),distance=4.4;
+let contactShadow=null;
+const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=256;
+const shadowCtx=shadowCanvas.getContext('2d');
+const shadowGradient=shadowCtx.createRadialGradient(128,128,8,128,128,124);
+shadowGradient.addColorStop(0,'rgba(0,0,0,.72)');shadowGradient.addColorStop(.42,'rgba(0,0,0,.38)');shadowGradient.addColorStop(1,'rgba(0,0,0,0)');
+shadowCtx.fillStyle=shadowGradient;shadowCtx.fillRect(0,0,256,256);
+const shadowTexture=new THREE.CanvasTexture(shadowCanvas);
+const shadowMaterial=new THREE.MeshBasicMaterial({map:shadowTexture,transparent:true,depthWrite:false,opacity:.72,toneMapped:false});
+contactShadow=new THREE.Mesh(new THREE.PlaneGeometry(4.8,3.5),shadowMaterial);
+contactShadow.rotation.x=-Math.PI/2;contactShadow.position.y=-1.15;scene.add(contactShadow);
 const clock=new THREE.Clock();
 const palettes=[
  {name:'RIVER PEBBLE',base:[111,119,119],rough:.82},
@@ -131,7 +141,16 @@ function makeMaps(seed,pal){
  return {map,bumpMap,roughnessMap};
 }
 function makeGeometry(seed,type){
- const rand=rng(seed),geo=new THREE.SphereGeometry(1,192,144),p=geo.attributes.position;
+ const rand=rng(seed);
+ // Three genuinely different mesh families: smooth organic, rounded block/slab, and fractured mineral.
+ const roundedTypes=['pebble','boulder','weathered','egg','elongated','porous','conglomerate','fractured','disk','weathered','wedge','kidney','fan','saddle'];
+ const blockTypes=['slab','layered','plate','block','cobble'];
+ const angularTypes=['shard','flint','angular','triangular','prism','column'];
+ let geo,baseKind='organic';
+ if(angularTypes.includes(type)){geo=new THREE.IcosahedronGeometry(1,4);baseKind='crystal';}
+ else if(blockTypes.includes(type)){geo=new THREE.BoxGeometry(2,2,2,56,28,56);baseKind='strata';}
+ else {geo=new THREE.SphereGeometry(1,192,144);}
+ const p=geo.attributes.position;
  const phase=[rand()*30,rand()*30,rand()*30];
  const profiles={
   pebble:{scale:[1.34,.78,1.02],rough:.022,cut:0,pits:1,ex:[1.18,1.28,1.16]},
@@ -196,6 +215,8 @@ function makeGeometry(seed,type){
  const profileDrift=(rand()-.5)*.12;
  for(let i=0;i<p.count;i++){
   const raw=new THREE.Vector3(p.getX(i),p.getY(i),p.getZ(i));
+  // Box faces and crystal vertices are converted to a shared directional field before specimen shaping.
+  if(baseKind!=='organic')raw.normalize();
   const v=new THREE.Vector3(signPow(raw.x,cfg.ex[0]),signPow(raw.y,cfg.ex[1]),signPow(raw.z,cfg.ex[2]));
   const n=fbm(v.x*2.5+phase[0],v.y*2.5+phase[1],v.z*2.5+phase[2]);
   const detail=fbm(v.x*7+phase[1],v.y*7+phase[2],v.z*7+phase[0]);
@@ -251,6 +272,8 @@ function makeGeometry(seed,type){
   p.setXYZ(i,v.x,v.y,v.z);
  }
  geo.computeVertexNormals();
+ // Crystal families retain readable mineral facets; organic stones keep continuous shading.
+ geo.userData={...(geo.userData||{}),baseKind};
  return geo;
 }
 function build(seed){
@@ -268,10 +291,15 @@ function build(seed){
  const formNames={pebble:'RIVER-ROUNDED',boulder:'MASSIVE BOULDER',slab:'FLAT-WORN',shard:'BROKEN FRAGMENT',flint:'FLINT-LIKE',porous:'PITTED ROCK',conglomerate:'CONGLOMERATE',fractured:'FRACTURED',elongated:'ELONGATED',egg:'OVAL PEBBLE',angular:'ANGULAR',weathered:'WEATHERED',layered:'LAYERED',wedge:'WEDGE-FORM',plate:'THIN PLATE',column:'COLUMNAR',knobby:'KNOBBY ROCK',block:'BLOCKY COBBLE',oblong:'LONG COBBLE',triangular:'ANGULAR FRAGMENT',cobble:'FLAT COBBLE',kidney:'KIDNEY-SHAPED',fan:'FAN-FORM',saddle:'WORN SADDLE',prism:'FACETED PRISM'};
  currentName=pal.name;
  const maps=makeMaps(seed,pal);
- const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.031,roughness:THREE.MathUtils.clamp(pal.rough+(rand()-.5)*.09,.72,.98),roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:false});
- rock=new THREE.Mesh(makeGeometry(seed,type),material);rock.castShadow=false;rock.receiveShadow=false;
+ const geometry=makeGeometry(seed,type);
+ const faceted=['shard','flint','angular','triangular','prism','column'].includes(type);
+ const material=new THREE.MeshStandardMaterial({map:maps.map,bumpMap:maps.bumpMap,bumpScale:.031,roughness:THREE.MathUtils.clamp(pal.rough+(rand()-.5)*.09,.72,.98),roughnessMap:maps.roughnessMap,metalness:0,envMapIntensity:.38,vertexColors:false,flatShading:faceted});
+ rock=new THREE.Mesh(geometry,material);rock.castShadow=false;rock.receiveShadow=false;
  rock.scale.setScalar(type==='pebble'?1.02:type==='sandstone'?.98:type==='limestone'?.96:type==='ironstone'?.95:.94);rock.position.y=0;scene.add(rock);
  const box=new THREE.Box3().setFromObject(rock),sphere=box.getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
+ const bottom=box.min.y;
+ contactShadow.position.set(center.x,bottom-.012,center.z);
+ contactShadow.scale.set(Math.max(1.15,sphere.radius*1.45),Math.max(.85,sphere.radius*1.05),1);
  distance=sphere.radius/Math.sin(THREE.MathUtils.degToRad(camera.fov/2))*1.48;
  document.querySelector('#readout').innerHTML='SPECIMEN '+String(specimenNo).padStart(3,'0')+'<br>'+formNames[type]+' · '+pal.name;
 }
